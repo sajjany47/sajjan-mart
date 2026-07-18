@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 30% 98%;
+    --foreground: 20 14% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 14% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14% 12%;
+    --primary: 12 75% 45%;
+    --primary-foreground: 40 30% 98%;
+    --secondary: 36 40% 92%;
+    --secondary-foreground: 20 14% 18%;
+    --muted: 36 30% 94%;
+    --muted-foreground: 20 10% 42%;
+    --accent: 36 60% 88%;
+    --accent-foreground: 20 14% 18%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 40 30% 98%;
+    --border: 36 20% 88%;
+    --input: 36 20% 88%;
+    --ring: 12 75% 45%;
+    --chart-1: 12 76% 51%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 40%;
+    --chart-4: 43 74% 56%;
+    --chart-5: 27 87% 60%;
+    --radius: 0.625rem;
+    --success: 142 60% 38%;
+    --success-foreground: 40 30% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 20 14% 14%;
+  }
+  .dark {
+    --background: 20 14% 7%;
+    --foreground: 40 30% 96%;
+    --card: 20 14% 10%;
+    --card-foreground: 40 30% 96%;
+    --popover: 20 14% 9%;
+    --popover-foreground: 40 30% 96%;
+    --primary: 12 80% 55%;
+    --primary-foreground: 20 14% 8%;
+    --secondary: 20 10% 16%;
+    --secondary-foreground: 40 30% 96%;
+    --muted: 20 10% 16%;
+    --muted-foreground: 40 15% 65%;
+    --accent: 20 10% 18%;
+    --accent-foreground: 40 30% 96%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 40 30% 96%;
+    --border: 20 10% 20%;
+    --input: 20 10% 20%;
+    --ring: 12 80% 55%;
+    --chart-1: 12 76% 55%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --success: 142 55% 48%;
+    --success-foreground: 20 14% 8%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 20 14% 8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display), Georgia, serif;
+  }
+}
+
+@layer utilities {
+  .container-px {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .text-balance { text-wrap: balance; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+.animate-shimmer {
+  animation: shimmer 1.6s infinite linear;
+  background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--accent)) 50%, hsl(var(--muted)) 100%);
+  background-size: 1000px 100%;
+}
