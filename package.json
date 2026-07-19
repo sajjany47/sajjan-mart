@@ -3,11 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "dotenv -e .env.development -- next dev",
+    "build": "dotenv -e .env.production -- next build",
+    "start": "dotenv -e .env.production -- next start",
+    "prod": "dotenv -e .env.production -- next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "supabase:start": "npx supabase start",
+    "supabase:stop": "npx supabase stop"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -70,5 +73,8 @@
     "typescript": "5.2.2",
     "vaul": "^0.9.9",
     "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^11.0.0"
   }
 }
