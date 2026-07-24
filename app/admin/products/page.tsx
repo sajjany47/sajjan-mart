@@ -55,7 +55,7 @@ export default function AdminProductsPage() {
   }
 
   useEffect(() => {
-    supabase.from('categories').select('*').order('sort_order').then(({ data }) => setCategories((data ?? []) as Category[]));
+    supabase.from('categories').select('*').order('sort_order').then(({ data }: any) => setCategories((data ?? []) as Category[]));
     load();
   }, []);
 

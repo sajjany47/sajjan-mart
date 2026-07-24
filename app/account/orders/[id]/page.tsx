@@ -26,7 +26,7 @@ export default function OrderDetailPage() {
       .eq('id', id)
       .eq('user_id', user.id)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data }: any) => {
         setOrder((data as Order) ?? null);
         setLoading(false);
       });

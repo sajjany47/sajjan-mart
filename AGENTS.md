@@ -11,3 +11,100 @@
   - `npm run build` → loads `.env.production`
   - `npm run start` / `npm run prod` → loads `.env.production`
 - Added `supabase:start` and `supabase:stop` scripts for local Supabase management
+
+## 2026-07-22: Prisma ORM + CRUD API routes + pgAdmin guide
+
+### Prisma Setup
+- Installed `prisma@5.22.0` and `@prisma/client@5.22.0`
+- Created `prisma/schema.prisma` — 19 models mapped from existing Supabase SQL migrations
+- Created `lib/prisma/client.ts` — singleton Prisma client (avoids hot-reload connection leaks)
+- Added package.json scripts:
+  - `npm run prisma:generate` — generate Prisma client from schema
+  - `npm run prisma:push` — push schema to database (dev only)
+  - `npm run prisma:pull` — introspect DB and update schema.prisma
+  - `npm run prisma:studio` — open Prisma Studio GUI
+  - `postinstall` — auto-runs `prisma generate` after npm install
+
+### CRUD API Routes (19 entities, 38 route files)
+All routes live under `app/api/<entity>/` with collection + detail handlers:
+
+| Entity | Endpoints | Key Filters |
+|--------|-----------|-------------|
+| Profiles | `GET/POST /api/profiles`, `GET/PUT/DELETE /api/profiles/[id]` | — |
+| Categories | `GET/POST /api/categories`, `GET/PUT/DELETE /api/categories/[id]` | `?slug=` |
+| SubCategories | `GET/POST /api/sub-categories`, `GET/PUT/DELETE /api/sub-categories/[id]` | `?categoryId=` |
+| Brands | `GET/POST /api/brands`, `GET/PUT/DELETE /api/brands/[id]` | `?slug=` |
+| Products | `GET/POST /api/products`, `GET/PUT/DELETE /api/products/[id]` | `?slug=`, `?active=`, `?featured=`, `?bestSeller=`, `?popular=`, `?todayDeal=`, `?categoryId=`, `?subCategoryId=`, `?brandId=` |
+| ProductImages | `GET/POST /api/product-images`, `GET/PUT/DELETE /api/product-images/[id]` | `?productId=` |
+| ProductVariants | `GET/POST /api/product-variants`, `GET/PUT/DELETE /api/product-variants/[id]` | `?productId=` |
+| Pujas | `GET/POST /api/pujas`, `GET/PUT/DELETE /api/pujas/[id]` | `?slug=`, `?active=` |
+| PujaItems | `GET/POST /api/puja-items`, `GET/PUT/DELETE /api/puja-items/[id]` | `?pujaId=` |
+| Pandits | `GET/POST /api/pandits`, `GET/PUT/DELETE /api/pandits/[id]` | `?active=` |
+| PujaPandits | `GET/POST /api/puja-pandits`, `GET/PUT/DELETE /api/puja-pandits/[id]` | `?pujaId=`, `?panditId=` |
+| Reviews | `GET/POST /api/reviews`, `GET/PUT/DELETE /api/reviews/[id]` | `?userId=`, `?productId=` |
+| Coupons | `GET/POST /api/coupons`, `GET/PUT/DELETE /api/coupons/[id]` | `?active=`, `?code=` |
+| Addresses | `GET/POST /api/addresses`, `GET/PUT/DELETE /api/addresses/[id]` | `?userId=` |
+| Orders | `GET/POST /api/orders`, `GET/PUT/DELETE /api/orders/[id]` | `?userId=`, `?status=` |
+| OrderItems | `GET/POST /api/order-items`, `GET/PUT/DELETE /api/order-items/[id]` | `?orderId=` |
+| Banners | `GET/POST /api/banners`, `GET/PUT/DELETE /api/banners/[id]` | `?active=` |
+| Wishlist | `GET/POST /api/wishlist`, `GET/PUT/DELETE /api/wishlist/[id]` | `?userId=` |
+| SupportTickets | `GET/POST /api/support-tickets`, `GET/PUT/DELETE /api/support-tickets/[id]` | `?userId=`, `?status=` |
+
+### pgAdmin Connection Guide
+To connect pgAdmin to local development PostgreSQL:
+
+1. Start local Supabase: `npx supabase start` (runs PostgreSQL on port 54322)
+2. Open pgAdmin → Add New Server
+3. Fill in:
+   - **Name**: `Sajjan Mart Local`
+   - **Host**: `localhost`
+   - **Port**: `54322`
+   - **Database**: `postgres`
+   - **Username**: `postgres`
+   - **Password**: `postgres`
+4. Save — you'll see all tables under `public` schema
+
+> Tables are created by SQL migrations (`supabase/migrations/`). Run them directly on your PostgreSQL instance via pgAdmin or `psql`.
+
+## 2026-07-22: Supabase removed, NextAuth.js auth, Prisma-based data layer
+
+### Supabase Removal
+- **Removed** `@supabase/supabase-js` dependency — no more Supabase anywhere in the codebase
+- Rewrote `lib/supabase/server.ts` — now wraps **Prisma** queries (same API shape, no Supabase)
+- Rewrote `lib/supabase/client.ts` — now calls **internal API routes** via `fetch` (same API shape, no Supabase)
+- Removed all Supabase auth calls (`supabase.auth.*`) — replaced with NextAuth.js
+- Removed Supabase-specific env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) — only `DATABASE_URL` needed
+
+### NextAuth.js Authentication
+- Installed `next-auth@4`, `@auth/prisma-adapter`, `bcryptjs`
+- Created `lib/auth.ts` — NextAuth config with Prisma adapter + CredentialsProvider
+- Created `app/api/auth/[...nextauth]/route.ts` — auth API route (login, session, etc.)
+- Created `app/api/auth/signup/route.ts` — registration endpoint (creates profile with hashed password)
+- Created `app/api/auth/reset-password/route.ts` — password reset request
+- Created `app/api/auth/update-password/route.ts` — password update (authenticated)
+- Created `components/providers/session-provider.tsx` — wraps NextAuth SessionProvider
+- Rewrote `components/providers/auth-provider.tsx` — now uses NextAuth `useSession` + fetch profile from API
+- Updated `app/layout.tsx` — wraps app in `<SessionProvider>` + `<AuthProvider>`
+- Updated `app/(auth)/login/page.tsx`, `register/page.tsx`, `forgot-password/page.tsx`, `reset-password/page.tsx` — all use NextAuth/API instead of Supabase auth
+
+### Prisma Schema Updates
+- Added `password` and `emailVerified` fields to Profile model
+- Added `Account`, `Session`, `VerificationToken` models for NextAuth compatibility
+
+### Database Migrations
+- Prisma schema (`prisma/schema.prisma`) is the source of truth
+- Use `npx prisma db push` to sync schema to local PostgreSQL
+- Use `npx prisma studio` for visual database management
+- Use pgAdmin connected to `localhost:54322` (local PostgreSQL) for manual queries
+
+### pgAdmin Connection (Updated)
+Local PostgreSQL runs independently (no Supabase required):
+1. Install PostgreSQL locally or run via Docker
+2. Update `DATABASE_URL` in `.env.development`
+3. Open pgAdmin → Register Server:
+   - **Host**: `localhost`
+   - **Port**: `5432` (default PostgreSQL) or `54322` (Supabase-managed PostgreSQL)
+   - **Database**: `postgres`
+   - **Username**: `postgres`
+   - **Password**: `postgres`
+4. Run SQL migrations from `supabase/migrations/` on your PostgreSQL instance

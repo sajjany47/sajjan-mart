@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
 import { ThemeProvider } from '@/components/providers/theme-provider';
+import { SessionProvider } from '@/components/providers/session-provider';
 import { AuthProvider } from '@/components/providers/auth-provider';
 import { CartProvider } from '@/components/providers/cart-provider';
 import { Toaster } from '@/components/ui/sonner';
@@ -25,12 +26,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
         <ThemeProvider>
+          <SessionProvider>
           <AuthProvider>
             <CartProvider>
               {children}
               <Toaster richColors position="top-right" />
             </CartProvider>
           </AuthProvider>
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>

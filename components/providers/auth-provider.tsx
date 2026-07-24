@@ -1,13 +1,12 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import type { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase/client';
+import { signIn as nextAuthSignIn, signOut as nextAuthSignOut, useSession } from 'next-auth/react';
 import type { Profile, UserRole } from '@/lib/types';
 
 interface AuthContextValue {
-  user: User | null;
-  session: Session | null;
+  user: { id: string; email: string; name?: string | null; image?: string | null } | null;
+  session: any;
   profile: Profile | null;
   role: UserRole | null;
   loading: boolean;
@@ -20,78 +19,65 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const { data: session, status } = useSession();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
 
-  async function loadProfile(uid: string) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', uid)
-      .maybeSingle();
-    setProfile(data as Profile | null);
+  async function loadProfile(userId: string) {
+    try {
+      const res = await fetch(`/api/profiles/${userId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setProfile(data);
+      }
+    } catch {
+      setProfile(null);
+    } finally {
+      setProfileLoading(false);
+    }
   }
 
   useEffect(() => {
-    let mounted = true;
+    if (session?.user) {
+      loadProfile((session.user as any).id);
+    } else {
+      setProfile(null);
+      setProfileLoading(false);
+    }
+  }, [session]);
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      if (data.session?.user) {
-        loadProfile(data.session.user.id).finally(() => mounted && setLoading(false));
-      } else {
-        setLoading(false);
-      }
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      (async () => {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        if (newSession?.user) {
-          await loadProfile(newSession.user.id);
-        } else {
-          setProfile(null);
-        }
-        setLoading(false);
-      })();
-    });
-
-    return () => {
-      mounted = false;
-      listener.subscription.unsubscribe();
-    };
-  }, []);
+  const user = session?.user
+    ? { id: (session.user as any).id, email: session.user.email!, name: session.user.name, image: session.user.image }
+    : null;
 
   async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+    const result = await nextAuthSignIn('credentials', {
+      email,
+      password,
+      redirect: false,
+    });
+    return { error: result?.error ?? null };
   }
 
   async function signUp(email: string, password: string, fullName: string) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName } },
-    });
-    if (error) return { error: error.message };
-    if (data.user) {
-      await supabase.from('profiles').upsert({
-        id: data.user.id,
-        email,
-        full_name: fullName,
-        role: 'customer',
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, fullName }),
       });
+      if (!res.ok) {
+        const { error } = await res.json();
+        return { error: error ?? 'Registration failed' };
+      }
+      return { error: null };
+    } catch {
+      return { error: 'Registration failed' };
     }
-    return { error: null };
   }
 
   async function signOut() {
-    await supabase.auth.signOut();
+    await nextAuthSignOut();
     setProfile(null);
   }
 
@@ -106,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         profile,
         role: profile?.role ?? null,
-        loading,
+        loading: status === 'loading' || profileLoading,
         signIn,
         signUp,
         signOut,

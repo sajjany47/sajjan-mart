@@ -43,7 +43,7 @@ export default function CheckoutPage() {
       .select('*')
       .eq('user_id', user.id)
       .order('is_default', { ascending: false })
-      .then(({ data }) => {
+      .then(({ data }: any) => {
         setAddresses((data ?? []) as Address[]);
         if (data && data.length > 0) setSelectedAddressId(data[0].id);
       });

@@ -98,7 +98,7 @@ export function ShopClient({ filters, searchParams }: Props) {
     query = query.range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 
     setLoading(true);
-    query.then(({ data, count, error }) => {
+    query.then(({ data, count, error }: any) => {
       if (error) {
         setProducts([]);
         setTotal(0);

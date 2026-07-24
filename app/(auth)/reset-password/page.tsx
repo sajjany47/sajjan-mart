@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 
 export default function ResetPasswordPage() {
@@ -20,13 +19,23 @@ export default function ResetPasswordPage() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success('Password updated. Please sign in.');
-      router.push('/login');
+    try {
+      const res = await fetch('/api/auth/update-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      setLoading(false);
+      if (!res.ok) {
+        const { error } = await res.json();
+        toast.error(error || 'Failed to update password');
+      } else {
+        toast.success('Password updated. Please sign in.');
+        router.push('/login');
+      }
+    } catch {
+      setLoading(false);
+      toast.error('Failed to update password');
     }
   }
 

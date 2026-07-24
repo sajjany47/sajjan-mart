@@ -24,7 +24,7 @@ export default function AdminDashboard() {
         products: p.count ?? 0,
         orders: orders.length,
         customers: c.count ?? 0,
-        revenue: orders.reduce((s, o) => s + Number(o.total), 0),
+        revenue: orders.reduce((s: any, o: any) => s + Number(o.total), 0),
       });
       setRecent(orders);
       setLoading(false);
