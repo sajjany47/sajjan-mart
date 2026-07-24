@@ -128,7 +128,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
                   />
                 ))}
                 <span className="ml-1 text-sm text-muted-foreground">
-                  {product.rating.toFixed(1)} ({product.review_count})
+                  {Number(product.rating).toFixed(1)} ({product.review_count})
                 </span>
               </div>
             </div>

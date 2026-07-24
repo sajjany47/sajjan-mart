@@ -104,7 +104,7 @@ export function ProductCard({ product }: { product: Product }) {
 
         <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
           <Star className="h-3 w-3 fill-warning text-warning" />
-          <span>{product.rating.toFixed(1)}</span>
+          <span>{Number(product.rating).toFixed(1)}</span>
           <span>·</span>
           <span>{product.review_count} reviews</span>
         </div>

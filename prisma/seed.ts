@@ -1,0 +1,245 @@
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+async function main() {
+  console.log('Seeding database...');
+
+  // Categories
+  const categories = await Promise.all([
+    prisma.category.upsert({
+      where: { slug: 'food' },
+      update: {},
+      create: { name: 'Food', slug: 'food', description: 'Cloud kitchen - fresh meals delivered hot', imageUrl: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=600', sortOrder: 1 },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'puja-samagri' },
+      update: {},
+      create: { name: 'Puja Samagri', slug: 'puja-samagri', description: 'Complete puja packages with pandit booking', imageUrl: 'https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=600', sortOrder: 2 },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'natural-products' },
+      update: {},
+      create: { name: 'Natural Products', slug: 'natural-products', description: 'Farm-fresh organic products direct from farmers', imageUrl: 'https://images.pexels.com/photos/2255935/pexels-photo-2255935.jpeg?auto=compress&cs=tinysrgb&w=600', sortOrder: 3 },
+    }),
+    prisma.category.upsert({
+      where: { slug: 'general' },
+      update: {},
+      create: { name: 'General', slug: 'general', description: 'Everything else - electronics, fashion, home and more', imageUrl: 'https://images.pexels.com/photos/4498136/pexels-photo-4498136.jpeg?auto=compress&cs=tinysrgb&w=600', sortOrder: 4 },
+    }),
+  ]);
+  console.log(`Upserted ${categories.length} categories`);
+
+  const [food, pujaSamagri, natural, general] = categories;
+
+  // Subcategories
+  const subCategories = await Promise.all([
+    prisma.subCategory.create({ data: { categoryId: food.id, name: 'Pizza', slug: 'pizza' } }),
+    prisma.subCategory.create({ data: { categoryId: food.id, name: 'Burger', slug: 'burger' } }),
+    prisma.subCategory.create({ data: { categoryId: food.id, name: 'Momos', slug: 'momos' } }),
+    prisma.subCategory.create({ data: { categoryId: food.id, name: 'Biryani', slug: 'biryani' } }),
+    prisma.subCategory.create({ data: { categoryId: food.id, name: 'Rolls', slug: 'rolls' } }),
+    prisma.subCategory.create({ data: { categoryId: food.id, name: 'Beverages', slug: 'beverages' } }),
+    prisma.subCategory.create({ data: { categoryId: natural.id, name: 'Oils', slug: 'oils' } }),
+    prisma.subCategory.create({ data: { categoryId: natural.id, name: 'Grains', slug: 'grains' } }),
+    prisma.subCategory.create({ data: { categoryId: natural.id, name: 'Spices', slug: 'spices' } }),
+    prisma.subCategory.create({ data: { categoryId: natural.id, name: 'Honey & Ghee', slug: 'honey-ghee' } }),
+    prisma.subCategory.create({ data: { categoryId: general.id, name: 'Electronics', slug: 'electronics' } }),
+    prisma.subCategory.create({ data: { categoryId: general.id, name: 'Fashion', slug: 'fashion' } }),
+    prisma.subCategory.create({ data: { categoryId: general.id, name: 'Home & Kitchen', slug: 'home-kitchen' } }),
+    prisma.subCategory.create({ data: { categoryId: general.id, name: 'Beauty', slug: 'beauty' } }),
+  ]);
+  console.log(`Created ${subCategories.length} subcategories`);
+
+  const [pizza, burger, momos, biryani, rolls, beverages, oils, grains, spices, honeyGhee, electronics, fashion, homeKitchen, beauty] = subCategories;
+
+  // Brands
+  const brands = await Promise.all([
+    prisma.brand.upsert({ where: { slug: 'sajjan-kitchen' }, update: {}, create: { name: 'Sajjan Kitchen', slug: 'sajjan-kitchen' } }),
+    prisma.brand.upsert({ where: { slug: 'farm-fresh' }, update: {}, create: { name: 'Farm Fresh', slug: 'farm-fresh' } }),
+    prisma.brand.upsert({ where: { slug: 'pure-organic' }, update: {}, create: { name: 'Pure Organic', slug: 'pure-organic' } }),
+    prisma.brand.upsert({ where: { slug: 'technova' }, update: {}, create: { name: 'TechNova', slug: 'technova' } }),
+    prisma.brand.upsert({ where: { slug: 'urbanwear' }, update: {}, create: { name: 'UrbanWear', slug: 'urbanwear' } }),
+    prisma.brand.upsert({ where: { slug: 'homestyle' }, update: {}, create: { name: 'HomeStyle', slug: 'homestyle' } }),
+  ]);
+  console.log(`Upserted ${brands.length} brands`);
+
+  const [sajjanKitchen, farmFresh, pureOrganic, techNova, urbanwear, homestyle] = brands;
+
+  // Banners
+  const banners = [
+    { title: 'Sajjan Mart - One Stop for Everything', subtitle: 'Food, Puja Samagri, Natural Products & More', imageUrl: 'https://images.pexels.com/photos/5650049/pexels-photo-5650049.jpeg?auto=compress&cs=tinysrgb&w=1600', ctaText: 'Shop Now', ctaLink: '/shop', sortOrder: 1 },
+    { title: 'Fresh from our Cloud Kitchen', subtitle: 'Hot meals delivered to your door', imageUrl: 'https://images.pexels.com/photos/1640774/pexels-photo-1640774.jpeg?auto=compress&cs=tinysrgb&w=1600', ctaText: 'Order Food', ctaLink: '/category/food', sortOrder: 2 },
+    { title: 'Complete Puja Packages', subtitle: 'Pandit + Samagri in one booking', imageUrl: 'https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=1600', ctaText: 'Book Puja', ctaLink: '/puja', sortOrder: 3 },
+    { title: '100% Organic, Direct from Farmers', subtitle: 'No chemicals, no adulteration', imageUrl: 'https://images.pexels.com/photos/2255935/pexels-photo-2255935.jpeg?auto=compress&cs=tinysrgb&w=1600', ctaText: 'Explore', ctaLink: '/category/natural-products', sortOrder: 4 },
+  ];
+  for (const b of banners) await prisma.banner.create({ data: b });
+  console.log(`Created ${banners.length} banners`);
+
+  // Coupons
+  const coupons = [
+    { code: 'WELCOME10', description: '10% off on first order', discountPercent: 10, maxDiscount: 200, minOrder: 500, validUntil: new Date(Date.now() + 365 * 86400000) },
+    { code: 'SAJJAN20', description: '20% off - max Rs 500', discountPercent: 20, maxDiscount: 500, minOrder: 1000, validUntil: new Date(Date.now() + 90 * 86400000) },
+    { code: 'PUJA15', description: '15% off on puja bookings', discountPercent: 15, maxDiscount: 300, minOrder: 600, validUntil: new Date(Date.now() + 180 * 86400000) },
+  ];
+  for (const c of coupons) await prisma.coupon.upsert({ where: { code: c.code }, update: {}, create: c });
+  console.log(`Created ${coupons.length} coupons`);
+
+  // Food products
+  const foodProducts = [
+    { name: 'Margherita Pizza', slug: 'margherita-pizza', description: 'Classic pizza with fresh mozzarella, basil and tomato sauce', categoryId: food.id, subCategoryId: pizza.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 249, discountPercent: 10, rating: 4.5, reviewCount: 128, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true, metadata: { ingredients: ['mozzarella', 'basil', 'tomato sauce'], prepTime: '20 min', veg: true } },
+    { name: 'Chicken Tikka Pizza', slug: 'chicken-tikka-pizza', description: 'Tandoori chicken tikka with onions, capsicum and mint mayo', categoryId: food.id, subCategoryId: pizza.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 349, discountPercent: 15, rating: 4.7, reviewCount: 96, isFeatured: true, isBestSeller: true, isPopular: true, metadata: { ingredients: ['chicken tikka', 'onion', 'capsicum'], prepTime: '25 min', veg: false } },
+    { name: 'Classic Veg Burger', slug: 'classic-veg-burger', description: 'Crispy patty with cheese, lettuce and tomato', categoryId: food.id, subCategoryId: burger.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 129, rating: 4.3, reviewCount: 210, isBestSeller: true, isPopular: true, isTodayDeal: true, metadata: { ingredients: ['veg patty', 'cheese', 'lettuce'], prepTime: '15 min', veg: true } },
+    { name: 'Steamed Veg Momos', slug: 'steamed-veg-momos', description: '8 pieces of steamed dumplings with spicy chutney', categoryId: food.id, subCategoryId: momos.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 99, rating: 4.6, reviewCount: 320, isFeatured: true, isBestSeller: true, isPopular: true, metadata: { ingredients: ['flour', 'cabbage', 'carrot'], prepTime: '18 min', veg: true } },
+    { name: 'Chicken Biryani', slug: 'chicken-biryani', description: 'Fragrant basmati rice with marinated chicken and aromatic spices', categoryId: food.id, subCategoryId: biryani.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 229, discountPercent: 12, rating: 4.8, reviewCount: 410, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true, metadata: { ingredients: ['basmati rice', 'chicken', 'saffron'], prepTime: '30 min', veg: false } },
+    { name: 'Chicken Popcorn', slug: 'chicken-popcorn', description: 'Bite-sized crispy chicken pieces with dip', categoryId: food.id, subCategoryId: rolls.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 179, rating: 4.4, reviewCount: 88, isPopular: true, metadata: { ingredients: ['chicken', 'flour', 'spices'], prepTime: '12 min', veg: false } },
+    { name: 'Paneer Roll', slug: 'paneer-roll', description: 'Tandoori paneer wrapped in soft roti with mint chutney', categoryId: food.id, subCategoryId: rolls.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 149, rating: 4.5, reviewCount: 142, isBestSeller: true, isPopular: true, metadata: { ingredients: ['paneer', 'roti', 'onion'], prepTime: '10 min', veg: true } },
+    { name: 'French Fries', slug: 'french-fries', description: 'Crispy golden fries with peri peri seasoning', categoryId: food.id, subCategoryId: rolls.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 89, rating: 4.2, reviewCount: 180, isBestSeller: true, isPopular: true, isTodayDeal: true, metadata: { ingredients: ['potato', 'peri peri'], prepTime: '8 min', veg: true } },
+    { name: 'Cold Coffee', slug: 'cold-coffee', description: 'Chilled creamy coffee with ice cream', categoryId: food.id, subCategoryId: beverages.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 119, rating: 4.6, reviewCount: 75, isPopular: true, metadata: { ingredients: ['coffee', 'milk', 'ice cream'], prepTime: '5 min', veg: true } },
+  ];
+  for (const p of foodProducts) {
+    await prisma.product.upsert({ where: { slug: p.slug }, update: {}, create: p as any });
+  }
+  console.log(`Created ${foodProducts.length} food products`);
+
+  // Natural products
+  const naturalProducts = [
+    { name: 'Cold Pressed Mustard Oil', slug: 'cold-pressed-mustard-oil', description: 'Traditional wood-pressed mustard oil from organic seeds', categoryId: natural.id, subCategoryId: oils.id, brandId: farmFresh.id, productType: 'natural', basePrice: 320, discountPercent: 5, rating: 4.7, reviewCount: 64, isFeatured: true, isBestSeller: true, isPopular: true },
+    { name: 'Organic Turmeric Powder', slug: 'organic-turmeric-powder', description: 'High-curcumin turmeric, sun-dried and stone-ground', categoryId: natural.id, subCategoryId: spices.id, brandId: pureOrganic.id, productType: 'natural', basePrice: 180, rating: 4.8, reviewCount: 92, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
+    { name: 'Premium Basmati Rice', slug: 'premium-basmati-rice', description: 'Aged 2-year basmati from the foothills of Himalayas', categoryId: natural.id, subCategoryId: grains.id, brandId: farmFresh.id, productType: 'natural', basePrice: 450, discountPercent: 8, rating: 4.6, reviewCount: 48, isFeatured: true, isBestSeller: true, isPopular: true },
+    { name: 'Whole Wheat Atta', slug: 'whole-wheat-atta', description: 'Stone-ground wheat flour from MP Sharbati wheat', categoryId: natural.id, subCategoryId: grains.id, brandId: farmFresh.id, productType: 'natural', basePrice: 240, rating: 4.5, reviewCount: 56, isBestSeller: true, isPopular: true },
+    { name: 'Raw Forest Honey', slug: 'raw-forest-honey', description: 'Multi-floral raw honey harvested by tribal communities', categoryId: natural.id, subCategoryId: honeyGhee.id, brandId: pureOrganic.id, productType: 'natural', basePrice: 380, discountPercent: 10, rating: 4.9, reviewCount: 110, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
+    { name: 'A2 Desi Cow Ghee', slug: 'a2-desi-cow-ghee', description: 'Bilona method ghee from grass-fed Gir cows', categoryId: natural.id, subCategoryId: honeyGhee.id, brandId: pureOrganic.id, productType: 'natural', basePrice: 890, discountPercent: 5, rating: 4.9, reviewCount: 78, isFeatured: true, isBestSeller: true, isPopular: true },
+    { name: 'Organic Toor Dal', slug: 'organic-toor-dal', description: 'Unpolished toor dal, rich in protein', categoryId: natural.id, subCategoryId: grains.id, brandId: farmFresh.id, productType: 'natural', basePrice: 160, rating: 4.4, reviewCount: 36, isPopular: true },
+    { name: 'Whole Spices Combo', slug: 'whole-spices-combo', description: 'Mixed whole spices - cardamom, clove, cinnamon, bay leaf', categoryId: natural.id, subCategoryId: spices.id, brandId: pureOrganic.id, productType: 'natural', basePrice: 520, discountPercent: 12, rating: 4.7, reviewCount: 44, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
+    { name: 'Ragi Millet Flour', slug: 'ragi-millet-flour', description: 'Calcium-rich finger millet flour', categoryId: natural.id, subCategoryId: grains.id, brandId: farmFresh.id, productType: 'natural', basePrice: 140, rating: 4.5, reviewCount: 28, isPopular: true },
+  ];
+  for (const p of naturalProducts) {
+    await prisma.product.upsert({ where: { slug: p.slug }, update: {}, create: p as any });
+  }
+  console.log(`Created ${naturalProducts.length} natural products`);
+
+  // General products
+  const generalProducts = [
+    { name: 'Wireless Bluetooth Earbuds', slug: 'wireless-bluetooth-earbuds', description: 'True wireless earbuds with ANC and 30hr playback', categoryId: general.id, subCategoryId: electronics.id, brandId: techNova.id, productType: 'general', basePrice: 1999, discountPercent: 25, rating: 4.4, reviewCount: 540, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
+    { name: 'Smart Fitness Band', slug: 'smart-fitness-band', description: 'Heart rate, SpO2, sleep tracking with 14-day battery', categoryId: general.id, subCategoryId: electronics.id, brandId: techNova.id, productType: 'general', basePrice: 1499, discountPercent: 15, rating: 4.3, reviewCount: 320, isFeatured: true, isBestSeller: true, isPopular: true },
+    { name: 'Cotton Casual Shirt', slug: 'cotton-casual-shirt', description: 'Breathable cotton shirt for everyday wear', categoryId: general.id, subCategoryId: fashion.id, brandId: urbanwear.id, productType: 'general', basePrice: 799, discountPercent: 20, rating: 4.2, reviewCount: 210, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
+    { name: 'Non-stick Cookware Set', slug: 'non-stick-cookware-set', description: '5-piece non-stick cookware with granite coating', categoryId: general.id, subCategoryId: homeKitchen.id, brandId: homestyle.id, productType: 'general', basePrice: 2499, discountPercent: 30, rating: 4.5, reviewCount: 180, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
+    { name: 'Ayurvedic Face Wash', slug: 'ayurvedic-face-wash', description: 'Gentle herbal face wash with neem and turmeric', categoryId: general.id, subCategoryId: beauty.id, brandId: pureOrganic.id, productType: 'general', basePrice: 249, discountPercent: 10, rating: 4.4, reviewCount: 410, isBestSeller: true, isPopular: true },
+    { name: 'Stainless Steel Water Bottle', slug: 'stainless-steel-water-bottle', description: 'Insulated 1L bottle keeps cold 24h', categoryId: general.id, subCategoryId: homeKitchen.id, brandId: homestyle.id, productType: 'general', basePrice: 599, rating: 4.6, reviewCount: 260, isBestSeller: true, isPopular: true },
+    { name: 'Yoga Mat Premium', slug: 'yoga-mat-premium', description: '6mm anti-slip TPE yoga mat with carry strap', categoryId: general.id, subCategoryId: homeKitchen.id, brandId: homestyle.id, productType: 'general', basePrice: 699, discountPercent: 18, rating: 4.5, reviewCount: 150, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
+  ];
+  for (const p of generalProducts) {
+    await prisma.product.upsert({ where: { slug: p.slug }, update: {}, create: p as any });
+  }
+  console.log(`Created ${generalProducts.length} general products`);
+
+  // Product images
+  const allProducts = await prisma.product.findMany();
+  const imageMap: Record<string, string[]> = {
+    'margherita-pizza': ['https://images.pexels.com/photos/315755/pexels-photo-315755.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'chicken-tikka-pizza': ['https://images.pexels.com/photos/708587/pexels-photo-708587.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'classic-veg-burger': ['https://images.pexels.com/photos/1639559/pexels-photo-1639559.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'steamed-veg-momos': ['https://images.pexels.com/photos/7437483/pexels-photo-7437483.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'chicken-biryani': ['https://images.pexels.com/photos/12737656/pexels-photo-12737656.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'chicken-popcorn': ['https://images.pexels.com/photos/60616/fried-food-pan-fry-oil-60616.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'paneer-roll': ['https://images.pexels.com/photos/674572/pexels-photo-674572.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'french-fries': ['https://images.pexels.com/photos/1583884/pexels-photo-1583884.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'cold-coffee': ['https://images.pexels.com/photos/2074130/pexels-photo-2074130.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'cold-pressed-mustard-oil': ['https://images.pexels.com/photos/33783/olive-oil-oil-cooking-oil-olive.jpg?auto=compress&cs=tinysrgb&w=800'],
+    'organic-turmeric-powder': ['https://images.pexels.com/photos/1340116/pexels-photo-1340116.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'premium-basmati-rice': ['https://images.pexels.com/photos/1393382/pexels-photo-1393382.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'whole-wheat-atta': ['https://images.pexels.com/photos/1393382/pexels-photo-1393382.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'raw-forest-honey': ['https://images.pexels.com/photos/33260/bee-honey-sweet-syrup-33260.jpg?auto=compress&cs=tinysrgb&w=800'],
+    'a2-desi-cow-ghee': ['https://images.pexels.com/photos/248412/pexels-photo-248412.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'organic-toor-dal': ['https://images.pexels.com/photos/2282582/pexels-photo-2282582.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'whole-spices-combo': ['https://images.pexels.com/photos/1340116/pexels-photo-1340116.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'ragi-millet-flour': ['https://images.pexels.com/photos/1393382/pexels-photo-1393382.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'wireless-bluetooth-earbuds': ['https://images.pexels.com/photos/3780681/pexels-photo-3780681.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'smart-fitness-band': ['https://images.pexels.com/photos/437037/pexels-photo-437037.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'cotton-casual-shirt': ['https://images.pexels.com/photos/996329/pexels-photo-996329.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'non-stick-cookware-set': ['https://images.pexels.com/photos/4226806/pexels-photo-4226806.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'ayurvedic-face-wash': ['https://images.pexels.com/photos/3373508/pexels-photo-3373508.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'stainless-steel-water-bottle': ['https://images.pexels.com/photos/1188649/pexels-photo-1188649.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'yoga-mat-premium': ['https://images.pexels.com/photos/3823039/pexels-photo-3823039.jpeg?auto=compress&cs=tinysrgb&w=800'],
+  };
+  let imgCount = 0;
+  for (const p of allProducts) {
+    const urls = imageMap[p.slug];
+    if (urls) {
+      for (let i = 0; i < urls.length; i++) {
+        await prisma.productImage.create({ data: { productId: p.id, url: urls[i], alt: p.name, sortOrder: i } });
+        imgCount++;
+      }
+    }
+  }
+  console.log(`Created ${imgCount} product images`);
+
+  // Pujas
+  const pujas = [
+    { name: 'Satyanarayan Puja', slug: 'satyanarayan-puja', description: 'Performed for prosperity, harmony and family well-being', imageUrl: 'https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=800', basePrice: 1100 },
+    { name: 'Durga Puja', slug: 'durga-puja', description: 'Worship of Goddess Durga for strength and protection', imageUrl: 'https://images.pexels.com/photos/8230812/pexels-photo-8230812.jpeg?auto=compress&cs=tinysrgb&w=800', basePrice: 2500 },
+    { name: 'Lakshmi Puja', slug: 'lakshmi-puja', description: 'Inviting Goddess Lakshmi for wealth and prosperity', imageUrl: 'https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=800', basePrice: 1300 },
+    { name: 'Ganesh Puja', slug: 'ganesh-puja', description: 'Worship of Lord Ganesha for new beginnings and obstacle removal', imageUrl: 'https://images.pexels.com/photos/8230812/pexels-photo-8230812.jpeg?auto=compress&cs=tinysrgb&w=800', basePrice: 1000 },
+    { name: 'Griha Pravesh', slug: 'griha-pravesh', description: 'Housewarming puja for peace and positivity in new home', imageUrl: 'https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=800', basePrice: 2100 },
+    { name: 'Navgraha Puja', slug: 'navgraha-puja', description: 'Puja to pacify the nine planets and reduce negative effects', imageUrl: 'https://images.pexels.com/photos/8230812/pexels-photo-8230812.jpeg?auto=compress&cs=tinysrgb&w=800', basePrice: 1800 },
+    { name: 'Mundan Sanskar', slug: 'mundan-sanskar', description: 'First haircut ceremony for the child', imageUrl: 'https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=800', basePrice: 800 },
+    { name: 'Marriage Puja', slug: 'marriage-puja', description: 'Complete marriage ceremony with all rituals', imageUrl: 'https://images.pexels.com/photos/8230812/pexels-photo-8230812.jpeg?auto=compress&cs=tinysrgb&w=800', basePrice: 5100 },
+  ];
+  for (const p of pujas) {
+    await prisma.puja.upsert({ where: { slug: p.slug }, update: {}, create: p });
+  }
+  console.log(`Created ${pujas.length} pujas`);
+
+  // Puja items
+  const allPujas = await prisma.puja.findMany();
+  const pujaItemTemplates = [
+    { name: 'Coconut', unit: 'pc', price: 40, defaultQty: 1, sortOrder: 1 },
+    { name: 'Agarbatti', unit: 'pack', price: 25, defaultQty: 2, sortOrder: 2 },
+    { name: 'Camphor', unit: 'pack', price: 50, defaultQty: 1, sortOrder: 3 },
+    { name: 'Ghee', unit: 'kg', price: 250, defaultQty: 1, sortOrder: 4 },
+    { name: 'Rice', unit: 'kg', price: 60, defaultQty: 1, sortOrder: 5 },
+    { name: 'Flowers', unit: 'bunch', price: 50, defaultQty: 2, sortOrder: 6 },
+    { name: 'Kalash', unit: 'pc', price: 120, defaultQty: 1, sortOrder: 7 },
+    { name: 'Betel Leaf', unit: 'bunch', price: 30, defaultQty: 1, sortOrder: 8 },
+    { name: 'Fruits', unit: 'kg', price: 100, defaultQty: 2, sortOrder: 9 },
+  ];
+  let pujaItemCount = 0;
+  for (const puja of allPujas) {
+    for (const item of pujaItemTemplates) {
+      await prisma.pujaItem.create({ data: { pujaId: puja.id, ...item } });
+      pujaItemCount++;
+    }
+  }
+  console.log(`Created ${pujaItemCount} puja items`);
+
+  // Pandits
+  const pandits = [
+    { name: 'Pandit Ravi Shastri', experience: 15, languages: ['Hindi', 'Sanskrit', 'English'], rating: 4.9, price: 500, photoUrl: 'https://images.pexels.com/photos/220277/pexels-photo-220277.jpeg?auto=compress&cs=tinysrgb&w=400', bio: 'Vedic scholar specializing in Satyanarayan and Griha Pravesh pujas' },
+    { name: 'Pandit Anand Joshi', experience: 12, languages: ['Hindi', 'Marathi', 'Sanskrit'], rating: 4.8, price: 450, photoUrl: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=400', bio: 'Expert in all 16 sanskaras and marriage ceremonies' },
+    { name: 'Pandit Krishna Iyer', experience: 20, languages: ['Tamil', 'Sanskrit', 'English'], rating: 5.0, price: 600, photoUrl: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=400', bio: 'South Indian Vedic rituals and Navgraha pujas' },
+    { name: 'Pandit Suresh Upadhyay', experience: 8, languages: ['Hindi', 'Bhojpuri', 'Sanskrit'], rating: 4.6, price: 350, photoUrl: 'https://images.pexels.com/photos/220277/pexels-photo-220277.jpeg?auto=compress&cs=tinysrgb&w=400', bio: 'Specialist in Mundan and small home pujas' },
+  ];
+  const panditRecords = [];
+  for (const p of pandits) {
+    const record = await prisma.pandit.create({ data: p });
+    panditRecords.push(record);
+  }
+  console.log(`Created ${panditRecords.length} pandits`);
+
+  // Assign pandits to all pujas
+  let pujaPanditCount = 0;
+  for (const puja of allPujas) {
+    for (const pandit of panditRecords) {
+      await prisma.pujaPandit.create({ data: { pujaId: puja.id, panditId: pandit.id } });
+      pujaPanditCount++;
+    }
+  }
+  console.log(`Created ${pujaPanditCount} puja-pandit assignments`);
+
+  console.log('Seed complete!');
+}
+
+main()
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());

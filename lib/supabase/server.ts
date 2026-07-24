@@ -31,10 +31,28 @@ function toCamel(s: string): string {
   return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
 }
 
+function toSnake(s: string): string {
+  return s.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+}
+
 function convertKeys(obj: Record<string, any>): Record<string, any> {
   const out: Record<string, any> = {};
   for (const [k, v] of Object.entries(obj)) {
     out[toCamel(k)] = v;
+  }
+  return out;
+}
+
+function toSnakeCaseKeys(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj !== 'object') return obj;
+  if (obj instanceof Date) return obj;
+  if (Array.isArray(obj)) return obj.map(toSnakeCaseKeys);
+  if (typeof obj.toNumber === 'function') return obj.toNumber();
+
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    out[toSnake(k)] = toSnakeCaseKeys(v);
   }
   return out;
 }
@@ -90,7 +108,7 @@ function makeQueryBuilder(model: PrismaModel) {
     async maybeSingle() {
       const where = convertKeys(filters);
       const result = await model.findFirst({ where });
-      return { data: result || null, error: null };
+      return { data: result ? toSnakeCaseKeys(result) : null, error: null };
     },
     async then(resolve: any) {
       const where = convertKeys(filters);
@@ -99,7 +117,8 @@ function makeQueryBuilder(model: PrismaModel) {
       if (takeVal) args.take = takeVal;
       if (skipVal) args.skip = skipVal;
       const result = await model.findMany(args);
-      return resolve({ data: result, count: result.length, error: null });
+      const converted = result.map(toSnakeCaseKeys);
+      return resolve({ data: converted, count: converted.length, error: null });
     },
   };
 
