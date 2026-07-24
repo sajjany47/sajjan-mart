@@ -11,14 +11,13 @@
     "typecheck": "tsc --noEmit",
     "supabase:start": "npx supabase start",
     "supabase:stop": "npx supabase stop",
-    "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push",
-    "prisma:pull": "prisma db pull",
-    "prisma:studio": "prisma studio",
+    "prisma:generate": "dotenv -e .env.development -- prisma generate",
+    "prisma:push": "dotenv -e .env.development -- prisma db push",
+    "prisma:pull": "dotenv -e .env.development -- prisma db pull",
+    "prisma:studio": "dotenv -e .env.development -- prisma studio",
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "^2.11.3",
     "@hookform/resolvers": "^3.9.0",
     "@netlify/plugin-nextjs": "^5.15.1",
     "@next/swc-wasm-nodejs": "13.5.1",
@@ -63,9 +62,9 @@
     "eslint": "8.49.0",
     "eslint-config-next": "13.5.1",
     "input-otp": "^1.2.4",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.446.0",
     "next": "13.5.1",
-    "next-auth": "^4.24.15",
     "next-themes": "^0.3.0",
     "postcss": "8.4.30",
     "prisma": "^5.22.0",
@@ -84,6 +83,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "dotenv-cli": "^11.0.0"
   }
 }

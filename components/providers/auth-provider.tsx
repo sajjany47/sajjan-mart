@@ -1,12 +1,18 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { signIn as nextAuthSignIn, signOut as nextAuthSignOut, useSession } from 'next-auth/react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import type { Profile, UserRole } from '@/lib/types';
 
+interface AuthUser {
+  id: string;
+  email: string;
+  name?: string | null;
+  image?: string | null;
+  role?: string;
+}
+
 interface AuthContextValue {
-  user: { id: string; email: string; name?: string | null; image?: string | null } | null;
-  session: any;
+  user: AuthUser | null;
   profile: Profile | null;
   role: UserRole | null;
   loading: boolean;
@@ -19,44 +25,51 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { data: session, status } = useSession();
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  async function loadProfile(userId: string) {
+  const loadProfile = useCallback(async () => {
     try {
-      const res = await fetch(`/api/profiles/${userId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setProfile(data);
+      const res = await fetch('/api/auth/me');
+      if (!res.ok) {
+        setUser(null);
+        setProfile(null);
+        return;
+      }
+      const data = await res.json();
+      if (data.user) {
+        setUser(data.user);
+        const profileRes = await fetch(`/api/profiles/${data.user.id}`);
+        if (profileRes.ok) {
+          setProfile(await profileRes.json());
+        }
       }
     } catch {
+      setUser(null);
       setProfile(null);
-    } finally {
-      setProfileLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
-    if (session?.user) {
-      loadProfile((session.user as any).id);
-    } else {
-      setProfile(null);
-      setProfileLoading(false);
-    }
-  }, [session]);
-
-  const user = session?.user
-    ? { id: (session.user as any).id, email: session.user.email!, name: session.user.name, image: session.user.image }
-    : null;
+    loadProfile().finally(() => setLoading(false));
+  }, [loadProfile]);
 
   async function signIn(email: string, password: string) {
-    const result = await nextAuthSignIn('credentials', {
-      email,
-      password,
-      redirect: false,
-    });
-    return { error: result?.error ?? null };
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) return { error: data.error ?? 'Login failed' };
+      setUser(data.user);
+      await loadProfile();
+      return { error: null };
+    } catch {
+      return { error: 'Login failed' };
+    }
   }
 
   async function signUp(email: string, password: string, fullName: string) {
@@ -66,10 +79,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, fullName }),
       });
-      if (!res.ok) {
-        const { error } = await res.json();
-        return { error: error ?? 'Registration failed' };
-      }
+      const data = await res.json();
+      if (!res.ok) return { error: data.error ?? 'Registration failed' };
       return { error: null };
     } catch {
       return { error: 'Registration failed' };
@@ -77,22 +88,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
-    await nextAuthSignOut();
+    await fetch('/api/auth/logout', { method: 'POST' });
+    setUser(null);
     setProfile(null);
   }
 
   async function refreshProfile() {
-    if (user) await loadProfile(user.id);
+    await loadProfile();
   }
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        session,
         profile,
         role: profile?.role ?? null,
-        loading: status === 'loading' || profileLoading,
+        loading,
         signIn,
         signUp,
         signOut,

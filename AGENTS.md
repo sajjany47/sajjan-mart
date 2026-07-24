@@ -108,3 +108,23 @@ Local PostgreSQL runs independently (no Supabase required):
    - **Username**: `postgres`
    - **Password**: `postgres`
 4. Run SQL migrations from `supabase/migrations/` on your PostgreSQL instance
+
+## 2026-07-24: NextAuth removed, JWT auth added
+
+### NextAuth Removal
+- **Removed** `next-auth@4` and `@auth/prisma-adapter` packages
+- **Removed** `lib/auth.ts`, `app/api/auth/[...nextauth]/route.ts`, `components/providers/session-provider.tsx`
+- **Removed** `SessionProvider` from `app/layout.tsx`
+- **Removed** `NEXTAUTH_URL`, `NEXTAUTH_SECRET` env vars — now uses `JWT_SECRET`
+
+### JWT Authentication
+- Installed `jsonwebtoken` + `@types/jsonwebtoken`
+- Created `lib/jwt.ts` — `signToken()`, `verifyToken()` (7-day expiry)
+- Created `app/api/auth/login/route.ts` — validates credentials, returns JWT in cookie
+- Created `app/api/auth/me/route.ts` — verifies JWT from cookie, returns current user
+- Created `app/api/auth/logout/route.ts` — clears token cookie
+- Updated `app/api/auth/update-password/route.ts` — uses JWT instead of NextAuth session
+- Rewrote `components/providers/auth-provider.tsx` — stores user in state, calls `/api/auth/me` on load
+- Updated `app/layout.tsx` — removed `SessionProvider`, kept `AuthProvider`
+- Updated `app/(auth)/forgot-password/page.tsx`, `reset-password/page.tsx` — use JWT-based APIs
+- Added `JWT_SECRET` to both `.env.development` and `.env.production`

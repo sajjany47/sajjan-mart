@@ -27,17 +27,27 @@ const modelMap: Record<string, PrismaModel> = {
   puja_pandits: prisma.pujaPandit as any,
 };
 
+function toCamel(s: string): string {
+  return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+}
+
+function convertKeys(obj: Record<string, any>): Record<string, any> {
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    out[toCamel(k)] = v;
+  }
+  return out;
+}
+
 function makeQueryBuilder(model: PrismaModel) {
   const filters: Record<string, any> = {};
   let orderByField: string | null = null;
   let orderDir: 'asc' | 'desc' = 'asc';
   let takeVal: number | null = null;
   let skipVal: number | null = null;
-  let selectFields: string | null = null;
 
   const builder: any = {
-    select(query: string) {
-      selectFields = query;
+    select(_query?: string) {
       return builder;
     },
     eq(field: string, value: any) {
@@ -61,7 +71,7 @@ function makeQueryBuilder(model: PrismaModel) {
       return builder;
     },
     order(field: string, opts?: { ascending?: boolean }) {
-      orderByField = field;
+      orderByField = toCamel(field);
       orderDir = opts?.ascending === false ? 'desc' : 'asc';
       return builder;
     },
@@ -78,35 +88,18 @@ function makeQueryBuilder(model: PrismaModel) {
       return builder.maybeSingle();
     },
     async maybeSingle() {
-      const where: Record<string, any> = {};
-      for (const [k, v] of Object.entries(filters)) {
-        if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
-          Object.assign(where, { [k]: v });
-        } else {
-          where[k] = v;
-        }
-      }
+      const where = convertKeys(filters);
       const result = await model.findFirst({ where });
       return { data: result || null, error: null };
     },
     async then(resolve: any) {
-      const where: Record<string, any> = {};
-      for (const [k, v] of Object.entries(filters)) {
-        if (typeof v === 'object' && v !== null && !Array.isArray(v) && 'in' in v) {
-          where[k] = { in: (v as any).in };
-        } else if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
-          Object.assign(where, { [k]: v });
-        } else {
-          where[k] = v;
-        }
-      }
+      const where = convertKeys(filters);
       const args: any = { where };
       if (orderByField) args.orderBy = { [orderByField]: orderDir };
       if (takeVal) args.take = takeVal;
       if (skipVal) args.skip = skipVal;
       const result = await model.findMany(args);
-      const count = result.length;
-      return resolve({ data: result, count, error: null });
+      return resolve({ data: result, count: result.length, error: null });
     },
   };
 

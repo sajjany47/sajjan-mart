@@ -139,9 +139,10 @@ function makeClientQueryBuilder(table: string) {
 function makeAuthStub() {
   return {
     async getSession() {
-      const res = await fetch('/api/auth/session');
+      const res = await fetch('/api/auth/me');
+      if (!res.ok) return { data: { session: null }, error: null };
       const data = await res.json();
-      return { data: { session: data || null }, error: null };
+      return { data: { session: data.user ? { user: data.user } : null }, error: null };
     },
     onAuthStateChange(_cb: any) {
       return { data: { subscription: { unsubscribe: () => {} } } };
@@ -153,7 +154,7 @@ function makeAuthStub() {
       return { data: null, error: new Error('Use signUp from useAuth()') };
     },
     async signOut() {
-      await fetch('/api/auth/signout', { method: 'POST' });
+      await fetch('/api/auth/logout', { method: 'POST' });
     },
     async resetPasswordForEmail(email: string, _opts?: any) {
       const res = await fetch('/api/auth/reset-password', {
@@ -164,7 +165,7 @@ function makeAuthStub() {
       return res.ok ? { data: {}, error: null } : { data: null, error: new Error('Failed') };
     },
     async updateUser(_data: any) {
-      return { data: null, error: new Error('Use NextAuth session') };
+      return { data: null, error: new Error('Use useAuth()') };
     },
   };
 }
