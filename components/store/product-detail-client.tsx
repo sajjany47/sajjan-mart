@@ -29,8 +29,8 @@ export function ProductDetailClient({ product, reviews }: Props) {
   const [wished, setWished] = useState(false);
 
   const variant = product.product_variants?.find((v) => v.id === variantId);
-  const basePrice = variant?.price ?? product.base_price;
-  const price = discountedPrice(basePrice, product.discount_percent);
+  const salePrice = variant?.price ?? product.sales_price;
+  const price = discountedPrice(salePrice, product.discount_percent);
 
   async function toggleWishlist() {
     if (!user) {

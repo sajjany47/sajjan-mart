@@ -111,28 +111,38 @@ model Brand {
 }
 
 model Product {
-  id             String        @id @default(dbgenerated("gen_random_uuid()"))
-  name           String
-  slug           String        @unique
-  description    String?
-  categoryId     String        @map("category_id")
-  subCategoryId  String?       @map("sub_category_id")
-  brandId        String?       @map("brand_id")
-  productType    String        @default("general") @map("product_type")
-  basePrice      Decimal       @default(0) @map("base_price")
-  discountPercent Decimal      @default(0) @map("discount_percent")
-  rating         Decimal       @default(0)
-  reviewCount    Int           @default(0) @map("review_count")
-  isFeatured     Boolean       @default(false) @map("is_featured")
-  isBestSeller   Boolean       @default(false) @map("is_best_seller")
-  isPopular      Boolean       @default(false) @map("is_popular")
-  isTodayDeal    Boolean       @default(false) @map("is_today_deal")
-  isActive       Boolean       @default(true) @map("is_active")
-  metadata       Json          @default("{}")
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @default(now()) @map("updated_at")
+  id              String        @id @default(dbgenerated("gen_random_uuid()"))
+  name            String
+  slug            String        @unique
+  description     String?
+  productType     String        @default("general") @map("product_type")
 
-  category      Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  categoryId      String?       @map("category_id")
+  subCategoryId   String?       @map("sub_category_id")
+  brandId         String?       @map("brand_id")
+
+  purchasePrice   Decimal       @default(0) @map("purchase_price")
+  salesPrice      Decimal       @default(0) @map("sales_price")
+  discountPercent Decimal       @default(0) @map("discount_percent")
+  quantityType    String?       @map("quantity_type")
+  quantity        Decimal?
+
+  foodType        String?       @map("food_type")
+  gender          String?
+  productCategory String?       @map("product_category")
+
+  rating          Decimal       @default(0)
+  reviewCount     Int           @default(0) @map("review_count")
+  isFeatured      Boolean       @default(false) @map("is_featured")
+  isBestSeller    Boolean       @default(false) @map("is_best_seller")
+  isPopular       Boolean       @default(false) @map("is_popular")
+  isTodayDeal     Boolean       @default(false) @map("is_today_deal")
+  isActive        Boolean       @default(true) @map("is_active")
+  metadata        Json          @default("{}")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @default(now()) @map("updated_at")
+
+  category      Category?       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   subCategory   SubCategory?    @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
   brand         Brand?          @relation(fields: [brandId], references: [id], onDelete: SetNull)
   images        ProductImage[]

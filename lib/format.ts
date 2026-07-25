@@ -6,8 +6,8 @@ export function formatINR(amount: number): string {
   }).format(amount);
 }
 
-export function discountedPrice(basePrice: number, discountPercent: number): number {
-  return Math.round(basePrice * (1 - discountPercent / 100));
+export function discountedPrice(salesPrice: number, discountPercent: number): number {
+  return Math.round(salesPrice * (1 - discountPercent / 100));
 }
 
 export function slugify(str: string): string {

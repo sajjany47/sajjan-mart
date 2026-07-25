@@ -83,13 +83,13 @@ export function ShopClient({ filters, searchParams }: Props) {
       const brandIds = filters.brands.filter((b) => selectedBrands.includes(b.slug)).map((b) => b.id);
       query = query.in('brand_id', brandIds);
     }
-    query = query.gte('base_price', priceRange[0]).lte('base_price', priceRange[1]);
+    query = query.gte('sales_price', priceRange[0]).lte('sales_price', priceRange[1]);
     if (minRating > 0) query = query.gte('rating', minRating);
     if (deals) query = query.eq('is_today_deal', true);
 
     switch (sort) {
-      case 'price-asc': query = query.order('base_price', { ascending: true }); break;
-      case 'price-desc': query = query.order('base_price', { ascending: false }); break;
+      case 'price-asc': query = query.order('sales_price', { ascending: true }); break;
+      case 'price-desc': query = query.order('sales_price', { ascending: false }); break;
       case 'rating': query = query.order('rating', { ascending: false }); break;
       case 'newest': query = query.order('created_at', { ascending: false }); break;
       default: query = query.order('is_featured', { ascending: false }).order('rating', { ascending: false });

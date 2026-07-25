@@ -33,23 +33,30 @@ async function main() {
   const [food, pujaSamagri, natural, general] = categories;
 
   // Subcategories
-  const subCategories = await Promise.all([
-    prisma.subCategory.create({ data: { categoryId: food.id, name: 'Pizza', slug: 'pizza' } }),
-    prisma.subCategory.create({ data: { categoryId: food.id, name: 'Burger', slug: 'burger' } }),
-    prisma.subCategory.create({ data: { categoryId: food.id, name: 'Momos', slug: 'momos' } }),
-    prisma.subCategory.create({ data: { categoryId: food.id, name: 'Biryani', slug: 'biryani' } }),
-    prisma.subCategory.create({ data: { categoryId: food.id, name: 'Rolls', slug: 'rolls' } }),
-    prisma.subCategory.create({ data: { categoryId: food.id, name: 'Beverages', slug: 'beverages' } }),
-    prisma.subCategory.create({ data: { categoryId: natural.id, name: 'Oils', slug: 'oils' } }),
-    prisma.subCategory.create({ data: { categoryId: natural.id, name: 'Grains', slug: 'grains' } }),
-    prisma.subCategory.create({ data: { categoryId: natural.id, name: 'Spices', slug: 'spices' } }),
-    prisma.subCategory.create({ data: { categoryId: natural.id, name: 'Honey & Ghee', slug: 'honey-ghee' } }),
-    prisma.subCategory.create({ data: { categoryId: general.id, name: 'Electronics', slug: 'electronics' } }),
-    prisma.subCategory.create({ data: { categoryId: general.id, name: 'Fashion', slug: 'fashion' } }),
-    prisma.subCategory.create({ data: { categoryId: general.id, name: 'Home & Kitchen', slug: 'home-kitchen' } }),
-    prisma.subCategory.create({ data: { categoryId: general.id, name: 'Beauty', slug: 'beauty' } }),
-  ]);
-  console.log(`Created ${subCategories.length} subcategories`);
+  const subData = [
+    { categoryId: food.id, name: 'Pizza', slug: 'pizza' },
+    { categoryId: food.id, name: 'Burger', slug: 'burger' },
+    { categoryId: food.id, name: 'Momos', slug: 'momos' },
+    { categoryId: food.id, name: 'Biryani', slug: 'biryani' },
+    { categoryId: food.id, name: 'Rolls', slug: 'rolls' },
+    { categoryId: food.id, name: 'Beverages', slug: 'beverages' },
+    { categoryId: natural.id, name: 'Oils', slug: 'oils' },
+    { categoryId: natural.id, name: 'Grains', slug: 'grains' },
+    { categoryId: natural.id, name: 'Spices', slug: 'spices' },
+    { categoryId: natural.id, name: 'Honey & Ghee', slug: 'honey-ghee' },
+    { categoryId: general.id, name: 'Electronics', slug: 'electronics' },
+    { categoryId: general.id, name: 'Fashion', slug: 'fashion' },
+    { categoryId: general.id, name: 'Home & Kitchen', slug: 'home-kitchen' },
+    { categoryId: general.id, name: 'Beauty', slug: 'beauty' },
+  ];
+  const subCategories = await Promise.all(
+    subData.map((s) => prisma.subCategory.upsert({
+      where: { categoryId_slug: { categoryId: s.categoryId, slug: s.slug } },
+      update: {},
+      create: s,
+    }))
+  );
+  console.log(`Upserted ${subCategories.length} subcategories`);
 
   const [pizza, burger, momos, biryani, rolls, beverages, oils, grains, spices, honeyGhee, electronics, fashion, homeKitchen, beauty] = subCategories;
 
@@ -73,7 +80,7 @@ async function main() {
     { title: 'Complete Puja Packages', subtitle: 'Pandit + Samagri in one booking', imageUrl: 'https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=1600', ctaText: 'Book Puja', ctaLink: '/puja', sortOrder: 3 },
     { title: '100% Organic, Direct from Farmers', subtitle: 'No chemicals, no adulteration', imageUrl: 'https://images.pexels.com/photos/2255935/pexels-photo-2255935.jpeg?auto=compress&cs=tinysrgb&w=1600', ctaText: 'Explore', ctaLink: '/category/natural-products', sortOrder: 4 },
   ];
-  for (const b of banners) await prisma.banner.create({ data: b });
+  for (const b of banners) await prisma.banner.create({ data: b }).catch(() => {});
   console.log(`Created ${banners.length} banners`);
 
   // Coupons
@@ -87,15 +94,15 @@ async function main() {
 
   // Food products
   const foodProducts = [
-    { name: 'Margherita Pizza', slug: 'margherita-pizza', description: 'Classic pizza with fresh mozzarella, basil and tomato sauce', categoryId: food.id, subCategoryId: pizza.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 249, discountPercent: 10, rating: 4.5, reviewCount: 128, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true, metadata: { ingredients: ['mozzarella', 'basil', 'tomato sauce'], prepTime: '20 min', veg: true } },
-    { name: 'Chicken Tikka Pizza', slug: 'chicken-tikka-pizza', description: 'Tandoori chicken tikka with onions, capsicum and mint mayo', categoryId: food.id, subCategoryId: pizza.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 349, discountPercent: 15, rating: 4.7, reviewCount: 96, isFeatured: true, isBestSeller: true, isPopular: true, metadata: { ingredients: ['chicken tikka', 'onion', 'capsicum'], prepTime: '25 min', veg: false } },
-    { name: 'Classic Veg Burger', slug: 'classic-veg-burger', description: 'Crispy patty with cheese, lettuce and tomato', categoryId: food.id, subCategoryId: burger.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 129, rating: 4.3, reviewCount: 210, isBestSeller: true, isPopular: true, isTodayDeal: true, metadata: { ingredients: ['veg patty', 'cheese', 'lettuce'], prepTime: '15 min', veg: true } },
-    { name: 'Steamed Veg Momos', slug: 'steamed-veg-momos', description: '8 pieces of steamed dumplings with spicy chutney', categoryId: food.id, subCategoryId: momos.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 99, rating: 4.6, reviewCount: 320, isFeatured: true, isBestSeller: true, isPopular: true, metadata: { ingredients: ['flour', 'cabbage', 'carrot'], prepTime: '18 min', veg: true } },
-    { name: 'Chicken Biryani', slug: 'chicken-biryani', description: 'Fragrant basmati rice with marinated chicken and aromatic spices', categoryId: food.id, subCategoryId: biryani.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 229, discountPercent: 12, rating: 4.8, reviewCount: 410, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true, metadata: { ingredients: ['basmati rice', 'chicken', 'saffron'], prepTime: '30 min', veg: false } },
-    { name: 'Chicken Popcorn', slug: 'chicken-popcorn', description: 'Bite-sized crispy chicken pieces with dip', categoryId: food.id, subCategoryId: rolls.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 179, rating: 4.4, reviewCount: 88, isPopular: true, metadata: { ingredients: ['chicken', 'flour', 'spices'], prepTime: '12 min', veg: false } },
-    { name: 'Paneer Roll', slug: 'paneer-roll', description: 'Tandoori paneer wrapped in soft roti with mint chutney', categoryId: food.id, subCategoryId: rolls.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 149, rating: 4.5, reviewCount: 142, isBestSeller: true, isPopular: true, metadata: { ingredients: ['paneer', 'roti', 'onion'], prepTime: '10 min', veg: true } },
-    { name: 'French Fries', slug: 'french-fries', description: 'Crispy golden fries with peri peri seasoning', categoryId: food.id, subCategoryId: rolls.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 89, rating: 4.2, reviewCount: 180, isBestSeller: true, isPopular: true, isTodayDeal: true, metadata: { ingredients: ['potato', 'peri peri'], prepTime: '8 min', veg: true } },
-    { name: 'Cold Coffee', slug: 'cold-coffee', description: 'Chilled creamy coffee with ice cream', categoryId: food.id, subCategoryId: beverages.id, brandId: sajjanKitchen.id, productType: 'food', basePrice: 119, rating: 4.6, reviewCount: 75, isPopular: true, metadata: { ingredients: ['coffee', 'milk', 'ice cream'], prepTime: '5 min', veg: true } },
+    { name: 'Margherita Pizza', slug: 'margherita-pizza', description: 'Classic pizza with fresh mozzarella, basil and tomato sauce', categoryId: food.id, subCategoryId: pizza.id, brandId: sajjanKitchen.id, productType: 'food', purchasePrice: 149.4, salesPrice: 249, foodType: 'veg', discountPercent: 10, rating: 4.5, reviewCount: 128, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true, metadata: { ingredients: ['mozzarella', 'basil', 'tomato sauce'], prepTime: '20 min', veg: true } },
+    { name: 'Chicken Tikka Pizza', slug: 'chicken-tikka-pizza', description: 'Tandoori chicken tikka with onions, capsicum and mint mayo', categoryId: food.id, subCategoryId: pizza.id, brandId: sajjanKitchen.id, productType: 'food', purchasePrice: 209.4, salesPrice: 349, foodType: 'non_veg', discountPercent: 15, rating: 4.7, reviewCount: 96, isFeatured: true, isBestSeller: true, isPopular: true, metadata: { ingredients: ['chicken tikka', 'onion', 'capsicum'], prepTime: '25 min', veg: false } },
+    { name: 'Classic Veg Burger', slug: 'classic-veg-burger', description: 'Crispy patty with cheese, lettuce and tomato', categoryId: food.id, subCategoryId: burger.id, brandId: sajjanKitchen.id, productType: 'food', purchasePrice: 77.4, salesPrice: 129, foodType: 'veg', rating: 4.3, reviewCount: 210, isBestSeller: true, isPopular: true, isTodayDeal: true, metadata: { ingredients: ['veg patty', 'cheese', 'lettuce'], prepTime: '15 min', veg: true } },
+    { name: 'Steamed Veg Momos', slug: 'steamed-veg-momos', description: '8 pieces of steamed dumplings with spicy chutney', categoryId: food.id, subCategoryId: momos.id, brandId: sajjanKitchen.id, productType: 'food', purchasePrice: 59.4, salesPrice: 99, foodType: 'veg', rating: 4.6, reviewCount: 320, isFeatured: true, isBestSeller: true, isPopular: true, metadata: { ingredients: ['flour', 'cabbage', 'carrot'], prepTime: '18 min', veg: true } },
+    { name: 'Chicken Biryani', slug: 'chicken-biryani', description: 'Fragrant basmati rice with marinated chicken and aromatic spices', categoryId: food.id, subCategoryId: biryani.id, brandId: sajjanKitchen.id, productType: 'food', purchasePrice: 137.4, salesPrice: 229, foodType: 'non_veg', discountPercent: 12, rating: 4.8, reviewCount: 410, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true, metadata: { ingredients: ['basmati rice', 'chicken', 'saffron'], prepTime: '30 min', veg: false } },
+    { name: 'Chicken Popcorn', slug: 'chicken-popcorn', description: 'Bite-sized crispy chicken pieces with dip', categoryId: food.id, subCategoryId: rolls.id, brandId: sajjanKitchen.id, productType: 'food', purchasePrice: 107.4, salesPrice: 179, foodType: 'non_veg', rating: 4.4, reviewCount: 88, isPopular: true, metadata: { ingredients: ['chicken', 'flour', 'spices'], prepTime: '12 min', veg: false } },
+    { name: 'Paneer Roll', slug: 'paneer-roll', description: 'Tandoori paneer wrapped in soft roti with mint chutney', categoryId: food.id, subCategoryId: rolls.id, brandId: sajjanKitchen.id, productType: 'food', purchasePrice: 89.4, salesPrice: 149, foodType: 'veg', rating: 4.5, reviewCount: 142, isBestSeller: true, isPopular: true, metadata: { ingredients: ['paneer', 'roti', 'onion'], prepTime: '10 min', veg: true } },
+    { name: 'French Fries', slug: 'french-fries', description: 'Crispy golden fries with peri peri seasoning', categoryId: food.id, subCategoryId: rolls.id, brandId: sajjanKitchen.id, productType: 'food', purchasePrice: 53.4, salesPrice: 89, foodType: 'veg', rating: 4.2, reviewCount: 180, isBestSeller: true, isPopular: true, isTodayDeal: true, metadata: { ingredients: ['potato', 'peri peri'], prepTime: '8 min', veg: true } },
+    { name: 'Cold Coffee', slug: 'cold-coffee', description: 'Chilled creamy coffee with ice cream', categoryId: food.id, subCategoryId: beverages.id, brandId: sajjanKitchen.id, productType: 'food', purchasePrice: 71.4, salesPrice: 119, foodType: 'veg', rating: 4.6, reviewCount: 75, isPopular: true, metadata: { ingredients: ['coffee', 'milk', 'ice cream'], prepTime: '5 min', veg: true } },
   ];
   for (const p of foodProducts) {
     await prisma.product.upsert({ where: { slug: p.slug }, update: {}, create: p as any });
@@ -104,15 +111,15 @@ async function main() {
 
   // Natural products
   const naturalProducts = [
-    { name: 'Cold Pressed Mustard Oil', slug: 'cold-pressed-mustard-oil', description: 'Traditional wood-pressed mustard oil from organic seeds', categoryId: natural.id, subCategoryId: oils.id, brandId: farmFresh.id, productType: 'natural', basePrice: 320, discountPercent: 5, rating: 4.7, reviewCount: 64, isFeatured: true, isBestSeller: true, isPopular: true },
-    { name: 'Organic Turmeric Powder', slug: 'organic-turmeric-powder', description: 'High-curcumin turmeric, sun-dried and stone-ground', categoryId: natural.id, subCategoryId: spices.id, brandId: pureOrganic.id, productType: 'natural', basePrice: 180, rating: 4.8, reviewCount: 92, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
-    { name: 'Premium Basmati Rice', slug: 'premium-basmati-rice', description: 'Aged 2-year basmati from the foothills of Himalayas', categoryId: natural.id, subCategoryId: grains.id, brandId: farmFresh.id, productType: 'natural', basePrice: 450, discountPercent: 8, rating: 4.6, reviewCount: 48, isFeatured: true, isBestSeller: true, isPopular: true },
-    { name: 'Whole Wheat Atta', slug: 'whole-wheat-atta', description: 'Stone-ground wheat flour from MP Sharbati wheat', categoryId: natural.id, subCategoryId: grains.id, brandId: farmFresh.id, productType: 'natural', basePrice: 240, rating: 4.5, reviewCount: 56, isBestSeller: true, isPopular: true },
-    { name: 'Raw Forest Honey', slug: 'raw-forest-honey', description: 'Multi-floral raw honey harvested by tribal communities', categoryId: natural.id, subCategoryId: honeyGhee.id, brandId: pureOrganic.id, productType: 'natural', basePrice: 380, discountPercent: 10, rating: 4.9, reviewCount: 110, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
-    { name: 'A2 Desi Cow Ghee', slug: 'a2-desi-cow-ghee', description: 'Bilona method ghee from grass-fed Gir cows', categoryId: natural.id, subCategoryId: honeyGhee.id, brandId: pureOrganic.id, productType: 'natural', basePrice: 890, discountPercent: 5, rating: 4.9, reviewCount: 78, isFeatured: true, isBestSeller: true, isPopular: true },
-    { name: 'Organic Toor Dal', slug: 'organic-toor-dal', description: 'Unpolished toor dal, rich in protein', categoryId: natural.id, subCategoryId: grains.id, brandId: farmFresh.id, productType: 'natural', basePrice: 160, rating: 4.4, reviewCount: 36, isPopular: true },
-    { name: 'Whole Spices Combo', slug: 'whole-spices-combo', description: 'Mixed whole spices - cardamom, clove, cinnamon, bay leaf', categoryId: natural.id, subCategoryId: spices.id, brandId: pureOrganic.id, productType: 'natural', basePrice: 520, discountPercent: 12, rating: 4.7, reviewCount: 44, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
-    { name: 'Ragi Millet Flour', slug: 'ragi-millet-flour', description: 'Calcium-rich finger millet flour', categoryId: natural.id, subCategoryId: grains.id, brandId: farmFresh.id, productType: 'natural', basePrice: 140, rating: 4.5, reviewCount: 28, isPopular: true },
+    { name: 'Cold Pressed Mustard Oil', slug: 'cold-pressed-mustard-oil', description: 'Traditional wood-pressed mustard oil from organic seeds', categoryId: natural.id, subCategoryId: oils.id, brandId: farmFresh.id, productType: 'natural', purchasePrice: 192, salesPrice: 320, quantityType: 'pack', discountPercent: 5, rating: 4.7, reviewCount: 64, isFeatured: true, isBestSeller: true, isPopular: true },
+    { name: 'Organic Turmeric Powder', slug: 'organic-turmeric-powder', description: 'High-curcumin turmeric, sun-dried and stone-ground', categoryId: natural.id, subCategoryId: spices.id, brandId: pureOrganic.id, productType: 'natural', purchasePrice: 108, salesPrice: 180, quantityType: 'pack', rating: 4.8, reviewCount: 92, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
+    { name: 'Premium Basmati Rice', slug: 'premium-basmati-rice', description: 'Aged 2-year basmati from the foothills of Himalayas', categoryId: natural.id, subCategoryId: grains.id, brandId: farmFresh.id, productType: 'natural', purchasePrice: 270, salesPrice: 450, quantityType: 'pack', discountPercent: 8, rating: 4.6, reviewCount: 48, isFeatured: true, isBestSeller: true, isPopular: true },
+    { name: 'Whole Wheat Atta', slug: 'whole-wheat-atta', description: 'Stone-ground wheat flour from MP Sharbati wheat', categoryId: natural.id, subCategoryId: grains.id, brandId: farmFresh.id, productType: 'natural', purchasePrice: 144, salesPrice: 240, quantityType: 'pack', rating: 4.5, reviewCount: 56, isBestSeller: true, isPopular: true },
+    { name: 'Raw Forest Honey', slug: 'raw-forest-honey', description: 'Multi-floral raw honey harvested by tribal communities', categoryId: natural.id, subCategoryId: honeyGhee.id, brandId: pureOrganic.id, productType: 'natural', purchasePrice: 228, salesPrice: 380, quantityType: 'pack', discountPercent: 10, rating: 4.9, reviewCount: 110, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
+    { name: 'A2 Desi Cow Ghee', slug: 'a2-desi-cow-ghee', description: 'Bilona method ghee from grass-fed Gir cows', categoryId: natural.id, subCategoryId: honeyGhee.id, brandId: pureOrganic.id, productType: 'natural', purchasePrice: 534, salesPrice: 890, quantityType: 'pack', discountPercent: 5, rating: 4.9, reviewCount: 78, isFeatured: true, isBestSeller: true, isPopular: true },
+    { name: 'Organic Toor Dal', slug: 'organic-toor-dal', description: 'Unpolished toor dal, rich in protein', categoryId: natural.id, subCategoryId: grains.id, brandId: farmFresh.id, productType: 'natural', purchasePrice: 96, salesPrice: 160, quantityType: 'pack', rating: 4.4, reviewCount: 36, isPopular: true },
+    { name: 'Whole Spices Combo', slug: 'whole-spices-combo', description: 'Mixed whole spices - cardamom, clove, cinnamon, bay leaf', categoryId: natural.id, subCategoryId: spices.id, brandId: pureOrganic.id, productType: 'natural', purchasePrice: 312, salesPrice: 520, quantityType: 'pack', discountPercent: 12, rating: 4.7, reviewCount: 44, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
+    { name: 'Ragi Millet Flour', slug: 'ragi-millet-flour', description: 'Calcium-rich finger millet flour', categoryId: natural.id, subCategoryId: grains.id, brandId: farmFresh.id, productType: 'natural', purchasePrice: 84, salesPrice: 140, quantityType: 'pack', rating: 4.5, reviewCount: 28, isPopular: true },
   ];
   for (const p of naturalProducts) {
     await prisma.product.upsert({ where: { slug: p.slug }, update: {}, create: p as any });
@@ -121,13 +128,13 @@ async function main() {
 
   // General products
   const generalProducts = [
-    { name: 'Wireless Bluetooth Earbuds', slug: 'wireless-bluetooth-earbuds', description: 'True wireless earbuds with ANC and 30hr playback', categoryId: general.id, subCategoryId: electronics.id, brandId: techNova.id, productType: 'general', basePrice: 1999, discountPercent: 25, rating: 4.4, reviewCount: 540, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
-    { name: 'Smart Fitness Band', slug: 'smart-fitness-band', description: 'Heart rate, SpO2, sleep tracking with 14-day battery', categoryId: general.id, subCategoryId: electronics.id, brandId: techNova.id, productType: 'general', basePrice: 1499, discountPercent: 15, rating: 4.3, reviewCount: 320, isFeatured: true, isBestSeller: true, isPopular: true },
-    { name: 'Cotton Casual Shirt', slug: 'cotton-casual-shirt', description: 'Breathable cotton shirt for everyday wear', categoryId: general.id, subCategoryId: fashion.id, brandId: urbanwear.id, productType: 'general', basePrice: 799, discountPercent: 20, rating: 4.2, reviewCount: 210, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
-    { name: 'Non-stick Cookware Set', slug: 'non-stick-cookware-set', description: '5-piece non-stick cookware with granite coating', categoryId: general.id, subCategoryId: homeKitchen.id, brandId: homestyle.id, productType: 'general', basePrice: 2499, discountPercent: 30, rating: 4.5, reviewCount: 180, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
-    { name: 'Ayurvedic Face Wash', slug: 'ayurvedic-face-wash', description: 'Gentle herbal face wash with neem and turmeric', categoryId: general.id, subCategoryId: beauty.id, brandId: pureOrganic.id, productType: 'general', basePrice: 249, discountPercent: 10, rating: 4.4, reviewCount: 410, isBestSeller: true, isPopular: true },
-    { name: 'Stainless Steel Water Bottle', slug: 'stainless-steel-water-bottle', description: 'Insulated 1L bottle keeps cold 24h', categoryId: general.id, subCategoryId: homeKitchen.id, brandId: homestyle.id, productType: 'general', basePrice: 599, rating: 4.6, reviewCount: 260, isBestSeller: true, isPopular: true },
-    { name: 'Yoga Mat Premium', slug: 'yoga-mat-premium', description: '6mm anti-slip TPE yoga mat with carry strap', categoryId: general.id, subCategoryId: homeKitchen.id, brandId: homestyle.id, productType: 'general', basePrice: 699, discountPercent: 18, rating: 4.5, reviewCount: 150, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
+    { name: 'Wireless Bluetooth Earbuds', slug: 'wireless-bluetooth-earbuds', description: 'True wireless earbuds with ANC and 30hr playback', categoryId: general.id, subCategoryId: electronics.id, brandId: techNova.id, productType: 'general', purchasePrice: 1199.4, salesPrice: 1999, productCategory: 'electronics', gender: 'all', discountPercent: 25, rating: 4.4, reviewCount: 540, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
+    { name: 'Smart Fitness Band', slug: 'smart-fitness-band', description: 'Heart rate, SpO2, sleep tracking with 14-day battery', categoryId: general.id, subCategoryId: electronics.id, brandId: techNova.id, productType: 'general', purchasePrice: 899.4, salesPrice: 1499, productCategory: 'electronics', gender: 'all', discountPercent: 15, rating: 4.3, reviewCount: 320, isFeatured: true, isBestSeller: true, isPopular: true },
+    { name: 'Cotton Casual Shirt', slug: 'cotton-casual-shirt', description: 'Breathable cotton shirt for everyday wear', categoryId: general.id, subCategoryId: fashion.id, brandId: urbanwear.id, productType: 'general', purchasePrice: 479.4, salesPrice: 799, productCategory: 'fashion', gender: 'men', discountPercent: 20, rating: 4.2, reviewCount: 210, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
+    { name: 'Non-stick Cookware Set', slug: 'non-stick-cookware-set', description: '5-piece non-stick cookware with granite coating', categoryId: general.id, subCategoryId: homeKitchen.id, brandId: homestyle.id, productType: 'general', purchasePrice: 1499.4, salesPrice: 2499, productCategory: 'home', gender: 'all', discountPercent: 30, rating: 4.5, reviewCount: 180, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
+    { name: 'Ayurvedic Face Wash', slug: 'ayurvedic-face-wash', description: 'Gentle herbal face wash with neem and turmeric', categoryId: general.id, subCategoryId: beauty.id, brandId: pureOrganic.id, productType: 'general', purchasePrice: 149.4, salesPrice: 249, productCategory: 'beauty', gender: 'all', discountPercent: 10, rating: 4.4, reviewCount: 410, isBestSeller: true, isPopular: true },
+    { name: 'Stainless Steel Water Bottle', slug: 'stainless-steel-water-bottle', description: 'Insulated 1L bottle keeps cold 24h', categoryId: general.id, subCategoryId: homeKitchen.id, brandId: homestyle.id, productType: 'general', purchasePrice: 359.4, salesPrice: 599, productCategory: 'home', gender: 'all', rating: 4.6, reviewCount: 260, isBestSeller: true, isPopular: true },
+    { name: 'Yoga Mat Premium', slug: 'yoga-mat-premium', description: '6mm anti-slip TPE yoga mat with carry strap', categoryId: general.id, subCategoryId: homeKitchen.id, brandId: homestyle.id, productType: 'general', purchasePrice: 419.4, salesPrice: 699, productCategory: 'home', gender: 'all', discountPercent: 18, rating: 4.5, reviewCount: 150, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
   ];
   for (const p of generalProducts) {
     await prisma.product.upsert({ where: { slug: p.slug }, update: {}, create: p as any });
@@ -167,6 +174,7 @@ async function main() {
   for (const p of allProducts) {
     const urls = imageMap[p.slug];
     if (urls) {
+      await prisma.productImage.deleteMany({ where: { productId: p.id } });
       for (let i = 0; i < urls.length; i++) {
         await prisma.productImage.create({ data: { productId: p.id, url: urls[i], alt: p.name, sortOrder: i } });
         imgCount++;
@@ -206,6 +214,7 @@ async function main() {
   ];
   let pujaItemCount = 0;
   for (const puja of allPujas) {
+    await prisma.pujaItem.deleteMany({ where: { pujaId: puja.id } });
     for (const item of pujaItemTemplates) {
       await prisma.pujaItem.create({ data: { pujaId: puja.id, ...item } });
       pujaItemCount++;
@@ -222,12 +231,15 @@ async function main() {
   ];
   const panditRecords = [];
   for (const p of pandits) {
+    const existing = await prisma.pandit.findFirst({ where: { name: p.name } });
+    if (existing) { panditRecords.push(existing); continue; }
     const record = await prisma.pandit.create({ data: p });
     panditRecords.push(record);
   }
-  console.log(`Created ${panditRecords.length} pandits`);
+  console.log(`Upserted ${panditRecords.length} pandits`);
 
   // Assign pandits to all pujas
+  await prisma.pujaPandit.deleteMany({});
   let pujaPanditCount = 0;
   for (const puja of allPujas) {
     for (const pandit of panditRecords) {

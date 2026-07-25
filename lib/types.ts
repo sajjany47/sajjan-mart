@@ -1,4 +1,8 @@
-export type ProductType = 'food' | 'puja' | 'natural' | 'general';
+export type ProductType = 'food' | 'puja_samagri' | 'natural' | 'general';
+export type FoodType = 'veg' | 'non_veg' | 'egg';
+export type QuantityType = 'piece' | 'inch' | 'gram' | 'ml' | 'pack';
+export type GenderType = 'men' | 'women' | 'baby' | 'men_women_both' | 'all';
+export type ProductCategory = 'electronics' | 'fashion' | 'food' | 'beauty' | 'home' | 'sports' | 'books' | 'toys' | 'automotive' | 'other';
 export type UserRole = 'admin' | 'customer';
 export type OrderStatus =
   | 'pending'
@@ -69,12 +73,18 @@ export interface Product {
   name: string;
   slug: string;
   description: string | null;
-  category_id: string;
+  product_type: ProductType;
+  category_id: string | null;
   sub_category_id: string | null;
   brand_id: string | null;
-  product_type: ProductType;
-  base_price: number;
+  purchase_price: number;
+  sales_price: number;
   discount_percent: number;
+  quantity_type: QuantityType | null;
+  quantity: number | null;
+  food_type: FoodType | null;
+  gender: GenderType | null;
+  product_category: ProductCategory | null;
   rating: number;
   review_count: number;
   is_featured: boolean;
@@ -143,6 +153,16 @@ export interface Coupon {
   min_order: number;
   is_active: boolean;
   valid_until: string | null;
+}
+
+export interface Review {
+  id: string;
+  product_id: string;
+  user_id: string;
+  rating: number;
+  title: string | null;
+  comment: string | null;
+  created_at: string;
 }
 
 export interface Address {

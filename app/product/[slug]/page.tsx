@@ -52,7 +52,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
     getReviews(product.id),
   ]);
 
-  const price = discountedPrice(product.base_price, product.discount_percent);
+  const price = discountedPrice(product.sales_price, product.discount_percent);
   const meta = product.metadata ?? {};
 
   return (
@@ -139,12 +139,12 @@ export default async function ProductPage({ params }: { params: { slug: string }
               <span className="text-3xl font-semibold">{formatINR(price)}</span>
               {product.discount_percent > 0 && (
                 <span className="text-lg text-muted-foreground line-through">
-                  {formatINR(product.base_price)}
+                  {formatINR(product.sales_price)}
                 </span>
               )}
               {product.discount_percent > 0 && (
                 <span className="text-sm font-medium text-success">
-                  Save {formatINR(product.base_price - price)}
+                  Save {formatINR(product.sales_price - price)}
                 </span>
               )}
             </div>

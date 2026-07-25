@@ -18,7 +18,7 @@ export function ProductCard({ product }: { product: Product }) {
   const { user } = useAuth();
   const [wished, setWished] = useState(false);
   const image = product.product_images?.[0]?.url;
-  const price = discountedPrice(product.base_price, product.discount_percent);
+  const price = discountedPrice(product.sales_price, product.discount_percent);
 
   async function toggleWishlist() {
     if (!user) {
@@ -114,7 +114,7 @@ export function ProductCard({ product }: { product: Product }) {
             <span className="text-base font-semibold">{formatINR(price)}</span>
             {product.discount_percent > 0 && (
               <span className="text-xs text-muted-foreground line-through">
-                {formatINR(product.base_price)}
+                {formatINR(product.sales_price)}
               </span>
             )}
           </div>
