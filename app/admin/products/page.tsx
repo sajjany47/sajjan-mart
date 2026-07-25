@@ -6,13 +6,14 @@ import { Plus, Pencil, Trash2, Search, X, Upload, Link as LinkIcon, Loader2 } fr
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { formatINR, slugify } from '@/lib/format';
+import { Formik, Form, Field, FormikProps } from 'formik';
+import * as Yup from 'yup';
+import { FormikTextInput, FormikTextArea, FormikCheckBox, FormikSelect } from '@/components/FormikTextInput';
 import type { Product, Category, Brand } from '@/lib/types';
 
 const PRODUCT_TYPES = [
@@ -22,24 +23,112 @@ const PRODUCT_TYPES = [
   { value: 'general', label: 'General' },
 ] as const;
 
-const FOOD_TYPES = ['veg', 'non_veg', 'egg'];
-const QUANTITY_TYPES = ['piece', 'inch', 'gram', 'ml', 'pack'];
-const GENDER_TYPES = ['men', 'women', 'baby', 'men_women_both', 'all'];
-const PRODUCT_CATEGORIES = ['electronics', 'fashion', 'food', 'beauty', 'home', 'sports', 'books', 'toys', 'automotive', 'other'];
+const FOOD_TYPES = [
+  { value: 'veg', label: 'Veg' },
+  { value: 'non_veg', label: 'Non Veg' },
+  { value: 'egg', label: 'Egg' },
+];
 
-function emptyForm(productType: string) {
+const QUANTITY_TYPES = [
+  { value: 'piece', label: 'Piece' },
+  { value: 'inch', label: 'Inch' },
+  { value: 'gram', label: 'Gram' },
+  { value: 'ml', label: 'ML' },
+  { value: 'pack', label: 'Pack' },
+];
+
+const GENDER_TYPES = [
+  { value: 'men', label: 'Men' },
+  { value: 'women', label: 'Women' },
+  { value: 'baby', label: 'Baby' },
+  { value: 'men_women_both', label: 'Men & Women Both' },
+  { value: 'all', label: 'All' },
+];
+
+const PRODUCT_CATEGORIES = [
+  { value: 'electronics', label: 'Electronics' },
+  { value: 'fashion', label: 'Fashion' },
+  { value: 'food', label: 'Food' },
+  { value: 'beauty', label: 'Beauty' },
+  { value: 'home', label: 'Home' },
+  { value: 'sports', label: 'Sports' },
+  { value: 'books', label: 'Books' },
+  { value: 'toys', label: 'Toys' },
+  { value: 'automotive', label: 'Automotive' },
+  { value: 'other', label: 'Other' },
+];
+
+function getInitialValues(productType: string, editing: Product | null) {
+  if (editing) {
+    return {
+      name: editing.name,
+      description: editing.description ?? '',
+      product_type: editing.product_type,
+      category_id: editing.category_id ?? '',
+      sub_category_id: editing.sub_category_id ?? '',
+      brand_id: editing.brand_id ?? '',
+      purchase_price: editing.purchase_price,
+      sales_price: editing.sales_price,
+      discount_percent: editing.discount_percent,
+      quantity_type: editing.quantity_type ?? '',
+      quantity: editing.quantity ?? 0,
+      food_type: editing.food_type ?? '',
+      gender: editing.gender ?? '',
+      product_category: editing.product_category ?? '',
+      is_featured: editing.is_featured,
+      is_best_seller: editing.is_best_seller,
+      is_popular: editing.is_popular,
+      is_today_deal: editing.is_today_deal,
+      is_active: editing.is_active,
+    };
+  }
   return {
-    name: '', description: '', product_type: productType,
-    category_id: '', sub_category_id: '', brand_id: '',
-    purchase_price: 0, sales_price: 0, discount_percent: 0,
-    quantity_type: '', quantity: 0,
-    food_type: '', gender: '', product_category: '',
-    is_featured: false, is_best_seller: false, is_popular: false, is_today_deal: false, is_active: true,
-    images: [] as string[],
-    imageInputMode: 'url' as 'url' | 'upload',
-    imageUrl: '',
+    name: '',
+    description: '',
+    product_type: productType,
+    category_id: '',
+    sub_category_id: '',
+    brand_id: '',
+    purchase_price: 0,
+    sales_price: 0,
+    discount_percent: 0,
+    quantity_type: '',
+    quantity: 0,
+    food_type: '',
+    gender: '',
+    product_category: '',
+    is_featured: false,
+    is_best_seller: false,
+    is_popular: false,
+    is_today_deal: false,
+    is_active: true,
   };
 }
+
+function getValidationSchema(productType: string) {
+  return Yup.object().shape({
+    name: Yup.string().trim().required('Product name is required'),
+    description: Yup.string(),
+    sales_price: Yup.number().min(1, 'Sales price must be greater than 0').required('Sales price is required'),
+    purchase_price: Yup.number().min(0, 'Purchase price cannot be negative').required('Purchase price is required'),
+    discount_percent: Yup.number().min(0).max(100).required(),
+    quantity: Yup.number().min(0).required(),
+    food_type: productType === 'food' ? Yup.string().required('Food type is required') : Yup.string(),
+    category_id: Yup.string(),
+    sub_category_id: Yup.string(),
+    brand_id: Yup.string(),
+    quantity_type: Yup.string(),
+    gender: Yup.string(),
+    product_category: Yup.string(),
+    is_featured: Yup.boolean(),
+    is_best_seller: Yup.boolean(),
+    is_popular: Yup.boolean(),
+    is_today_deal: Yup.boolean(),
+    is_active: Yup.boolean(),
+  });
+}
+
+type FormValues = ReturnType<typeof getInitialValues>;
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -50,7 +139,9 @@ export default function AdminProductsPage() {
   const [activeTab, setActiveTab] = useState('food');
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
-  const [form, setForm] = useState<any>(emptyForm('food'));
+  const [images, setImages] = useState<string[]>([]);
+  const [imageInputMode, setImageInputMode] = useState<'url' | 'upload'>('url');
+  const [imageUrl, setImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
 
   const load = useCallback(async () => {
@@ -71,34 +162,29 @@ export default function AdminProductsPage() {
 
   function openNew(type: string) {
     setEditing(null);
-    setForm({ ...emptyForm(type), category_id: categories[0]?.id ?? '' });
+    setImages([]);
+    setImageInputMode('url');
+    setImageUrl('');
     setOpen(true);
   }
 
   function openEdit(p: Product) {
     setEditing(p);
-    setForm({
-      name: p.name, description: p.description ?? '', product_type: p.product_type,
-      category_id: p.category_id ?? '', sub_category_id: p.sub_category_id ?? '', brand_id: p.brand_id ?? '',
-      purchase_price: p.purchase_price, sales_price: p.sales_price, discount_percent: p.discount_percent,
-      quantity_type: p.quantity_type ?? '', quantity: p.quantity ?? 0,
-      food_type: p.food_type ?? '', gender: p.gender ?? '', product_category: p.product_category ?? '',
-      is_featured: p.is_featured, is_best_seller: p.is_best_seller, is_popular: p.is_popular, is_today_deal: p.is_today_deal, is_active: p.is_active,
-      images: p.product_images?.map((img) => img.url) ?? [],
-      imageInputMode: 'url' as const,
-      imageUrl: '',
-    });
+    setImages(p.product_images?.map((img) => img.url) ?? []);
+    setImageInputMode('url');
+    setImageUrl('');
     setOpen(true);
   }
 
-  function addImage() {
-    if (!form.imageUrl.trim()) return;
-    if (form.images.includes(form.imageUrl)) { toast.error('Image already added'); return; }
-    setForm({ ...form, images: [...form.images, form.imageUrl], imageUrl: '' });
+  function addImageUrl() {
+    if (!imageUrl.trim()) return;
+    if (images.includes(imageUrl)) { toast.error('Image already added'); return; }
+    setImages([...images, imageUrl]);
+    setImageUrl('');
   }
 
   function removeImage(idx: number) {
-    setForm({ ...form, images: form.images.filter((_: string, i: number) => i !== idx) });
+    setImages(images.filter((_, i) => i !== idx));
   }
 
   async function uploadFile(file: File) {
@@ -110,8 +196,8 @@ export default function AdminProductsPage() {
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error || 'Upload failed'); return; }
-      if (form.images.includes(data.url)) { toast.error('Image already added'); return; }
-      setForm({ ...form, images: [...form.images, data.url] });
+      if (images.includes(data.url)) { toast.error('Image already added'); return; }
+      setImages([...images, data.url]);
       toast.success('Image uploaded');
     } catch {
       toast.error('Upload failed');
@@ -120,38 +206,49 @@ export default function AdminProductsPage() {
     }
   }
 
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.name) { toast.error('Product name is required.'); return; }
-    if (Number(form.sales_price) <= 0) { toast.error('Sales price must be greater than 0.'); return; }
-
-    const slug = editing?.slug ?? slugify(form.name) + '-' + Math.random().toString(36).slice(2, 6);
+  async function onSubmit(values: FormValues, { setSubmitting }: any) {
+    const slug = editing?.slug ?? slugify(values.name) + '-' + Math.random().toString(36).slice(2, 6);
     const payload = {
-      name: form.name, description: form.description, productType: form.product_type, slug,
-      categoryId: form.category_id || null, subCategoryId: form.sub_category_id || null, brandId: form.brand_id || null,
-      purchasePrice: Number(form.purchase_price), salesPrice: Number(form.sales_price), discountPercent: Number(form.discount_percent),
-      quantityType: form.quantity_type || null, quantity: Number(form.quantity) || null,
-      foodType: form.food_type || null, gender: form.gender || null, productCategory: form.product_category || null,
-      isFeatured: form.is_featured, isBestSeller: form.is_best_seller, isPopular: form.is_popular, isTodayDeal: form.is_today_deal, isActive: form.is_active,
+      name: values.name,
+      description: values.description,
+      productType: values.product_type,
+      slug,
+      categoryId: values.category_id || null,
+      subCategoryId: values.sub_category_id || null,
+      brandId: values.brand_id || null,
+      purchasePrice: Number(values.purchase_price),
+      salesPrice: Number(values.sales_price),
+      discountPercent: Number(values.discount_percent),
+      quantityType: values.quantity_type || null,
+      quantity: Number(values.quantity) || null,
+      foodType: values.food_type || null,
+      gender: values.gender || null,
+      productCategory: values.product_category || null,
+      isFeatured: values.is_featured,
+      isBestSeller: values.is_best_seller,
+      isPopular: values.is_popular,
+      isTodayDeal: values.is_today_deal,
+      isActive: values.is_active,
     };
 
     if (editing) {
       const { error } = await supabase.from('products').update(payload).eq('id', editing.id);
-      if (error) { toast.error(error.message); return; }
+      if (error) { toast.error(error.message); setSubmitting(false); return; }
       await supabase.from('product_images').delete().eq('product_id', editing.id);
-      for (let i = 0; i < form.images.length; i++) {
-        await supabase.from('product_images').insert({ product_id: editing.id, url: form.images[i], alt: editing.name, sort_order: i });
+      for (let i = 0; i < images.length; i++) {
+        await supabase.from('product_images').insert({ product_id: editing.id, url: images[i], alt: values.name, sort_order: i });
       }
       toast.success('Product updated');
     } else {
       const { data, error } = await supabase.from('products').insert(payload).select('*').single();
-      if (error) { toast.error(error.message); return; }
-      for (let i = 0; i < form.images.length; i++) {
-        await supabase.from('product_images').insert({ product_id: data.id, url: form.images[i], alt: form.name, sort_order: i });
+      if (error) { toast.error(error.message); setSubmitting(false); return; }
+      for (let i = 0; i < images.length; i++) {
+        await supabase.from('product_images').insert({ product_id: data.id, url: images[i], alt: values.name, sort_order: i });
       }
       toast.success('Product created');
     }
     setOpen(false);
+    setSubmitting(false);
     load();
   }
 
@@ -166,14 +263,6 @@ export default function AdminProductsPage() {
   const filtered = products
     .filter((p) => p.product_type === activeTab)
     .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
-
-  const categoriesForType = activeTab === 'food'
-    ? categories.filter((c) => ['food'].includes(c.slug))
-    : activeTab === 'natural'
-    ? categories.filter((c) => ['natural-products'].includes(c.slug))
-    : activeTab === 'puja_samagri'
-    ? categories.filter((c) => ['puja-samagri'].includes(c.slug))
-    : categories;
 
   return (
     <div>
@@ -271,152 +360,121 @@ export default function AdminProductsPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Edit' : 'Add'} {PRODUCT_TYPES.find((t) => t.value === form.product_type)?.label}</DialogTitle>
+            <DialogTitle>{editing ? 'Edit' : 'Add'} {PRODUCT_TYPES.find((t) => t.value === (editing?.product_type ?? activeTab))?.label}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={save} className="space-y-4">
-            <ProductFormFields form={form} setForm={setForm} categories={categories} brands={brands} addImage={addImage} removeImage={removeImage} uploading={uploading} uploadFile={uploadFile} />
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit">{editing ? 'Save changes' : 'Create product'}</Button>
-            </DialogFooter>
-          </form>
+          <Formik
+            initialValues={getInitialValues(editing?.product_type ?? activeTab, editing)}
+            validationSchema={getValidationSchema(editing?.product_type ?? activeTab)}
+            enableReinitialize
+            onSubmit={onSubmit}
+          >
+            {({ isSubmitting, values, setFieldValue }) => (
+              <Form className="space-y-4">
+                <ProductFormContent
+                  values={values}
+                  setFieldValue={setFieldValue}
+                  categories={categories}
+                  brands={brands}
+                  images={images}
+                  imageInputMode={imageInputMode}
+                  setImageInputMode={setImageInputMode}
+                  imageUrl={imageUrl}
+                  setImageUrl={setImageUrl}
+                  addImageUrl={addImageUrl}
+                  removeImage={removeImage}
+                  uploading={uploading}
+                  uploadFile={uploadFile}
+                />
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                  <Button type="submit" disabled={isSubmitting || uploading}>
+                    {isSubmitting ? 'Saving...' : editing ? 'Save changes' : 'Create product'}
+                  </Button>
+                </DialogFooter>
+              </Form>
+            )}
+          </Formik>
         </DialogContent>
       </Dialog>
     </div>
   );
 }
 
-function ProductFormFields({ form, setForm, categories, brands, addImage, removeImage, uploading, uploadFile }: any) {
-  const pt = form.product_type;
+function ProductFormContent({
+  values, setFieldValue, categories, brands,
+  images, imageInputMode, setImageInputMode, imageUrl, setImageUrl,
+  addImageUrl, removeImage, uploading, uploadFile,
+}: {
+  values: any;
+  setFieldValue: any;
+  categories: Category[];
+  brands: Brand[];
+  images: string[];
+  imageInputMode: 'url' | 'upload';
+  setImageInputMode: (m: 'url' | 'upload') => void;
+  imageUrl: string;
+  setImageUrl: (v: string) => void;
+  addImageUrl: () => void;
+  removeImage: (i: number) => void;
+  uploading: boolean;
+  uploadFile: (f: File) => void;
+}) {
+  const pt = values.product_type;
+
+  const categoryOptions = categories.map((c) => ({ value: c.id, label: c.name }));
+  const brandOptions = brands.map((b) => ({ value: b.id, label: b.name }));
+
   return (
     <>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2">
-          <Label className="text-xs">Product Name *</Label>
-          <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Enter product name" className="mt-1" />
-        </div>
-        <div className="col-span-2">
-          <Label className="text-xs">Description</Label>
-          <textarea className="mt-1 flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-        </div>
-      </div>
+      <Field name="name" label="Product Name *" placeholder="Enter product name" component={FormikTextInput} />
+      <Field name="description" label="Description" placeholder="Enter product description" rows={3} component={FormikTextArea} />
 
       {(pt === 'food' || pt === 'general') && (
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label className="text-xs">Category</Label>
-            <Select value={form.category_id} onValueChange={(v) => setForm({ ...form, category_id: v })}>
-              <SelectTrigger className="mt-1"><SelectValue placeholder="Select category" /></SelectTrigger>
-              <SelectContent>
-                {categories.map((c: Category) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+          <Field name="category_id" label="Category" placeholder="Select category" options={categoryOptions} component={FormikSelect} />
           {pt === 'general' && (
-            <div>
-              <Label className="text-xs">Brand</Label>
-              <Select value={form.brand_id} onValueChange={(v) => setForm({ ...form, brand_id: v })}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Select brand" /></SelectTrigger>
-                <SelectContent>
-                  {brands.map((b: Brand) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+            <Field name="brand_id" label="Brand" placeholder="Select brand" options={brandOptions} component={FormikSelect} />
           )}
         </div>
       )}
 
       {pt === 'food' && (
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label className="text-xs">Food Type *</Label>
-            <Select value={form.food_type} onValueChange={(v) => setForm({ ...form, food_type: v })}>
-              <SelectTrigger className="mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>
-                {FOOD_TYPES.map((ft) => <SelectItem key={ft} value={ft}>{ft.replace('_', ' ')}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <Field name="food_type" label="Food Type *" placeholder="Select food type" options={FOOD_TYPES} component={FormikSelect} />
       )}
 
       {pt === 'general' && (
         <div className="grid grid-cols-3 gap-3">
-          <div>
-            <Label className="text-xs">Gender</Label>
-            <Select value={form.gender} onValueChange={(v) => setForm({ ...form, gender: v })}>
-              <SelectTrigger className="mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>
-                {GENDER_TYPES.map((g) => <SelectItem key={g} value={g}>{g.replace(/_/g, ' ')}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">Product Category</Label>
-            <Select value={form.product_category} onValueChange={(v) => setForm({ ...form, product_category: v })}>
-              <SelectTrigger className="mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>
-                {PRODUCT_CATEGORIES.map((pc) => <SelectItem key={pc} value={pc}>{pc}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">Brand</Label>
-            <Select value={form.brand_id} onValueChange={(v) => setForm({ ...form, brand_id: v })}>
-              <SelectTrigger className="mt-1"><SelectValue placeholder="Select brand" /></SelectTrigger>
-              <SelectContent>
-                {brands.map((b: Brand) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+          <Field name="gender" label="Gender" placeholder="Select gender" options={GENDER_TYPES} component={FormikSelect} />
+          <Field name="product_category" label="Product Category" placeholder="Select category" options={PRODUCT_CATEGORIES} component={FormikSelect} />
+          <Field name="brand_id" label="Brand" placeholder="Select brand" options={brandOptions} component={FormikSelect} />
         </div>
       )}
 
       <div className="grid grid-cols-3 gap-3">
-        <div>
-          <Label className="text-xs">Purchase Price (Rs) *</Label>
-          <Input type="number" min={0} value={form.purchase_price} onChange={(e) => setForm({ ...form, purchase_price: e.target.value })} className="mt-1" />
-        </div>
-        <div>
-          <Label className="text-xs">Sales Price (Rs) *</Label>
-          <Input type="number" min={0} value={form.sales_price} onChange={(e) => setForm({ ...form, sales_price: e.target.value })} className="mt-1" />
-        </div>
-        <div>
-          <Label className="text-xs">Discount (%)</Label>
-          <Input type="number" min={0} max={100} value={form.discount_percent} onChange={(e) => setForm({ ...form, discount_percent: e.target.value })} className="mt-1" />
-        </div>
+        <Field name="purchase_price" label="Purchase Price (Rs) *" type="number" component={FormikTextInput} />
+        <Field name="sales_price" label="Sales Price (Rs) *" type="number" component={FormikTextInput} />
+        <Field name="discount_percent" label="Discount (%)" type="number" component={FormikTextInput} />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label className="text-xs">Quantity Type</Label>
-          <Select value={form.quantity_type} onValueChange={(v) => setForm({ ...form, quantity_type: v })}>
-            <SelectTrigger className="mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
-            <SelectContent>
-              {QUANTITY_TYPES.map((qt) => <SelectItem key={qt} value={qt}>{qt}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label className="text-xs">Quantity</Label>
-          <Input type="number" min={0} value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} className="mt-1" />
-        </div>
+        <Field name="quantity_type" label="Quantity Type" placeholder="Select" options={QUANTITY_TYPES} component={FormikSelect} />
+        <Field name="quantity" label="Quantity" type="number" component={FormikTextInput} />
       </div>
 
       <div>
-        <Label className="text-xs">Images</Label>
-        <div className="mt-1 flex gap-1 rounded-md border border-input p-1 w-fit">
-          <button type="button" onClick={() => setForm({ ...form, imageInputMode: 'url' })} className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition ${form.imageInputMode === 'url' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>
+        <label className="text-sm font-medium text-gray-700 block mb-1">Images</label>
+        <div className="flex gap-1 rounded-md border border-input p-1 w-fit">
+          <button type="button" onClick={() => setImageInputMode('url')} className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition ${imageInputMode === 'url' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>
             <LinkIcon className="h-3 w-3" /> Paste URL
           </button>
-          <button type="button" onClick={() => setForm({ ...form, imageInputMode: 'upload' })} className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition ${form.imageInputMode === 'upload' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>
+          <button type="button" onClick={() => setImageInputMode('upload')} className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition ${imageInputMode === 'upload' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>
             <Upload className="h-3 w-3" /> Upload File
           </button>
         </div>
-        {form.imageInputMode === 'url' ? (
+        {imageInputMode === 'url' ? (
           <div className="mt-1 flex gap-2">
-            <Input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="Paste image URL" className="flex-1" />
-            <Button type="button" variant="outline" onClick={addImage}><Plus className="h-4 w-4" /></Button>
+            <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Paste image URL" className="flex-1" />
+            <Button type="button" variant="outline" onClick={addImageUrl}><Plus className="h-4 w-4" /></Button>
           </div>
         ) : (
           <div className="mt-1">
@@ -431,9 +489,9 @@ function ProductFormFields({ form, setForm, categories, brands, addImage, remove
             </label>
           </div>
         )}
-        {form.images.length > 0 && (
+        {images.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
-            {form.images.map((url: string, idx: number) => (
+            {images.map((url, idx) => (
               <div key={idx} className="relative group">
                 <Image src={url} alt="" width={80} height={80} className="h-20 w-20 rounded-md border object-cover" />
                 <button type="button" onClick={() => removeImage(idx)} className="absolute -top-1 -right-1 bg-destructive text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition">
@@ -446,18 +504,11 @@ function ProductFormFields({ form, setForm, categories, brands, addImage, remove
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        {[
-          { k: 'is_featured', l: 'Featured' },
-          { k: 'is_best_seller', l: 'Best Seller' },
-          { k: 'is_popular', l: 'Popular' },
-          { k: 'is_today_deal', l: "Today's Deal" },
-          { k: 'is_active', l: 'Active' },
-        ].map((f) => (
-          <label key={f.k} className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={form[f.k]} onChange={(e) => setForm({ ...form, [f.k]: e.target.checked })} />
-            {f.l}
-          </label>
-        ))}
+        <Field name="is_featured" label="Featured" component={FormikCheckBox} />
+        <Field name="is_best_seller" label="Best Seller" component={FormikCheckBox} />
+        <Field name="is_popular" label="Popular" component={FormikCheckBox} />
+        <Field name="is_today_deal" label="Today's Deal" component={FormikCheckBox} />
+        <Field name="is_active" label="Active" component={FormikCheckBox} />
       </div>
     </>
   );

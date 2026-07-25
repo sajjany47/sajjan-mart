@@ -324,3 +324,49 @@ export const FormikCheckBox = ({
     </div>
   );
 };
+
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+
+export const FormikSelect = ({
+  field,
+  form: { touched, errors, setFieldValue },
+  options,
+  placeholder,
+  ...props
+}: any) => {
+  const hasError =
+    Boolean(getIn(errors, field.name)) && getIn(touched, field.name);
+
+  return (
+    <div className={props.containerClass || ''}>
+      {props.label && (
+        <Label
+          htmlFor={field.name}
+          className={props.labelClass || 'text-gray-700 font-medium mb-1 block'}
+        >
+          {props.label}
+        </Label>
+      )}
+      <Select value={field.value || undefined} onValueChange={(val) => setFieldValue(field.name, val)}>
+        <SelectTrigger
+          id={field.name}
+          className={`mt-2 mb-2 w-full ${
+            hasError ? 'border-red-500 ring-red-200' : 'border-gray-300 focus:ring-blue-300'
+          } ${props.className || ''}`}
+        >
+          <SelectValue placeholder={placeholder || `Select ${props.label || ''}`} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((opt: any) => (
+            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {hasError && (
+        <small className="text-red-600 mt-1 block text-sm">
+          {getIn(errors, field.name)}
+        </small>
+      )}
+    </div>
+  );
+};
