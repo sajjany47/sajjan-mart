@@ -4,54 +4,72 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useAuth } from '@/components/providers/auth-provider';
 import { toast } from 'sonner';
+import { Formik, Form, Field } from 'formik';
+import * as Yup from 'yup';
+import { FormikTextInput, FormikTextPassword } from '@/components/FormikTextInput';
+
+const LoginSchema = Yup.object().shape({
+  email: Yup.string().email('Invalid email address').required('Email is required'),
+  password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+});
 
 export default function LoginPage() {
   const { signIn } = useAuth();
   const router = useRouter();
   const params = useSearchParams();
   const redirect = params.get('redirect') ?? '/account';
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    const { error } = await signIn(email, password);
-    setLoading(false);
-    if (error) {
-      toast.error(error);
-    } else {
-      toast.success('Welcome back!');
-      router.push(redirect);
-    }
-  }
 
   return (
     <>
       <h1 className="font-display text-2xl font-semibold">Welcome back</h1>
       <p className="mt-1 text-sm text-muted-foreground">Sign in to your Sajjan Mart account.</p>
 
-      <form onSubmit={submit} className="mt-6 space-y-4">
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1" />
-        </div>
-        <div>
-          <div className="flex justify-between">
-            <Label htmlFor="password">Password</Label>
-            <Link href="/forgot-password" className="text-xs text-primary hover:underline">Forgot password?</Link>
-          </div>
-          <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1" />
-        </div>
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Signing in...' : 'Sign in'}
-        </Button>
-      </form>
+      <Formik
+        initialValues={{ email: '', password: '' }}
+        validationSchema={LoginSchema}
+        onSubmit={async (values, { setSubmitting }) => {
+          setLoading(true);
+          const { error } = await signIn(values.email, values.password);
+          setLoading(false);
+          setSubmitting(false);
+          if (error) {
+            toast.error(error);
+          } else {
+            toast.success('Welcome back!');
+            router.push(redirect);
+          }
+        }}
+      >
+        {({ isSubmitting }) => (
+          <Form className="mt-6 space-y-4">
+            <Field
+              name="email"
+              label="Email"
+              type="email"
+              placeholder="you@example.com"
+              component={FormikTextInput}
+            />
+            <div>
+              <div className="flex justify-between">
+                <span />
+                <Link href="/forgot-password" className="text-xs text-primary hover:underline">Forgot password?</Link>
+              </div>
+              <Field
+                name="password"
+                label="Password"
+                placeholder="Enter your password"
+                component={FormikTextPassword}
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={loading || isSubmitting}>
+              {loading ? 'Signing in...' : 'Sign in'}
+            </Button>
+          </Form>
+        )}
+      </Formik>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         New to Sajjan Mart?{' '}
