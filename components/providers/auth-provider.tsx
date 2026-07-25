@@ -81,6 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       const data = await res.json();
       if (!res.ok) return { error: data.error ?? 'Registration failed' };
+      setUser(data.user);
+      await loadProfile();
       return { error: null };
     } catch {
       return { error: 'Registration failed' };

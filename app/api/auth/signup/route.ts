@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma/client';
+import { signToken } from '@/lib/jwt';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,7 +26,27 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ id: profile.id, email: profile.email }, { status: 201 });
+    const token = signToken({ id: profile.id, email: profile.email, role: profile.role });
+
+    const response = NextResponse.json({
+      token,
+      user: {
+        id: profile.id,
+        email: profile.email,
+        name: profile.fullName,
+        role: profile.role,
+      },
+    }, { status: 201 });
+
+    response.cookies.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60,
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     return NextResponse.json({ error: 'Registration failed' }, { status: 500 });
   }
