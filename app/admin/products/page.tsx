@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
-import { Plus, Pencil, Trash2, Search, X, Upload, Link } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, X, Upload, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,6 +51,7 @@ export default function AdminProductsPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [form, setForm] = useState<any>(emptyForm('food'));
+  const [uploading, setUploading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -98,6 +99,25 @@ export default function AdminProductsPage() {
 
   function removeImage(idx: number) {
     setForm({ ...form, images: form.images.filter((_: string, i: number) => i !== idx) });
+  }
+
+  async function uploadFile(file: File) {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('folder', 'products');
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error || 'Upload failed'); return; }
+      if (form.images.includes(data.url)) { toast.error('Image already added'); return; }
+      setForm({ ...form, images: [...form.images, data.url] });
+      toast.success('Image uploaded');
+    } catch {
+      toast.error('Upload failed');
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function save(e: React.FormEvent) {
@@ -254,7 +274,7 @@ export default function AdminProductsPage() {
             <DialogTitle>{editing ? 'Edit' : 'Add'} {PRODUCT_TYPES.find((t) => t.value === form.product_type)?.label}</DialogTitle>
           </DialogHeader>
           <form onSubmit={save} className="space-y-4">
-            <ProductFormFields form={form} setForm={setForm} categories={categories} brands={brands} addImage={addImage} removeImage={removeImage} />
+            <ProductFormFields form={form} setForm={setForm} categories={categories} brands={brands} addImage={addImage} removeImage={removeImage} uploading={uploading} uploadFile={uploadFile} />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
               <Button type="submit">{editing ? 'Save changes' : 'Create product'}</Button>
@@ -266,7 +286,7 @@ export default function AdminProductsPage() {
   );
 }
 
-function ProductFormFields({ form, setForm, categories, brands, addImage, removeImage }: any) {
+function ProductFormFields({ form, setForm, categories, brands, addImage, removeImage, uploading, uploadFile }: any) {
   const pt = form.product_type;
   return (
     <>
@@ -385,10 +405,32 @@ function ProductFormFields({ form, setForm, categories, brands, addImage, remove
 
       <div>
         <Label className="text-xs">Images</Label>
-        <div className="mt-1 flex gap-2">
-          <Input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="Paste image URL" className="flex-1" />
-          <Button type="button" variant="outline" onClick={addImage}><Plus className="h-4 w-4" /></Button>
+        <div className="mt-1 flex gap-1 rounded-md border border-input p-1 w-fit">
+          <button type="button" onClick={() => setForm({ ...form, imageInputMode: 'url' })} className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition ${form.imageInputMode === 'url' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>
+            <LinkIcon className="h-3 w-3" /> Paste URL
+          </button>
+          <button type="button" onClick={() => setForm({ ...form, imageInputMode: 'upload' })} className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition ${form.imageInputMode === 'upload' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>
+            <Upload className="h-3 w-3" /> Upload File
+          </button>
         </div>
+        {form.imageInputMode === 'url' ? (
+          <div className="mt-1 flex gap-2">
+            <Input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="Paste image URL" className="flex-1" />
+            <Button type="button" variant="outline" onClick={addImage}><Plus className="h-4 w-4" /></Button>
+          </div>
+        ) : (
+          <div className="mt-1">
+            <label className="flex flex-col items-center gap-1 rounded-md border-2 border-dashed border-input p-4 text-center cursor-pointer hover:bg-muted/50 transition">
+              {uploading ? (
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              ) : (
+                <Upload className="h-6 w-6 text-muted-foreground" />
+              )}
+              <span className="text-xs text-muted-foreground">{uploading ? 'Uploading...' : 'Click or drag image here'}</span>
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" className="hidden" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); e.target.value = ''; }} />
+            </label>
+          </div>
+        )}
         {form.images.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
             {form.images.map((url: string, idx: number) => (
