@@ -58,13 +58,23 @@ const PRODUCT_CATEGORIES = [
   { value: 'other', label: 'Other' },
 ];
 
-function getInitialValues(productType: string, editing: Product | null) {
+const CATEGORY_SLUG_MAP: Record<string, string> = {
+  food: 'food',
+  puja_samagri: 'puja-samagri',
+  natural: 'natural-products',
+  general: 'general',
+};
+
+function getInitialValues(productType: string, editing: Product | null, categories: Category[]) {
+  const targetSlug = CATEGORY_SLUG_MAP[productType] ?? '';
+  const matchedCategory = categories.find((c) => c.slug === targetSlug);
+
   if (editing) {
     return {
       name: editing.name,
       description: editing.description ?? '',
       product_type: editing.product_type,
-      category_id: editing.category_id ?? '',
+      category_id: editing.category_id ?? matchedCategory?.id ?? '',
       sub_category_id: editing.sub_category_id ?? '',
       brand_id: editing.brand_id ?? '',
       purchase_price: editing.purchase_price,
@@ -72,6 +82,8 @@ function getInitialValues(productType: string, editing: Product | null) {
       discount_percent: editing.discount_percent,
       quantity_type: editing.quantity_type ?? '',
       quantity: editing.quantity ?? 0,
+      stock_type: editing.stock_type ?? '',
+      stock: editing.stock ?? 0,
       food_type: editing.food_type ?? '',
       gender: editing.gender ?? '',
       product_category: editing.product_category ?? '',
@@ -86,7 +98,7 @@ function getInitialValues(productType: string, editing: Product | null) {
     name: '',
     description: '',
     product_type: productType,
-    category_id: '',
+    category_id: matchedCategory?.id ?? '',
     sub_category_id: '',
     brand_id: '',
     purchase_price: 0,
@@ -94,6 +106,8 @@ function getInitialValues(productType: string, editing: Product | null) {
     discount_percent: 0,
     quantity_type: '',
     quantity: 0,
+    stock_type: '',
+    stock: 0,
     food_type: '',
     gender: '',
     product_category: '',
@@ -112,12 +126,14 @@ function getValidationSchema(productType: string) {
     sales_price: Yup.number().min(1, 'Sales price must be greater than 0').required('Sales price is required'),
     purchase_price: Yup.number().min(0, 'Purchase price cannot be negative').required('Purchase price is required'),
     discount_percent: Yup.number().min(0).max(100).required(),
-    quantity: Yup.number().min(0).required(),
+    quantity_type: Yup.string().required('Quantity type is required'),
+    quantity: Yup.number().min(1, 'Quantity must be at least 1').required('Quantity is required'),
+    stock_type: Yup.string().required('Stock type is required'),
+    stock: Yup.number().min(0, 'Stock cannot be negative').required('Stock is required'),
     food_type: productType === 'food' ? Yup.string().required('Food type is required') : Yup.string(),
     category_id: Yup.string(),
     sub_category_id: Yup.string(),
     brand_id: Yup.string(),
-    quantity_type: Yup.string(),
     gender: Yup.string(),
     product_category: Yup.string(),
     is_featured: Yup.boolean(),
@@ -221,6 +237,8 @@ export default function AdminProductsPage() {
       discountPercent: Number(values.discount_percent),
       quantityType: values.quantity_type || null,
       quantity: Number(values.quantity) || null,
+      stockType: values.stock_type || null,
+      stock: Number(values.stock) || 0,
       foodType: values.food_type || null,
       gender: values.gender || null,
       productCategory: values.product_category || null,
@@ -363,7 +381,7 @@ export default function AdminProductsPage() {
             <DialogTitle>{editing ? 'Edit' : 'Add'} {PRODUCT_TYPES.find((t) => t.value === (editing?.product_type ?? activeTab))?.label}</DialogTitle>
           </DialogHeader>
           <Formik
-            initialValues={getInitialValues(editing?.product_type ?? activeTab, editing)}
+            initialValues={getInitialValues(editing?.product_type ?? activeTab, editing, categories)}
             validationSchema={getValidationSchema(editing?.product_type ?? activeTab)}
             enableReinitialize
             onSubmit={onSubmit}
@@ -375,6 +393,7 @@ export default function AdminProductsPage() {
                   setFieldValue={setFieldValue}
                   categories={categories}
                   brands={brands}
+                  isEditing={!!editing}
                   images={images}
                   imageInputMode={imageInputMode}
                   setImageInputMode={setImageInputMode}
@@ -401,7 +420,7 @@ export default function AdminProductsPage() {
 }
 
 function ProductFormContent({
-  values, setFieldValue, categories, brands,
+  values, setFieldValue, categories, brands, isEditing,
   images, imageInputMode, setImageInputMode, imageUrl, setImageUrl,
   addImageUrl, removeImage, uploading, uploadFile,
 }: {
@@ -409,6 +428,7 @@ function ProductFormContent({
   setFieldValue: any;
   categories: Category[];
   brands: Brand[];
+  isEditing: boolean;
   images: string[];
   imageInputMode: 'url' | 'upload';
   setImageInputMode: (m: 'url' | 'upload') => void;
@@ -429,24 +449,21 @@ function ProductFormContent({
       <Field name="name" label="Product Name *" placeholder="Enter product name" component={FormikTextInput} />
       <Field name="description" label="Description" placeholder="Enter product description" rows={3} component={FormikTextArea} />
 
-      {(pt === 'food' || pt === 'general') && (
-        <div className="grid grid-cols-2 gap-3">
-          <Field name="category_id" label="Category" placeholder="Select category" options={categoryOptions} component={FormikSelect} />
-          {pt === 'general' && (
-            <Field name="brand_id" label="Brand" placeholder="Select brand" options={brandOptions} component={FormikSelect} />
-          )}
-        </div>
-      )}
+      <div className="grid grid-cols-2 gap-3">
+        <Field name="category_id" label="Category" placeholder="Select category" options={categoryOptions} component={FormikSelect} disabled={!isEditing} />
+        {(pt === 'general') && (
+          <Field name="brand_id" label="Brand" placeholder="Select brand" options={brandOptions} component={FormikSelect} />
+        )}
+      </div>
 
       {pt === 'food' && (
         <Field name="food_type" label="Food Type *" placeholder="Select food type" options={FOOD_TYPES} component={FormikSelect} />
       )}
 
       {pt === 'general' && (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <Field name="gender" label="Gender" placeholder="Select gender" options={GENDER_TYPES} component={FormikSelect} />
           <Field name="product_category" label="Product Category" placeholder="Select category" options={PRODUCT_CATEGORIES} component={FormikSelect} />
-          <Field name="brand_id" label="Brand" placeholder="Select brand" options={brandOptions} component={FormikSelect} />
         </div>
       )}
 
@@ -457,8 +474,13 @@ function ProductFormContent({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field name="quantity_type" label="Quantity Type" placeholder="Select" options={QUANTITY_TYPES} component={FormikSelect} />
-        <Field name="quantity" label="Quantity" type="number" component={FormikTextInput} />
+        <Field name="quantity_type" label="Quantity Type *" placeholder="Select quantity type" options={QUANTITY_TYPES} component={FormikSelect} />
+        <Field name="quantity" label="Quantity *" type="number" component={FormikTextInput} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field name="stock_type" label="Stock Type *" placeholder="Select stock type" options={QUANTITY_TYPES} component={FormikSelect} />
+        <Field name="stock" label="Stock *" type="number" component={FormikTextInput} />
       </div>
 
       <div>

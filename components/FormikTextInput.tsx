@@ -332,6 +332,7 @@ export const FormikSelect = ({
   form: { touched, errors, setFieldValue },
   options,
   placeholder,
+  disabled,
   ...props
 }: any) => {
   const hasError =
@@ -342,17 +343,17 @@ export const FormikSelect = ({
       {props.label && (
         <Label
           htmlFor={field.name}
-          className={props.labelClass || 'text-gray-700 font-medium mb-1 block'}
+          className={`${props.labelClass || 'text-gray-700 font-medium mb-1 block'} ${disabled ? 'opacity-50' : ''}`}
         >
           {props.label}
         </Label>
       )}
-      <Select value={field.value || undefined} onValueChange={(val) => setFieldValue(field.name, val)}>
+      <Select value={field.value || undefined} onValueChange={(val) => setFieldValue(field.name, val)} disabled={disabled}>
         <SelectTrigger
           id={field.name}
           className={`mt-2 mb-2 w-full ${
             hasError ? 'border-red-500 ring-red-200' : 'border-gray-300 focus:ring-blue-300'
-          } ${props.className || ''}`}
+          } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${props.className || ''}`}
         >
           <SelectValue placeholder={placeholder || `Select ${props.label || ''}`} />
         </SelectTrigger>

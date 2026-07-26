@@ -82,6 +82,8 @@ export interface Product {
   discount_percent: number;
   quantity_type: QuantityType | null;
   quantity: number | null;
+  stock_type: QuantityType | null;
+  stock: number;
   food_type: FoodType | null;
   gender: GenderType | null;
   product_category: ProductCategory | null;

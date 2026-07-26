@@ -126,6 +126,8 @@ model Product {
   discountPercent Decimal       @default(0) @map("discount_percent")
   quantityType    String?       @map("quantity_type")
   quantity        Decimal?
+  stockType       String?       @map("stock_type")
+  stock           Int           @default(0) @map("stock")
 
   foodType        String?       @map("food_type")
   gender          String?
