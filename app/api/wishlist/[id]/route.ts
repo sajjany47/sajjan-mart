@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma/client';
-import { jsonResponse } from '@/lib/api-utils';
+import { jsonResponse, parseBody } from '@/lib/api-utils';
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const body = await request.json();
+    const body = await parseBody(request);
     const item = await prisma.wishlist.update({ where: { id: params.id }, data: body });
     return jsonResponse(item);
   } catch (error) {

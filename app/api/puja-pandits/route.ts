@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma/client';
-import { jsonResponse } from '@/lib/api-utils';
+import { jsonResponse, parseBody } from '@/lib/api-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await parseBody(request);
     const item = await prisma.pujaPandit.create({ data: body });
     return jsonResponse(item, { status: 201 });
   } catch (error) {

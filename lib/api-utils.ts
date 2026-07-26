@@ -4,6 +4,10 @@ function camelToSnake(str: string): string {
   return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }
 
+function snakeToCamel(str: string): string {
+  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
 function toSnakeCaseKeys(obj: any): any {
   if (obj === null || obj === undefined) return obj;
   if (typeof obj !== 'object') return obj;
@@ -19,6 +23,24 @@ function toSnakeCaseKeys(obj: any): any {
   return result;
 }
 
+function toSnakeCamelKeys(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj !== 'object') return obj;
+  if (obj instanceof Date) return obj;
+  if (Array.isArray(obj)) return obj.map(toSnakeCamelKeys);
+
+  const result: Record<string, any> = {};
+  for (const key of Object.keys(obj)) {
+    result[snakeToCamel(key)] = toSnakeCamelKeys(obj[key]);
+  }
+  return result;
+}
+
 export function jsonResponse(data: any, init?: ResponseInit) {
   return NextResponse.json(toSnakeCaseKeys(data), init);
+}
+
+export async function parseBody(request: Request) {
+  const body = await request.json();
+  return toSnakeCamelKeys(body);
 }
