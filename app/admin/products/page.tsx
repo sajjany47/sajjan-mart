@@ -376,7 +376,7 @@ export default function AdminProductsPage() {
       </Tabs>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? 'Edit' : 'Add'} {PRODUCT_TYPES.find((t) => t.value === (editing?.product_type ?? activeTab))?.label}</DialogTitle>
           </DialogHeader>
@@ -445,93 +445,145 @@ function ProductFormContent({
   const brandOptions = brands.map((b) => ({ value: b.id, label: b.name }));
 
   return (
-    <>
-      <Field name="name" label="Product Name *" placeholder="Enter product name" component={FormikTextInput} />
-      <Field name="description" label="Description" placeholder="Enter product description" rows={3} component={FormikTextArea} />
-
-      <div className="grid grid-cols-2 gap-3">
-        <Field name="category_id" label="Category" placeholder="Select category" options={categoryOptions} component={FormikSelect} disabled={!isEditing} />
-        {(pt === 'general') && (
-          <Field name="brand_id" label="Brand" placeholder="Select brand" options={brandOptions} component={FormikSelect} />
-        )}
-      </div>
-
-      {pt === 'food' && (
-        <Field name="food_type" label="Food Type *" placeholder="Select food type" options={FOOD_TYPES} component={FormikSelect} />
-      )}
-
-      {pt === 'general' && (
-        <div className="grid grid-cols-2 gap-3">
-          <Field name="gender" label="Gender" placeholder="Select gender" options={GENDER_TYPES} component={FormikSelect} />
-          <Field name="product_category" label="Product Category" placeholder="Select category" options={PRODUCT_CATEGORIES} component={FormikSelect} />
+    <div className="space-y-6">
+      {/* Basic Information */}
+      <div className="rounded-lg border border-border bg-muted/30 p-4">
+        <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+          <span className="flex h-5 w-5 items-center justify-center rounded bg-primary/10 text-xs font-bold text-primary">1</span>
+          Basic Information
+        </h3>
+        <div className="space-y-3">
+          <Field name="name" label="Product Name *" placeholder="Enter product name" component={FormikTextInput} />
+          <Field name="description" label="Description" placeholder="Enter product description" rows={3} component={FormikTextArea} />
         </div>
-      )}
-
-      <div className="grid grid-cols-3 gap-3">
-        <Field name="purchase_price" label="Purchase Price (Rs) *" type="number" component={FormikTextInput} />
-        <Field name="sales_price" label="Sales Price (Rs) *" type="number" component={FormikTextInput} />
-        <Field name="discount_percent" label="Discount (%)" type="number" component={FormikTextInput} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Field name="quantity_type" label="Quantity Type *" placeholder="Select quantity type" options={QUANTITY_TYPES} component={FormikSelect} />
-        <Field name="quantity" label="Quantity *" type="number" component={FormikTextInput} />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <Field name="stock_type" label="Stock Type *" placeholder="Select stock type" options={QUANTITY_TYPES} component={FormikSelect} />
-        <Field name="stock" label="Stock *" type="number" component={FormikTextInput} />
-      </div>
-
-      <div>
-        <label className="text-sm font-medium text-gray-700 block mb-1">Images</label>
-        <div className="flex gap-1 rounded-md border border-input p-1 w-fit">
-          <button type="button" onClick={() => setImageInputMode('url')} className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition ${imageInputMode === 'url' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>
-            <LinkIcon className="h-3 w-3" /> Paste URL
-          </button>
-          <button type="button" onClick={() => setImageInputMode('upload')} className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition ${imageInputMode === 'upload' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>
-            <Upload className="h-3 w-3" /> Upload File
-          </button>
-        </div>
-        {imageInputMode === 'url' ? (
-          <div className="mt-1 flex gap-2">
-            <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Paste image URL" className="flex-1" />
-            <Button type="button" variant="outline" onClick={addImageUrl}><Plus className="h-4 w-4" /></Button>
+      {/* Category & Classification */}
+      <div className="rounded-lg border border-border bg-muted/30 p-4">
+        <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+          <span className="flex h-5 w-5 items-center justify-center rounded bg-primary/10 text-xs font-bold text-primary">2</span>
+          Category & Classification
+        </h3>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-4">
+            <Field name="category_id" label="Category" placeholder="Select category" options={categoryOptions} component={FormikSelect} disabled={!isEditing} />
+            {(pt === 'general') && (
+              <Field name="brand_id" label="Brand" placeholder="Select brand" options={brandOptions} component={FormikSelect} />
+            )}
           </div>
-        ) : (
-          <div className="mt-1">
-            <label className="flex flex-col items-center gap-1 rounded-md border-2 border-dashed border-input p-4 text-center cursor-pointer hover:bg-muted/50 transition">
+
+          {pt === 'food' && (
+            <Field name="food_type" label="Food Type *" placeholder="Select food type" options={FOOD_TYPES} component={FormikSelect} />
+          )}
+
+          {pt === 'general' && (
+            <div className="grid grid-cols-2 gap-4">
+              <Field name="gender" label="Gender" placeholder="Select gender" options={GENDER_TYPES} component={FormikSelect} />
+              <Field name="product_category" label="Product Category" placeholder="Select category" options={PRODUCT_CATEGORIES} component={FormikSelect} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Pricing */}
+      <div className="rounded-lg border border-border bg-muted/30 p-4">
+        <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+          <span className="flex h-5 w-5 items-center justify-center rounded bg-primary/10 text-xs font-bold text-primary">3</span>
+          Pricing
+        </h3>
+        <div className="grid grid-cols-3 gap-4">
+          <Field name="purchase_price" label="Purchase Price (Rs) *" type="number" component={FormikTextInput} />
+          <Field name="sales_price" label="Sales Price (Rs) *" type="number" component={FormikTextInput} />
+          <Field name="discount_percent" label="Discount (%)" type="number" component={FormikTextInput} />
+        </div>
+      </div>
+
+      {/* Quantity & Stock */}
+      <div className="rounded-lg border border-border bg-muted/30 p-4">
+        <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+          <span className="flex h-5 w-5 items-center justify-center rounded bg-primary/10 text-xs font-bold text-primary">4</span>
+          Quantity & Stock
+        </h3>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-4">
+            <Field name="quantity_type" label="Quantity Type *" placeholder="Select quantity type" options={QUANTITY_TYPES} component={FormikSelect} />
+            <Field name="quantity" label="Quantity *" type="number" component={FormikTextInput} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Field name="stock_type" label="Stock Type *" placeholder="Select stock type" options={QUANTITY_TYPES} component={FormikSelect} />
+            <Field name="stock" label="Stock *" type="number" component={FormikTextInput} />
+          </div>
+        </div>
+      </div>
+
+      {/* Images */}
+      <div className="rounded-lg border border-border bg-muted/30 p-4">
+        <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+          <span className="flex h-5 w-5 items-center justify-center rounded bg-primary/10 text-xs font-bold text-primary">5</span>
+          Product Images
+        </h3>
+        <div className="space-y-3">
+          <div className="flex gap-1 rounded-md border border-input p-1 w-fit">
+            <button type="button" onClick={() => setImageInputMode('url')} className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition ${imageInputMode === 'url' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>
+              <LinkIcon className="h-3 w-3" /> Paste URL
+            </button>
+            <button type="button" onClick={() => setImageInputMode('upload')} className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition ${imageInputMode === 'upload' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>
+              <Upload className="h-3 w-3" /> Upload File
+            </button>
+          </div>
+
+          {imageInputMode === 'url' ? (
+            <div className="flex gap-2">
+              <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Paste image URL" className="flex-1" />
+              <Button type="button" variant="outline" onClick={addImageUrl}><Plus className="h-4 w-4" /></Button>
+            </div>
+          ) : (
+            <label className="flex flex-col items-center gap-2 rounded-lg border-2 border-dashed border-input p-6 text-center cursor-pointer hover:bg-muted/50 transition">
               {uploading ? (
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               ) : (
-                <Upload className="h-6 w-6 text-muted-foreground" />
+                <Upload className="h-8 w-8 text-muted-foreground" />
               )}
-              <span className="text-xs text-muted-foreground">{uploading ? 'Uploading...' : 'Click or drag image here'}</span>
+              <div>
+                <span className="text-sm font-medium text-foreground">{uploading ? 'Uploading...' : 'Click to upload'}</span>
+                <p className="text-xs text-muted-foreground mt-1">JPEG, PNG, WebP, GIF, AVIF</p>
+              </div>
               <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" className="hidden" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); e.target.value = ''; }} />
             </label>
-          </div>
-        )}
-        {images.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {images.map((url, idx) => (
-              <div key={idx} className="relative group">
-                <Image src={url} alt="" width={80} height={80} className="h-20 w-20 rounded-md border object-cover" />
-                <button type="button" onClick={() => removeImage(idx)} className="absolute -top-1 -right-1 bg-destructive text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition">
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+          )}
+
+          {images.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {images.map((url, idx) => (
+                <div key={idx} className="relative group">
+                  <Image src={url} alt="" width={80} height={80} className="h-20 w-20 rounded-lg border object-cover" />
+                  <button type="button" onClick={() => removeImage(idx)} className="absolute -top-1.5 -right-1.5 bg-destructive text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition shadow-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                  {idx === 0 && (
+                    <span className="absolute bottom-1 left-1 bg-primary text-primary-foreground text-[10px] font-medium px-1.5 py-0.5 rounded">Main</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        <Field name="is_featured" label="Featured" component={FormikCheckBox} />
-        <Field name="is_best_seller" label="Best Seller" component={FormikCheckBox} />
-        <Field name="is_popular" label="Popular" component={FormikCheckBox} />
-        <Field name="is_today_deal" label="Today's Deal" component={FormikCheckBox} />
-        <Field name="is_active" label="Active" component={FormikCheckBox} />
+      {/* Status & Flags */}
+      <div className="rounded-lg border border-border bg-muted/30 p-4">
+        <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+          <span className="flex h-5 w-5 items-center justify-center rounded bg-primary/10 text-xs font-bold text-primary">6</span>
+          Status & Visibility
+        </h3>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-3">
+          <Field name="is_active" label="Active" component={FormikCheckBox} />
+          <Field name="is_featured" label="Featured" component={FormikCheckBox} />
+          <Field name="is_best_seller" label="Best Seller" component={FormikCheckBox} />
+          <Field name="is_popular" label="Popular" component={FormikCheckBox} />
+          <Field name="is_today_deal" label="Today's Deal" component={FormikCheckBox} />
+        </div>
       </div>
-    </>
+    </div>
   );
 }
