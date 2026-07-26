@@ -147,7 +147,7 @@ model Product {
   category      Category?       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   subCategory   SubCategory?    @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
   brand         Brand?          @relation(fields: [brandId], references: [id], onDelete: SetNull)
-  images        ProductImage[]
+  productImages ProductImage[]
   variants      ProductVariant[]
   reviews       Review[]
   wishlists     Wishlist[]

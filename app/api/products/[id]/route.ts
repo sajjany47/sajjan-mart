@@ -6,7 +6,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   try {
     const item = await prisma.product.findUnique({
       where: { id: params.id },
-      include: { images: true, variants: true, category: true, subCategory: true, brand: true },
+      include: { productImages: true, variants: true, category: true, subCategory: true, brand: true },
     });
     if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return jsonResponse(item);

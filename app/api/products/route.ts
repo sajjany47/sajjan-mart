@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     if (slug) {
       const item = await prisma.product.findUnique({
         where: { slug },
-        include: { images: true, variants: true, category: true, subCategory: true, brand: true },
+        include: { productImages: true, variants: true, category: true, subCategory: true, brand: true },
       });
       if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 });
       return jsonResponse(item);
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     const items = await prisma.product.findMany({
       where,
-      include: { images: true, variants: true, category: true, subCategory: true, brand: true },
+      include: { productImages: true, variants: true, category: true, subCategory: true, brand: true },
       orderBy: { createdAt: 'desc' },
     });
     return jsonResponse(items);
