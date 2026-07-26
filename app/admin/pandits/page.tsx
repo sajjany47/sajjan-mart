@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { formatINR } from '@/lib/format';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { Pandit } from '@/lib/types';
 
 const EMPTY = { name: '', experience: 0, languages: '', rating: 5, price: 0, photo_url: '', bio: '' };
@@ -18,6 +19,8 @@ export default function AdminPanditsPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Pandit | null>(null);
   const [form, setForm] = useState<any>(EMPTY);
+  const [deleteTarget, setDeleteTarget] = useState<Pandit | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function load() {
     const { data } = await supabase.from('pandits').select('*').order('name');
@@ -60,9 +63,12 @@ export default function AdminPanditsPage() {
     setOpen(false); load();
   }
 
-  async function remove(p: Pandit) {
-    if (!confirm(`Delete "${p.name}"?`)) return;
-    const { error } = await supabase.from('pandits').delete().eq('id', p.id);
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { error } = await supabase.from('pandits').delete().eq('id', deleteTarget.id);
+    setDeleting(false);
+    setDeleteTarget(null);
     if (error) { toast.error(error.message); return; }
     load(); toast.success('Pandit deleted');
   }
@@ -91,7 +97,7 @@ export default function AdminPanditsPage() {
               </div>
               <div className="flex gap-1">
                 <Button variant="ghost" size="icon" onClick={() => openEdit(p)} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
-                <Button variant="ghost" size="icon" onClick={() => remove(p)} aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(p)} aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
               </div>
             </div>
             {p.bio && <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{p.bio}</p>}
@@ -119,6 +125,15 @@ export default function AdminPanditsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title="Delete Pandit"
+        description={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        onConfirm={confirmDelete}
+        loading={deleting}
+      />
     </div>
   );
 }

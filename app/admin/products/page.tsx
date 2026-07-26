@@ -14,6 +14,7 @@ import { formatINR, slugify } from '@/lib/format';
 import { Formik, Form, Field, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import { FormikTextInput, FormikTextArea, FormikCheckBox, FormikSelect } from '@/components/FormikTextInput';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { Product, Category, Brand } from '@/lib/types';
 
 const PRODUCT_TYPES = [
@@ -159,6 +160,8 @@ export default function AdminProductsPage() {
   const [imageInputMode, setImageInputMode] = useState<'url' | 'upload'>('url');
   const [imageUrl, setImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -270,9 +273,12 @@ export default function AdminProductsPage() {
     load();
   }
 
-  async function remove(p: Product) {
-    if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
-    const { error } = await supabase.from('products').delete().eq('id', p.id);
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { error } = await supabase.from('products').delete().eq('id', deleteTarget.id);
+    setDeleting(false);
+    setDeleteTarget(null);
     if (error) { toast.error(error.message); return; }
     load();
     toast.success('Product deleted');
@@ -362,7 +368,7 @@ export default function AdminProductsPage() {
                         <td className="px-4 py-3 text-right">
                           <div className="flex justify-end gap-1">
                             <Button variant="ghost" size="icon" onClick={() => openEdit(p)} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" onClick={() => remove(p)} aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(p)} aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                           </div>
                         </td>
                       </tr>
@@ -415,6 +421,15 @@ export default function AdminProductsPage() {
           </Formik>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title="Delete Product"
+        description={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        onConfirm={confirmDelete}
+        loading={deleting}
+      />
     </div>
   );
 }

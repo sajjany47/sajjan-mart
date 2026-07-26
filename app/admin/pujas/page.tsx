@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { formatINR, slugify } from '@/lib/format';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { Puja } from '@/lib/types';
 
 const EMPTY = { name: '', description: '', image_url: '', base_price: 0 };
@@ -18,6 +19,8 @@ export default function AdminPujasPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Puja | null>(null);
   const [form, setForm] = useState<any>(EMPTY);
+  const [deleteTarget, setDeleteTarget] = useState<Puja | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function load() {
     const { data } = await supabase.from('pujas').select('*').order('name');
@@ -52,9 +55,12 @@ export default function AdminPujasPage() {
     setOpen(false); load();
   }
 
-  async function remove(p: Puja) {
-    if (!confirm(`Delete "${p.name}"?`)) return;
-    const { error } = await supabase.from('pujas').delete().eq('id', p.id);
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { error } = await supabase.from('pujas').delete().eq('id', deleteTarget.id);
+    setDeleting(false);
+    setDeleteTarget(null);
     if (error) { toast.error(error.message); return; }
     load(); toast.success('Puja deleted');
   }
@@ -79,7 +85,7 @@ export default function AdminPujasPage() {
               </div>
               <div className="flex gap-1">
                 <Button variant="ghost" size="icon" onClick={() => openEdit(p)} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
-                <Button variant="ghost" size="icon" onClick={() => remove(p)} aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(p)} aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
               </div>
             </div>
             <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{p.description}</p>
@@ -102,6 +108,15 @@ export default function AdminPujasPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title="Delete Puja"
+        description={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        onConfirm={confirmDelete}
+        loading={deleting}
+      />
     </div>
   );
 }

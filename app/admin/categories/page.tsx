@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { slugify } from '@/lib/format';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { Category } from '@/lib/types';
 
 const EMPTY = { name: '', description: '', image_url: '', sort_order: 0 };
@@ -18,6 +19,8 @@ export default function AdminCategoriesPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [form, setForm] = useState<any>(EMPTY);
+  const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function load() {
     const { data } = await supabase.from('categories').select('*').order('sort_order');
@@ -53,9 +56,12 @@ export default function AdminCategoriesPage() {
     setOpen(false); load();
   }
 
-  async function remove(c: Category) {
-    if (!confirm(`Delete category "${c.name}"?`)) return;
-    const { error } = await supabase.from('categories').delete().eq('id', c.id);
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { error } = await supabase.from('categories').delete().eq('id', deleteTarget.id);
+    setDeleting(false);
+    setDeleteTarget(null);
     if (error) { toast.error(error.message); return; }
     load(); toast.success('Category deleted');
   }
@@ -80,7 +86,7 @@ export default function AdminCategoriesPage() {
               </div>
               <div className="flex gap-1">
                 <Button variant="ghost" size="icon" onClick={() => openEdit(c)} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
-                <Button variant="ghost" size="icon" onClick={() => remove(c)} aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(c)} aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
               </div>
             </div>
             <p className="mt-2 text-sm text-muted-foreground">{c.description}</p>
@@ -115,6 +121,15 @@ export default function AdminCategoriesPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title="Delete Category"
+        description={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        onConfirm={confirmDelete}
+        loading={deleting}
+      />
     </div>
   );
 }
