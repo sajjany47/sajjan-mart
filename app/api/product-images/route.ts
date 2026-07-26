@@ -29,3 +29,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to create' }, { status: 500 });
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const productId = searchParams.get('product_id');
+    if (!productId) {
+      return NextResponse.json({ error: 'product_id is required' }, { status: 400 });
+    }
+    await prisma.productImage.deleteMany({ where: { productId } });
+    return jsonResponse({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
+  }
+}

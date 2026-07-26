@@ -2,32 +2,51 @@
 
 const API_BASE = '/api';
 
+const TABLE_MAP: Record<string, string> = {
+  product_images: 'product-images',
+  product_variants: 'product-variants',
+  puja_items: 'puja-items',
+  puja_pandits: 'puja-pandits',
+  support_tickets: 'support-tickets',
+};
+
 function makeClientQueryBuilder(table: string) {
+  const apiTable = TABLE_MAP[table] ?? table;
   const params = new URLSearchParams();
   let method: 'GET' | 'POST' = 'GET';
   let bodyData: any = null;
+  let mutationType: 'insert' | 'update' | 'delete' | null = null;
   let countExact = false;
   let headOnly = false;
 
+  async function safeJson(res: Response) {
+    const text = await res.text();
+    if (!text) return null;
+    try { return JSON.parse(text); } catch { return { error: text }; }
+  }
+
   const builder: any = {
     select(query?: string, opts?: { count?: 'exact'; head?: boolean }) {
-      method = 'GET';
+      if (!mutationType) method = 'GET';
       if (opts?.count === 'exact') countExact = true;
       if (opts?.head) headOnly = true;
       return builder;
     },
     insert(data: any) {
       method = 'POST';
+      mutationType = 'insert';
       bodyData = Array.isArray(data) ? data : [data];
       return builder;
     },
     update(data: any) {
       method = 'POST';
+      mutationType = 'update';
       bodyData = data;
       return builder;
     },
     delete() {
       method = 'POST';
+      mutationType = 'delete';
       return builder;
     },
     eq(field: string, value: any) {
@@ -70,10 +89,10 @@ function makeClientQueryBuilder(table: string) {
     },
     maybeSingle() {
       return builder.then(async (resolve: any) => {
-        const url = `${API_BASE}/${table}?${params.toString()}`;
+        const url = `${API_BASE}/${apiTable}?${params.toString()}`;
         try {
           const res = await fetch(url);
-          const data = await res.json();
+          const data = await safeJson(res);
           if (Array.isArray(data)) return resolve({ data: data[0] || null, error: null });
           return resolve({ data: data || null, error: null });
         } catch (e) {
@@ -82,36 +101,56 @@ function makeClientQueryBuilder(table: string) {
       });
     },
     async then(resolve: any) {
-      if (method === 'POST') {
-        if (bodyData && Array.isArray(bodyData)) {
+      if (mutationType) {
+        if (mutationType === 'insert' && Array.isArray(bodyData)) {
           const results = [];
           for (const item of bodyData) {
-            const res = await fetch(API_BASE + '/' + table, {
+            const res = await fetch(`${API_BASE}/${apiTable}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(item),
             });
-            results.push(await res.json());
+            const json = await safeJson(res);
+            if (!res.ok) return resolve({ data: null, error: json });
+            results.push(json);
           }
-          return resolve({ data: results, error: null });
+          const singleResult = results.length === 1 ? results[0] : results;
+          return resolve({ data: singleResult, error: null });
         }
-        const id = params.get('id');
-        const url = id
-          ? `${API_BASE}/${table}/${id}`
-          : `${API_BASE}/${table}`;
-        const res = await fetch(url, {
-          method: bodyData ? 'PUT' : 'DELETE',
-          headers: bodyData ? { 'Content-Type': 'application/json' } : undefined,
-          body: bodyData ? JSON.stringify(bodyData) : undefined,
-        });
-        const data = await res.json();
-        return resolve({ data, error: null });
+
+        if (mutationType === 'update' && bodyData) {
+          const id = params.get('id');
+          const url = id ? `${API_BASE}/${apiTable}/${id}` : `${API_BASE}/${apiTable}`;
+          const res = await fetch(url, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bodyData),
+          });
+          const data = await safeJson(res);
+          if (!res.ok) return resolve({ data: null, error: data });
+          return resolve({ data, error: null });
+        }
+
+        if (mutationType === 'delete') {
+          const id = params.get('id');
+          let url = id ? `${API_BASE}/${apiTable}/${id}` : `${API_BASE}/${apiTable}`;
+          const remaining = new URLSearchParams(params);
+          if (id) remaining.delete('id');
+          const qs = remaining.toString();
+          if (qs) url += `?${qs}`;
+          const res = await fetch(url, { method: 'DELETE' });
+          const data = await safeJson(res);
+          if (!res.ok) return resolve({ data: null, error: data });
+          return resolve({ data, error: null });
+        }
+
+        return resolve({ data: null, error: { error: 'Unknown mutation' } });
       }
 
-      const url = `${API_BASE}/${table}?${params.toString()}`;
+      const url = `${API_BASE}/${apiTable}?${params.toString()}`;
       try {
         const res = await fetch(url);
-        const data = await res.json();
+        const data = await safeJson(res);
         const dataArr = Array.isArray(data) ? data : [data];
         return resolve({
           data: headOnly ? [] : dataArr,
@@ -123,7 +162,7 @@ function makeClientQueryBuilder(table: string) {
       }
     },
     async upsert(data: any) {
-      const res = await fetch(`${API_BASE}/${table}`, {
+      const res = await fetch(`${API_BASE}/${apiTable}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
