@@ -129,8 +129,8 @@ function getValidationSchema(productType: string) {
     discount_percent: Yup.number().min(0).max(100).required(),
     quantity_type: Yup.string().required('Quantity type is required'),
     quantity: Yup.number().min(1, 'Quantity must be at least 1').required('Quantity is required'),
-    stock_type: Yup.string().required('Stock type is required'),
-    stock: Yup.number().min(0, 'Stock cannot be negative').required('Stock is required'),
+    stock_type: productType !== 'food' ? Yup.string().required('Stock type is required') : Yup.string(),
+    stock: productType !== 'food' ? Yup.number().min(0, 'Stock cannot be negative').required('Stock is required') : Yup.number(),
     food_type: productType === 'food' ? Yup.string().required('Food type is required') : Yup.string(),
     category_id: Yup.string(),
     sub_category_id: Yup.string(),
@@ -482,14 +482,13 @@ function ProductFormContent({
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-4">
             <Field name="category_id" label="Category" placeholder="Select category" options={categoryOptions} component={FormikSelect} disabled={!isEditing} />
-            {(pt === 'general') && (
+            {pt === 'general' && (
               <Field name="brand_id" label="Brand" placeholder="Select brand" options={brandOptions} component={FormikSelect} />
             )}
+            {pt === 'food' && (
+              <Field name="food_type" label="Food Type *" placeholder="Select food type" options={FOOD_TYPES} component={FormikSelect} />
+            )}
           </div>
-
-          {pt === 'food' && (
-            <Field name="food_type" label="Food Type *" placeholder="Select food type" options={FOOD_TYPES} component={FormikSelect} />
-          )}
 
           {pt === 'general' && (
             <div className="grid grid-cols-2 gap-4">
@@ -524,10 +523,12 @@ function ProductFormContent({
             <Field name="quantity_type" label="Quantity Type *" placeholder="Select quantity type" options={QUANTITY_TYPES} component={FormikSelect} />
             <Field name="quantity" label="Quantity *" type="number" component={FormikTextInput} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Field name="stock_type" label="Stock Type *" placeholder="Select stock type" options={QUANTITY_TYPES} component={FormikSelect} />
-            <Field name="stock" label="Stock *" type="number" component={FormikTextInput} />
-          </div>
+          {pt !== 'food' && (
+            <div className="grid grid-cols-2 gap-4">
+              <Field name="stock_type" label="Stock Type *" placeholder="Select stock type" options={QUANTITY_TYPES} component={FormikSelect} />
+              <Field name="stock" label="Stock *" type="number" component={FormikTextInput} />
+            </div>
+          )}
         </div>
       </div>
 
