@@ -10,6 +10,7 @@ import {
   FolderTree,
   Sparkles,
   Users,
+  ClipboardList,
   Settings,
   ArrowLeft,
 } from 'lucide-react';
@@ -24,6 +25,7 @@ const NAV = [
   { href: '/admin/categories', label: 'Categories', icon: FolderTree },
   { href: '/admin/pujas', label: 'Pujas', icon: Sparkles },
   { href: '/admin/pandits', label: 'Pandits', icon: Users },
+  { href: '/admin/essentials', label: 'Essentials', icon: ClipboardList },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 

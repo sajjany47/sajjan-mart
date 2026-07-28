@@ -8,6 +8,7 @@ const TABLE_MAP: Record<string, string> = {
   puja_items: 'puja-items',
   puja_pandits: 'puja-pandits',
   support_tickets: 'support-tickets',
+  essential_images: 'essential-images',
 };
 
 function makeClientQueryBuilder(table: string) {
