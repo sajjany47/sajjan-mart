@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     const items = await prisma.essential.findMany({
       where,
-      include: { images: true },
+      include: { essentialImages: true },
       orderBy: { createdAt: 'desc' },
     });
     return jsonResponse(items);
