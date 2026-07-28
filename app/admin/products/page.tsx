@@ -15,6 +15,7 @@ import { Formik, Form, Field, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import { FormikTextInput, FormikTextArea, FormikCheckBox, FormikSelect } from '@/components/FormikTextInput';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { PageLoader } from '@/components/ui/page-loader';
 import type { Product, Category, Brand } from '@/lib/types';
 
 const PRODUCT_TYPES = [
@@ -288,6 +289,8 @@ export default function AdminProductsPage() {
     .filter((p) => p.product_type === activeTab)
     .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
 
+  if (loading) return <PageLoader text="Loading products..." />;
+
   return (
     <div>
       <div className="flex items-center justify-between">
@@ -335,9 +338,7 @@ export default function AdminProductsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {loading ? (
-                    <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
-                  ) : filtered.length === 0 ? (
+                  {filtered.length === 0 ? (
                     <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No products found.</td></tr>
                   ) : (
                     filtered.map((p) => (

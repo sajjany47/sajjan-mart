@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import type { Order, OrderStatus } from '@/lib/types';
+import { PageLoader } from '@/components/ui/page-loader';
 
 const STATUSES: OrderStatus[] = ['pending','confirmed','processing','packed','shipped','delivered','cancelled','return','refunded'];
 
@@ -52,6 +53,8 @@ export default function AdminOrdersPage() {
     load();
   }
 
+  if (loading) return <PageLoader text="Loading orders..." />;
+
   return (
     <div>
       <h1 className="font-display text-2xl font-semibold">Orders</h1>
@@ -69,10 +72,8 @@ export default function AdminOrdersPage() {
               <th className="px-4 py-3 text-left font-medium">Status</th>
             </tr>
           </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
-            ) : orders.length === 0 ? (
+            <tbody>
+              {orders.length === 0 ? (
               <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No orders yet.</td></tr>
             ) : (
               orders.map((o) => (

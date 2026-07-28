@@ -14,6 +14,7 @@ import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { FormikTextInput, FormikCheckBox, FormikSelect } from '@/components/FormikTextInput';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { PageLoader } from '@/components/ui/page-loader';
 
 interface EssentialImage {
   id: string;
@@ -205,6 +206,8 @@ export default function AdminEssentialsPage() {
     .filter((e) => categoryFilter === 'all' || e.category === categoryFilter)
     .filter((e) => e.name.toLowerCase().includes(q.toLowerCase()));
 
+  if (loading) return <PageLoader text="Loading essentials..." />;
+
   const getCategoryLabel = (val: string) => CATEGORIES.find((c) => c.value === val)?.label ?? val;
   const getStockTypeLabel = (val: string | null) => STOCK_TYPES.find((s) => s.value === val)?.label ?? '-';
 
@@ -250,10 +253,8 @@ export default function AdminEssentialsPage() {
               <th className="px-4 py-3 text-right font-medium">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
-            ) : filtered.length === 0 ? (
+            <tbody>
+              {filtered.length === 0 ? (
               <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No essentials found.</td></tr>
             ) : (
               filtered.map((e) => (
