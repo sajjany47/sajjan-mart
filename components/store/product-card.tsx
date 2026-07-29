@@ -77,12 +77,30 @@ export function ProductCard({ product }: { product: Product }) {
           </Badge>
         )}
         {product.product_type === 'food' && (
-          <Badge
-            variant="secondary"
-            className="absolute right-2 top-2"
-          >
-            {product.metadata?.veg ? 'Veg' : 'Non-Veg'}
-          </Badge>
+          <div className="absolute right-2 top-2 flex items-center gap-1 rounded-md bg-background/90 px-2 py-0.5 text-[11px] font-semibold shadow-sm backdrop-blur">
+            {product.food_type === 'veg' || (product.metadata?.veg === true && !product.food_type) ? (
+              <>
+                <span className="flex h-3 w-3 items-center justify-center rounded-sm border border-emerald-600 p-0.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                </span>
+                <span className="text-emerald-700 dark:text-emerald-400">Veg</span>
+              </>
+            ) : product.food_type === 'egg' ? (
+              <>
+                <span className="flex h-3 w-3 items-center justify-center rounded-sm border border-amber-600 p-0.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-600" />
+                </span>
+                <span className="text-amber-700 dark:text-amber-400">Egg</span>
+              </>
+            ) : (
+              <>
+                <span className="flex h-3 w-3 items-center justify-center rounded-sm border border-rose-600 p-0.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-rose-600" />
+                </span>
+                <span className="text-rose-700 dark:text-rose-400">Non-Veg</span>
+              </>
+            )}
+          </div>
         )}
       </Link>
 
