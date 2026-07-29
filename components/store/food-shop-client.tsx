@@ -84,7 +84,12 @@ export function FoodShopClient({ filters }: Props) {
 
   // Food Subcategories list
   const foodSubCategories = useMemo(() => {
-    return filters.subCategories || [
+    const allSubCats = filters.subCategories || [];
+    const foodCat = filters.categories.find((c) => c.slug === 'food');
+    if (foodCat && allSubCats.length > 0) {
+      return allSubCats.filter((sc) => sc.categoryId === foodCat.id);
+    }
+    return [
       { id: '1', name: 'Pizza', slug: 'pizza' },
       { id: '2', name: 'Burger', slug: 'burger' },
       { id: '3', name: 'Momos', slug: 'momos' },
@@ -92,7 +97,7 @@ export function FoodShopClient({ filters }: Props) {
       { id: '5', name: 'Rolls', slug: 'rolls' },
       { id: '6', name: 'Beverages', slug: 'beverages' },
     ];
-  }, [filters.subCategories]);
+  }, [filters.subCategories, filters.categories]);
 
   // Main data fetching
   useEffect(() => {
@@ -373,29 +378,42 @@ export function FoodShopClient({ filters }: Props) {
   return (
     <div className="space-y-6 pb-12">
       {/* Dedicated Food Section Banner Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-orange-600 via-amber-600 to-rose-600 p-6 md:p-10 text-white shadow-xl">
-        <div className="absolute right-0 top-0 -mr-12 -mt-12 h-64 w-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
-        <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur">
-            <Flame className="h-3.5 w-3.5 text-yellow-300 animate-pulse" />
+      <div className="relative overflow-hidden rounded-3xl bg-stone-950 p-8 md:p-12 text-white shadow-2xl border border-stone-800/60">
+        {/* Background Image with Ambient Blending */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-luminosity hover:opacity-40 transition-opacity duration-700 pointer-events-none" 
+          style={{ backgroundImage: `url('https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=1200')` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-stone-950 via-stone-950/70 to-transparent z-0 pointer-events-none" />
+        
+        {/* Decorative Ambient Radial Glows */}
+        <div className="absolute -left-16 -bottom-16 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute right-10 top-10 h-48 w-48 rounded-full bg-rose-500/10 blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 max-w-2xl space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-3.5 py-1 text-xs font-semibold text-orange-400 backdrop-blur-sm">
+            <Flame className="h-3.5 w-3.5 text-orange-500 animate-pulse" />
             <span>Sajjan Cloud Kitchen</span>
           </div>
-          <h1 className="mt-3 font-display text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">
-            Delicious Food, Delivered Hot & Fresh
+          
+          <h1 className="font-display text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl bg-gradient-to-r from-white via-stone-100 to-orange-200 bg-clip-text text-transparent leading-tight">
+            Delicious Food, <br className="hidden sm:inline" />
+            <span className="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">Delivered Hot & Fresh</span>
           </h1>
-          <p className="mt-2 text-sm md:text-base text-orange-100 font-medium">
-            Explore authentic freshly prepared meals, pizzas, biryanis, momos, and beverages. Customized for your appetite!
+          
+          <p className="text-sm md:text-base text-stone-300 leading-relaxed max-w-xl">
+            Explore authentic freshly prepared meals, pizzas, biryanis, momos, and beverages. Handcrafted by our expert chefs and customized for your appetite!
           </p>
 
-          <div className="mt-6 flex flex-wrap items-center gap-4 text-xs font-medium text-orange-50">
-            <span className="flex items-center gap-1.5">
-              <Clock className="h-4 w-4 text-yellow-300" /> Fast 20-30 Mins Delivery
+          <div className="pt-4 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs font-semibold text-stone-400 border-t border-stone-800/40">
+            <span className="flex items-center gap-2 hover:text-white transition-colors duration-200">
+              <Clock className="h-4 w-4 text-orange-400" /> Fast 20-30 Mins Delivery
             </span>
-            <span className="flex items-center gap-1.5">
-              <Sparkles className="h-4 w-4 text-yellow-300" /> 100% Quality Guarantee
+            <span className="flex items-center gap-2 hover:text-white transition-colors duration-200">
+              <Sparkles className="h-4 w-4 text-orange-400" /> 100% Quality Guarantee
             </span>
-            <span className="flex items-center gap-1.5">
-              <Utensils className="h-4 w-4 text-yellow-300" /> Fresh Ingredients Daily
+            <span className="flex items-center gap-2 hover:text-white transition-colors duration-200">
+              <Utensils className="h-4 w-4 text-orange-400" /> Fresh Ingredients Daily
             </span>
           </div>
         </div>

@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const where: Record<string, any> = {};
 
     if (active === 'true' || active === null) {
-      if (active !== 'false') where.isActive = true;
+      where.isActive = true;
     } else if (active === 'false') {
       where.isActive = false;
     }

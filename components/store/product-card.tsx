@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Heart, Star, ShoppingBag } from 'lucide-react';
+import { Heart, Star, ShoppingBag, Minus, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,8 +14,9 @@ import { toast } from 'sonner';
 import type { Product } from '@/lib/types';
 
 export function ProductCard({ product }: { product: Product }) {
-  const { addItem } = useCart();
+  const { items, addItem, updateQty, removeItem } = useCart();
   const { user } = useAuth();
+  const cartItem = items.find((i) => i.type === 'product' && i.productId === product.id);
   const [wished, setWished] = useState(false);
   const image = product.product_images?.[0]?.url;
   const price = discountedPrice(product.sales_price, product.discount_percent);
@@ -136,9 +137,42 @@ export function ProductCard({ product }: { product: Product }) {
               </span>
             )}
           </div>
-          <Button onClick={handleAdd} size="sm" className="mt-2 w-full">
-            <ShoppingBag className="mr-1 h-4 w-4" /> Add to Cart
-          </Button>
+          {cartItem ? (
+            <div className="mt-2 flex h-9 items-center justify-between rounded-lg border border-primary bg-background overflow-hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-full w-9 rounded-none hover:bg-primary/10 text-primary"
+                onClick={() => {
+                  if (cartItem.quantity > 1) {
+                    updateQty(cartItem.id, cartItem.quantity - 1);
+                  } else {
+                    removeItem(cartItem.id);
+                    toast.success(`${product.name} removed from cart`);
+                  }
+                }}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-bold text-foreground select-none">
+                {cartItem.quantity}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-full w-9 rounded-none hover:bg-primary/10 text-primary"
+                onClick={() => {
+                  updateQty(cartItem.id, cartItem.quantity + 1);
+                }}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button onClick={handleAdd} size="sm" className="mt-2 w-full">
+              <ShoppingBag className="mr-1 h-4 w-4" /> Add to Cart
+            </Button>
+          )}
         </div>
       </div>
     </div>
