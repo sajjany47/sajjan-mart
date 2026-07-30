@@ -17,16 +17,17 @@ async function getPuja(slug: string) {
 
 async function getPujaData(pujaId: string) {
   const supabase = createServerSupabase();
-  const [items, pandits] = await Promise.all([
+  const [items, pujaPandits] = await Promise.all([
     supabase.from('puja_items').select('*').eq('puja_id', pujaId).order('sort_order'),
-    supabase
-      .from('puja_pandits')
-      .select('pandit(*)')
-      .eq('puja_id', pujaId),
+    supabase.from('puja_pandits').select('*').eq('puja_id', pujaId),
   ]);
+  const panditIds = (pujaPandits.data ?? []).map((r: any) => r.pandit_id);
+  const pandits = panditIds.length > 0
+    ? await supabase.from('pandits').select('*').in('id', panditIds)
+    : { data: [] };
   return {
     items: items.data ?? [],
-    pandits: (pandits.data ?? []).map((r: any) => r.pandit).filter(Boolean),
+    pandits: (pandits.data ?? []),
   };
 }
 

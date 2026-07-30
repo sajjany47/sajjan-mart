@@ -27,7 +27,7 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
         items.map((i) => [i.id, { checked: true, qty: i.default_qty }])
       )
   );
-  const [panditId, setPanditId] = useState<string>(pandits[0]?.id ?? '');
+  const [panditId, setPanditId] = useState<string>('');
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
 
@@ -57,10 +57,6 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
   }
 
   function handleAddToCart() {
-    if (!pandit) {
-      toast.error('Please select a pandit.');
-      return;
-    }
     if (!bookingDate || !bookingTime) {
       toast.error('Please select a booking date and time.');
       return;
@@ -76,8 +72,8 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
       image: puja.image_url ?? undefined,
       price: grandTotal,
       quantity: 1,
-      panditId: pandit.id,
-      panditName: pandit.name,
+      panditId: pandit?.id,
+      panditName: pandit?.name,
       selectedItems,
     });
     toast.success(`${puja.name} package added to cart`);
@@ -146,29 +142,46 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
           <div className="mt-8">
             <h2 className="font-display text-xl font-semibold">Select a Pandit</h2>
             <RadioGroup value={panditId} onValueChange={setPanditId} className="mt-4 space-y-3">
-              {pandits.map((p) => (
-                <div
-                  key={p.id}
-                  className={`flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition has-[:checked]:border-primary has-[:checked]:bg-primary/5`}
-                >
-                  <RadioGroupItem value={p.id} id={`p-${p.id}`} className="mt-1" />
-                  <div className="flex-1">
-                    <Label htmlFor={`p-${p.id}`} className="cursor-pointer">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold">{p.name}</p>
-                          <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {p.experience} yrs exp</span>
-                            <span className="flex items-center gap-1"><Star className="h-3 w-3 fill-warning text-warning" /> {p.rating}</span>
-                            <span className="flex items-center gap-1"><Languages className="h-3 w-3" /> {p.languages.join(', ')}</span>
-                          </div>
-                        </div>
-                        <span className="text-lg font-semibold">{formatINR(p.price)}</span>
-                      </div>
-                      {p.bio && <p className="mt-2 text-xs text-muted-foreground">{p.bio}</p>}
-                    </Label>
-                  </div>
+              <div
+                className={`flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition has-[:checked]:border-primary has-[:checked]:bg-primary/5`}
+              >
+                <RadioGroupItem value="" id="p-no-pandit" className="mt-1" />
+                <div className="flex-1">
+                  <Label htmlFor="p-no-pandit" className="cursor-pointer">
+                    <p className="font-semibold">No Need</p>
+                    <p className="text-xs text-muted-foreground">I will arrange the pandit myself</p>
+                  </Label>
                 </div>
+                <span className="text-lg font-semibold text-muted-foreground">Free</span>
+              </div>
+              {pandits.map((p) => (
+                  <div
+                    key={p.id}
+                    className={`flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition has-[:checked]:border-primary has-[:checked]:bg-primary/5`}
+                  >
+                    <RadioGroupItem value={p.id} id={`p-${p.id}`} className="mt-1" />
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-muted">
+                      {p.photo_url && (
+                        <Image src={p.photo_url} alt={p.name} fill sizes="48px" className="object-cover" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <Label htmlFor={`p-${p.id}`} className="cursor-pointer">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold">{p.name}</p>
+                            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {p.experience} yrs exp</span>
+                              <span className="flex items-center gap-1"><Star className="h-3 w-3 fill-warning text-warning" /> {p.rating}</span>
+                              <span className="flex items-center gap-1"><Languages className="h-3 w-3" /> {p.languages.join(', ')}</span>
+                            </div>
+                          </div>
+                          <span className="text-lg font-semibold">{formatINR(p.price)}</span>
+                        </div>
+                        {p.bio && <p className="mt-2 text-xs text-muted-foreground">{p.bio}</p>}
+                      </Label>
+                    </div>
+                  </div>
               ))}
             </RadioGroup>
           </div>
