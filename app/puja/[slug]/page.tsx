@@ -11,6 +11,7 @@ async function getPuja(slug: string) {
     .from('pujas')
     .select('*')
     .eq('slug', slug)
+    .eq('is_active', true)
     .maybeSingle();
   return data;
 }

@@ -9,10 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { formatINR, slugify } from '@/lib/format';
+import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { Puja } from '@/lib/types';
 
-const EMPTY = { name: '', description: '', image_url: '', base_price: 0 };
+const EMPTY = { name: '', description: '', image_url: '', base_price: 0, is_active: true };
 
 export default function AdminPujasPage() {
   const [pujas, setPujas] = useState<Puja[]>([]);
@@ -31,7 +32,7 @@ export default function AdminPujasPage() {
   function openNew() { setEditing(null); setForm(EMPTY); setOpen(true); }
   function openEdit(p: Puja) {
     setEditing(p);
-    setForm({ name: p.name, description: p.description ?? '', image_url: p.image_url ?? '', base_price: p.base_price });
+    setForm({ name: p.name, description: p.description ?? '', image_url: p.image_url ?? '', base_price: p.base_price, is_active: p.is_active });
     setOpen(true);
   }
 
@@ -41,13 +42,13 @@ export default function AdminPujasPage() {
     const slug = slugify(form.name);
     if (editing) {
       const { error } = await supabase.from('pujas').update({
-        name: form.name, description: form.description, image_url: form.image_url, base_price: Number(form.base_price),
+        name: form.name, description: form.description, image_url: form.image_url, base_price: Number(form.base_price), is_active: form.is_active,
       }).eq('id', editing.id);
       if (error) { toast.error(error.message); return; }
       toast.success('Puja updated');
     } else {
       const { error } = await supabase.from('pujas').insert({
-        name: form.name, slug, description: form.description, image_url: form.image_url, base_price: Number(form.base_price),
+        name: form.name, slug, description: form.description, image_url: form.image_url, base_price: Number(form.base_price), is_active: form.is_active,
       });
       if (error) { toast.error(error.message); return; }
       toast.success('Puja created');
@@ -82,6 +83,9 @@ export default function AdminPujasPage() {
               <div>
                 <p className="font-semibold">{p.name}</p>
                 <p className="text-xs text-muted-foreground">{formatINR(p.base_price)}</p>
+                <Badge className={`mt-2 ${p.is_active ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground'}`}>
+                  {p.is_active ? 'Active' : 'Inactive'}
+                </Badge>
               </div>
               <div className="flex gap-1">
                 <Button variant="ghost" size="icon" onClick={() => openEdit(p)} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
@@ -101,6 +105,18 @@ export default function AdminPujasPage() {
             <div><Label className="text-xs">Description</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="mt-1" /></div>
             <div><Label className="text-xs">Image URL</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="mt-1" /></div>
             <div><Label className="text-xs">Base Price (Rs)</Label><Input type="number" value={form.base_price} onChange={(e) => setForm({ ...form, base_price: e.target.value })} className="mt-1" /></div>
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="puja-active"
+                checked={form.is_active}
+                onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+                className="h-4 w-4 rounded border-input"
+              />
+              <Label htmlFor="puja-active" className="text-sm font-normal cursor-pointer">
+                Active
+              </Label>
+            </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
               <Button type="submit">{editing ? 'Save' : 'Create'}</Button>
