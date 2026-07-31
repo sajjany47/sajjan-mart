@@ -22,15 +22,16 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { cn } from '@/lib/utils';
 
 const NAV = [
-  { href: '/category/food', label: 'Food' },
+  { href: '/category/food', label: 'Food', category: 'food' },
   { href: '/puja', label: 'Puja Samagri' },
-  { href: '/category/natural-products', label: 'Natural Products' },
-  { href: '/category/general', label: 'General' },
+  { href: '/category/natural-products', label: 'Natural Products', category: 'natural-products' },
+  { href: '/category/general', label: 'General', category: 'general' },
   { href: '/shop', label: 'Shop All' },
 ];
 
-export function Header() {
+export function Header({ activeCategories }: { activeCategories: string[] }) {
   const { count } = useCart();
+  const nav = NAV.filter((n) => !n.category || activeCategories.includes(n.category));
   const { user, profile, role, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -63,7 +64,7 @@ export function Header() {
               <SheetTitle className="font-display text-xl">Sajjan Mart</SheetTitle>
             </SheetHeader>
             <nav className="mt-6 flex flex-col gap-1">
-              {NAV.map((n) => (
+              {nav.map((n) => (
                 <Link
                   key={n.href}
                   href={n.href}
@@ -168,7 +169,7 @@ export function Header() {
 
       <nav className="hidden border-t border-border bg-card md:block">
         <div className="container-px mx-auto flex max-w-7xl items-center gap-1">
-          {NAV.map((n) => (
+          {nav.map((n) => (
             <Link
               key={n.href}
               href={n.href}

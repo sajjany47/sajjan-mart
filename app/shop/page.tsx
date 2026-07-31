@@ -7,7 +7,7 @@ export const revalidate = 60;
 async function getFilters() {
   const supabase = createServerSupabase();
   const [categories, brands] = await Promise.all([
-    supabase.from('categories').select('id, name, slug').order('sort_order'),
+    supabase.from('categories').select('id, name, slug').eq('is_active', true).order('sort_order'),
     supabase.from('brands').select('id, name, slug').order('name'),
   ]);
   return {

@@ -9,7 +9,7 @@ export const revalidate = 60;
 async function getFilters() {
   const supabase = createServerSupabase();
   const [categories, subCategories, brands] = await Promise.all([
-    supabase.from('categories').select('id, name, slug').order('sort_order'),
+    supabase.from('categories').select('id, name, slug').eq('is_active', true).order('sort_order'),
     supabase.from('sub_categories').select('id, category_id, name, slug').order('name'),
     supabase.from('brands').select('id, name, slug').order('name'),
   ]);
@@ -37,6 +37,7 @@ export default async function CategoryPage({
     .from('categories')
     .select('*')
     .eq('slug', params.slug)
+    .eq('is_active', true)
     .maybeSingle();
 
   if (!category) notFound();

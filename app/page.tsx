@@ -15,7 +15,7 @@ async function getHomeData() {
   const supabase = createServerSupabase();
   const [banners, categories, todayDeals, featured, latest, bestSellers, popular, pujas] = await Promise.all([
     supabase.from('banners').select('*').eq('is_active', true).order('sort_order'),
-    supabase.from('categories').select('*').order('sort_order'),
+    supabase.from('categories').select('*').eq('is_active', true).order('sort_order'),
     supabase
       .from('products')
       .select('*, product_images(*)')
@@ -237,22 +237,26 @@ export default async function HomePage() {
       {/* Offer banner */}
       <section className="container-px mx-auto max-w-7xl py-8">
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl bg-secondary p-8">
-            <p className="text-sm font-semibold uppercase tracking-wide text-primary">Food Delivery</p>
-            <h3 className="mt-2 font-display text-2xl font-semibold">Hot meals in 30 minutes</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Pizzas, biryani, momos and more from our cloud kitchen.</p>
-            <Link href="/category/food" className="mt-4 inline-block">
-              <Button>Order Food</Button>
-            </Link>
-          </div>
-          <div className="rounded-2xl bg-accent p-8">
-            <p className="text-sm font-semibold uppercase tracking-wide text-primary">Organic</p>
-            <h3 className="mt-2 font-display text-2xl font-semibold">Direct from farmers</h3>
-            <p className="mt-2 text-sm text-muted-foreground">No chemicals, no adulteration - just pure goodness.</p>
-            <Link href="/category/natural-products" className="mt-4 inline-block">
-              <Button>Shop Natural</Button>
-            </Link>
-          </div>
+          {data.categories.some((c) => c.slug === 'food') && (
+            <div className="rounded-2xl bg-secondary p-8">
+              <p className="text-sm font-semibold uppercase tracking-wide text-primary">Food Delivery</p>
+              <h3 className="mt-2 font-display text-2xl font-semibold">Hot meals in 30 minutes</h3>
+              <p className="mt-2 text-sm text-muted-foreground">Pizzas, biryani, momos and more from our cloud kitchen.</p>
+              <Link href="/category/food" className="mt-4 inline-block">
+                <Button>Order Food</Button>
+              </Link>
+            </div>
+          )}
+          {data.categories.some((c) => c.slug === 'natural-products') && (
+            <div className="rounded-2xl bg-accent p-8">
+              <p className="text-sm font-semibold uppercase tracking-wide text-primary">Organic</p>
+              <h3 className="mt-2 font-display text-2xl font-semibold">Direct from farmers</h3>
+              <p className="mt-2 text-sm text-muted-foreground">No chemicals, no adulteration - just pure goodness.</p>
+              <Link href="/category/natural-products" className="mt-4 inline-block">
+                <Button>Shop Natural</Button>
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 

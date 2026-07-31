@@ -34,6 +34,7 @@ export interface Category {
   description: string | null;
   image_url: string | null;
   sort_order: number;
+  is_active: boolean;
 }
 
 export interface SubCategory {

@@ -1,14 +1,14 @@
 import Link from 'next/link';
 import { Mail, Phone, MapPin } from 'lucide-react';
 
-const FOOTER_LINKS = [
+const FOOTER_LINKS: { title: string; links: { href: string; label: string; category?: string }[] }[] = [
   {
     title: 'Shop',
     links: [
-      { href: '/category/food', label: 'Food' },
+      { href: '/category/food', label: 'Food', category: 'food' },
       { href: '/puja', label: 'Puja Samagri' },
-      { href: '/category/natural-products', label: 'Natural Products' },
-      { href: '/category/general', label: 'General' },
+      { href: '/category/natural-products', label: 'Natural Products', category: 'natural-products' },
+      { href: '/category/general', label: 'General', category: 'general' },
       { href: '/shop', label: 'All Products' },
     ],
   },
@@ -34,7 +34,7 @@ const FOOTER_LINKS = [
   },
 ];
 
-export function Footer() {
+export function Footer({ activeCategories }: { activeCategories: string[] }) {
   return (
     <footer className="mt-16 border-t border-border bg-card">
       <div className="container-px mx-auto max-w-7xl py-12">
@@ -60,13 +60,15 @@ export function Footer() {
             <div key={col.title}>
               <h3 className="text-sm font-semibold">{col.title}</h3>
               <ul className="mt-3 space-y-2">
-                {col.links.map((l) => (
-                  <li key={l.href}>
-                    <Link href={l.href} className="text-sm text-muted-foreground hover:text-primary">
-                      {l.label}
-                    </Link>
-                  </li>
-                ))}
+                {col.links
+                  .filter((l) => !l.category || activeCategories.includes(l.category))
+                  .map((l) => (
+                    <li key={l.href}>
+                      <Link href={l.href} className="text-sm text-muted-foreground hover:text-primary">
+                        {l.label}
+                      </Link>
+                    </li>
+                  ))}
               </ul>
             </div>
           ))}

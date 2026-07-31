@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { toast } from 'sonner';
 import { formatINR, slugify } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
+import { Loader2 } from 'lucide-react';
+import { PageLoader } from '@/components/ui/page-loader';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { Puja } from '@/lib/types';
 
@@ -17,6 +19,8 @@ const EMPTY = { name: '', description: '', image_url: '', base_price: 0, is_acti
 
 export default function AdminPujasPage() {
   const [pujas, setPujas] = useState<Puja[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Puja | null>(null);
   const [form, setForm] = useState<any>(EMPTY);
@@ -24,8 +28,10 @@ export default function AdminPujasPage() {
   const [deleting, setDeleting] = useState(false);
 
   async function load() {
+    setLoading(true);
     const { data } = await supabase.from('pujas').select('*').order('name');
     setPujas((data ?? []) as Puja[]);
+    setLoading(false);
   }
   useEffect(() => { load(); }, []);
 
@@ -39,21 +45,22 @@ export default function AdminPujasPage() {
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name) { toast.error('Name required.'); return; }
+    setSaving(true);
     const slug = slugify(form.name);
     if (editing) {
       const { error } = await supabase.from('pujas').update({
         name: form.name, description: form.description, image_url: form.image_url, base_price: Number(form.base_price), is_active: form.is_active,
       }).eq('id', editing.id);
-      if (error) { toast.error(error.message); return; }
+      if (error) { toast.error(error.message); setSaving(false); return; }
       toast.success('Puja updated');
     } else {
       const { error } = await supabase.from('pujas').insert({
         name: form.name, slug, description: form.description, image_url: form.image_url, base_price: Number(form.base_price), is_active: form.is_active,
       });
-      if (error) { toast.error(error.message); return; }
+      if (error) { toast.error(error.message); setSaving(false); return; }
       toast.success('Puja created');
     }
-    setOpen(false); load();
+    setSaving(false); setOpen(false); load();
   }
 
   async function confirmDelete() {
@@ -65,6 +72,8 @@ export default function AdminPujasPage() {
     if (error) { toast.error(error.message); return; }
     load(); toast.success('Puja deleted');
   }
+
+  if (loading) return <PageLoader text="Loading pujas..." />;
 
   return (
     <div>
@@ -119,7 +128,9 @@ export default function AdminPujasPage() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit">{editing ? 'Save' : 'Create'}</Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Saving...</> : editing ? 'Save' : 'Create'}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

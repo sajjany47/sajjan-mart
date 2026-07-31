@@ -1,21 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Trash2, Pencil } from 'lucide-react';
+import { Plus, Trash2, Pencil, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { slugify } from '@/lib/format';
+import { PageLoader } from '@/components/ui/page-loader';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { Category } from '@/lib/types';
 
-const EMPTY = { name: '', description: '', image_url: '', sort_order: 0 };
+const EMPTY = { name: '', description: '', image_url: '', sort_order: 0, is_active: true };
 
 export default function AdminCategoriesPage() {
   const [cats, setCats] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [form, setForm] = useState<any>(EMPTY);
@@ -23,8 +27,10 @@ export default function AdminCategoriesPage() {
   const [deleting, setDeleting] = useState(false);
 
   async function load() {
+    setLoading(true);
     const { data } = await supabase.from('categories').select('*').order('sort_order');
     setCats((data ?? []) as Category[]);
+    setLoading(false);
   }
 
   useEffect(() => { load(); }, []);
@@ -32,28 +38,29 @@ export default function AdminCategoriesPage() {
   function openNew() { setEditing(null); setForm(EMPTY); setOpen(true); }
   function openEdit(c: Category) {
     setEditing(c);
-    setForm({ name: c.name, description: c.description ?? '', image_url: c.image_url ?? '', sort_order: c.sort_order });
+    setForm({ name: c.name, description: c.description ?? '', image_url: c.image_url ?? '', sort_order: c.sort_order, is_active: c.is_active });
     setOpen(true);
   }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name) { toast.error('Name required.'); return; }
+    setSaving(true);
     const slug = slugify(form.name);
     if (editing) {
       const { error } = await supabase.from('categories').update({
-        name: form.name, description: form.description, image_url: form.image_url, sort_order: Number(form.sort_order),
+        name: form.name, description: form.description, image_url: form.image_url, sort_order: Number(form.sort_order), is_active: form.is_active,
       }).eq('id', editing.id);
-      if (error) { toast.error(error.message); return; }
+      if (error) { toast.error(error.message); setSaving(false); return; }
       toast.success('Category updated');
     } else {
       const { error } = await supabase.from('categories').insert({
-        name: form.name, slug, description: form.description, image_url: form.image_url, sort_order: Number(form.sort_order),
+        name: form.name, slug, description: form.description, image_url: form.image_url, sort_order: Number(form.sort_order), is_active: form.is_active,
       });
-      if (error) { toast.error(error.message); return; }
+      if (error) { toast.error(error.message); setSaving(false); return; }
       toast.success('Category created');
     }
-    setOpen(false); load();
+    setSaving(false); setOpen(false); load();
   }
 
   async function confirmDelete() {
@@ -65,6 +72,8 @@ export default function AdminCategoriesPage() {
     if (error) { toast.error(error.message); return; }
     load(); toast.success('Category deleted');
   }
+
+  if (loading) return <PageLoader text="Loading categories..." />;
 
   return (
     <div>
@@ -83,6 +92,9 @@ export default function AdminCategoriesPage() {
               <div>
                 <p className="font-semibold">{c.name}</p>
                 <p className="text-xs text-muted-foreground">{c.slug}</p>
+                <Badge className={`mt-2 ${c.is_active ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground'}`}>
+                  {c.is_active ? 'Active' : 'Inactive'}
+                </Badge>
               </div>
               <div className="flex gap-1">
                 <Button variant="ghost" size="icon" onClick={() => openEdit(c)} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
@@ -114,9 +126,23 @@ export default function AdminCategoriesPage() {
               <Label className="text-xs">Sort Order</Label>
               <Input type="number" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: e.target.value })} className="mt-1" />
             </div>
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="category-active"
+                checked={form.is_active}
+                onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+                className="h-4 w-4 rounded border-input"
+              />
+              <Label htmlFor="category-active" className="text-sm font-normal cursor-pointer">
+                Active
+              </Label>
+            </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit">{editing ? 'Save' : 'Create'}</Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Saving...</> : editing ? 'Save' : 'Create'}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
