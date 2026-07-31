@@ -15,16 +15,12 @@ async function getPuja(slug: string) {
   return data;
 }
 
-async function getPujaData(pujaId: string) {
+async function getPujaData(_pujaId: string) {
   const supabase = createServerSupabase();
-  const [items, pujaPandits] = await Promise.all([
-    supabase.from('puja_items').select('*').eq('puja_id', pujaId).order('sort_order'),
-    supabase.from('puja_pandits').select('*').eq('puja_id', pujaId),
+  const [items, pandits] = await Promise.all([
+    supabase.from('puja_items').select('*').eq('puja_id', _pujaId).order('sort_order'),
+    supabase.from('pandits').select('*').eq('is_active', true).order('name'),
   ]);
-  const panditIds = (pujaPandits.data ?? []).map((r: any) => r.pandit_id);
-  const pandits = panditIds.length > 0
-    ? await supabase.from('pandits').select('*').in('id', panditIds)
-    : { data: [] };
   return {
     items: items.data ?? [],
     pandits: (pandits.data ?? []),

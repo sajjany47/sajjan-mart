@@ -6,13 +6,14 @@ import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { formatINR } from '@/lib/format';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { Pandit } from '@/lib/types';
 
-const EMPTY = { name: '', experience: 0, languages: '', rating: 5, price: 0, photo_url: '', bio: '' };
+const EMPTY = { name: '', experience: 0, languages: '', rating: 5, price: 0, photo_url: '', bio: '', is_active: true };
 
 export default function AdminPanditsPage() {
   const [pandits, setPandits] = useState<Pandit[]>([]);
@@ -33,7 +34,7 @@ export default function AdminPanditsPage() {
     setEditing(p);
     setForm({
       name: p.name, experience: p.experience, languages: p.languages.join(', '),
-      rating: p.rating, price: p.price, photo_url: p.photo_url ?? '', bio: p.bio ?? '',
+      rating: p.rating, price: p.price, photo_url: p.photo_url ?? '', bio: p.bio ?? '', is_active: p.is_active,
     });
     setOpen(true);
   }
@@ -50,6 +51,7 @@ export default function AdminPanditsPage() {
       price: Number(form.price),
       photo_url: form.photo_url,
       bio: form.bio,
+      is_active: form.is_active,
     };
     if (editing) {
       const { error } = await supabase.from('pandits').update(payload).eq('id', editing.id);
@@ -94,6 +96,9 @@ export default function AdminPanditsPage() {
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">{p.languages.join(', ')}</p>
                 <p className="mt-1 text-sm font-medium">{formatINR(p.price)}</p>
+                <Badge className={`mt-2 ${p.is_active ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground'}`}>
+                  {p.is_active ? 'Active' : 'Inactive'}
+                </Badge>
               </div>
               <div className="flex gap-1">
                 <Button variant="ghost" size="icon" onClick={() => openEdit(p)} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
@@ -118,6 +123,18 @@ export default function AdminPanditsPage() {
             <div><Label className="text-xs">Price (Rs)</Label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="mt-1" /></div>
             <div><Label className="text-xs">Photo URL</Label><Input value={form.photo_url} onChange={(e) => setForm({ ...form, photo_url: e.target.value })} className="mt-1" /></div>
             <div><Label className="text-xs">Bio</Label><Input value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} className="mt-1" /></div>
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="pandit-active"
+                checked={form.is_active}
+                onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+                className="h-4 w-4 rounded border-input"
+              />
+              <Label htmlFor="pandit-active" className="text-sm font-normal cursor-pointer">
+                Active
+              </Label>
+            </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
               <Button type="submit">{editing ? 'Save' : 'Create'}</Button>

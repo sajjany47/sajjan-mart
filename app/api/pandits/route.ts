@@ -23,7 +23,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await parseBody(request);
-    const item = await prisma.pandit.create({ data: body });
+    const item = await prisma.$transaction(async (tx) => {
+      const pandit = await tx.pandit.create({ data: body });
+      const pujas = await tx.puja.findMany({ select: { id: true } });
+      if (pujas.length > 0) {
+        await tx.pujaPandit.createMany({
+          data: pujas.map((puja) => ({ pujaId: puja.id, panditId: pandit.id })),
+          skipDuplicates: true,
+        });
+      }
+      return pandit;
+    });
     return jsonResponse(item, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to create' }, { status: 500 });
