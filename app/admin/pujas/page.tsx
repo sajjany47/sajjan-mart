@@ -62,6 +62,13 @@ export default function AdminPujasPage() {
     setSelectedItems((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
+  useEffect(() => {
+    const total = products
+      .filter((p) => selectedItems.includes(p.id))
+      .reduce((sum, p) => sum + p.sales_price, 0);
+    setForm((prev: any) => ({ ...prev, base_price: total }));
+  }, [selectedItems, products]);
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name) { toast.error('Name required.'); return; }
@@ -147,18 +154,34 @@ export default function AdminPujasPage() {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editing ? 'Edit Puja' : 'New Puja'}</DialogTitle></DialogHeader>
-          <form onSubmit={save} className="space-y-3">
-            <div><Label className="text-xs">Name</Label><Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="mt-1" /></div>
-            <div><Label className="text-xs">Description</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="mt-1" /></div>
-            <div><Label className="text-xs">Image URL</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="mt-1" /></div>
-            <div><Label className="text-xs">Base Price (Rs)</Label><Input type="number" value={form.base_price} onChange={(e) => setForm({ ...form, base_price: e.target.value })} className="mt-1" /></div>
+          <form onSubmit={save} className="space-y-5">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2"><Label className="text-xs">Name</Label><Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="mt-1" /></div>
+              <div className="sm:col-span-2"><Label className="text-xs">Description</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="mt-1" /></div>
+              <div className="sm:col-span-2"><Label className="text-xs">Image URL</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="mt-1" /></div>
+              <div><Label className="text-xs">Base Price (Rs)</Label><Input type="number" value={form.base_price} onChange={(e) => setForm({ ...form, base_price: e.target.value })} className="mt-1" /><p className="mt-1 text-xs text-muted-foreground">Auto-set from selected items total</p></div>
+              <div className="flex items-end pb-1">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="puja-active"
+                    checked={form.is_active}
+                    onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+                    className="h-4 w-4 rounded border-input"
+                  />
+                  <Label htmlFor="puja-active" className="text-sm font-normal cursor-pointer">
+                    Active
+                  </Label>
+                </div>
+              </div>
+            </div>
             <div>
               <Label className="text-xs">Puja Samagri Items</Label>
-              <div className="mt-2 max-h-64 overflow-y-auto rounded-lg border border-border p-2 space-y-1">
+              <div className="mt-2 grid grid-cols-1 gap-1 rounded-lg border border-border p-2 sm:grid-cols-2">
                 {products.length === 0 && (
-                  <p className="px-2 py-4 text-center text-xs text-muted-foreground">No puja samagri products found. Add them under Products.</p>
+                  <p className="col-span-full px-2 py-4 text-center text-xs text-muted-foreground">No puja samagri products found. Add them under Products.</p>
                 )}
                 {products.map((p) => {
                   const checked = selectedItems.includes(p.id);
@@ -187,19 +210,7 @@ export default function AdminPujasPage() {
                   <button type="button" onClick={() => setSelectedItems([])} className="text-muted-foreground">Clear</button>
                 </div>
               )}
-              <p className="mt-1 text-xs text-muted-foreground">{selectedItems.length} of {products.length} items selected</p>
-            </div>
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                type="checkbox"
-                id="puja-active"
-                checked={form.is_active}
-                onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                className="h-4 w-4 rounded border-input"
-              />
-              <Label htmlFor="puja-active" className="text-sm font-normal cursor-pointer">
-                Active
-              </Label>
+              <p className="mt-1 text-xs text-muted-foreground">{selectedItems.length} of {products.length} items selected · Total {formatINR(products.filter((p) => selectedItems.includes(p.id)).reduce((sum, p) => sum + p.sales_price, 0))}</p>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
