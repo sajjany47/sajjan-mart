@@ -311,6 +311,10 @@ model Address {
   line1     String
   line2     String?
   city      String
+  district  String?
+  region    String?
+  block     String?
+  country   String? @default("India)
   state     String
   pincode   String
   isDefault Boolean  @default(false) @map("is_default")

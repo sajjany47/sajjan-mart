@@ -177,7 +177,11 @@ export interface Address {
   line1: string;
   line2: string | null;
   city: string;
+  district: string | null;
   state: string;
+  region: string | null;
+  block: string | null;
+  country: string | null;
   pincode: string;
   is_default: boolean;
 }

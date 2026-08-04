@@ -1,17 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useCart } from '@/components/providers/cart-provider';
-import { useAuth } from '@/components/providers/auth-provider';
-import { supabase } from '@/lib/supabase/client';
-import { formatINR, generateOrderNumber } from '@/lib/format';
-import { toast } from 'sonner';
-import type { Address } from '@/lib/types';
+  import { useRouter } from 'next/navigation';
+  import { Button } from '@/components/ui/button';
+  import { Input } from '@/components/ui/input';
+  import { Label } from '@/components/ui/label';
+  import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+  import { Loader2 } from 'lucide-react';
+  import { useCart } from '@/components/providers/cart-provider';
+  import { useAuth } from '@/components/providers/auth-provider';
+  import { supabase } from '@/lib/supabase/client';
+  import { formatINR, generateOrderNumber } from '@/lib/format';
+  import { toast } from 'sonner';
+  import type { Address } from '@/lib/types';
 
 export function CheckoutClient() {
   const { items, subtotal, clearCart } = useCart();
@@ -22,7 +23,20 @@ export function CheckoutClient() {
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'razorpay' | 'cashfree'>('cod');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
-  const [newAddr, setNewAddr] = useState({ full_name: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '' });
+  const [pincodeLoading, setPincodeLoading] = useState(false);
+  const [newAddr, setNewAddr] = useState({
+    full_name: '',
+    phone: '',
+    line1: '',
+    line2: '',
+    city: '',
+    district: '',
+    state: '',
+    region: '',
+    block: '',
+    country: 'India',
+    pincode: '',
+  });
 
   const shipping = subtotal > 499 ? 0 : 49;
   const tax = Math.round(subtotal * 0.05);
@@ -50,7 +64,7 @@ export function CheckoutClient() {
 
   async function saveAddress() {
     if (!user) return;
-    if (!newAddr.full_name || !newAddr.phone || !newAddr.line1 || !newAddr.city || !newAddr.state || !newAddr.pincode) {
+    if (!newAddr.full_name || !newAddr.phone || !newAddr.line1 || !newAddr.city || !newAddr.district || !newAddr.state || !newAddr.pincode) {
       toast.error('Please fill all address fields.');
       return;
     }
@@ -65,7 +79,7 @@ export function CheckoutClient() {
     }
     setAddresses((prev) => [...prev, data as Address]);
     setSelectedAddressId(data.id);
-    setNewAddr({ full_name: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '' });
+    setNewAddr({ full_name: '', phone: '', line1: '', line2: '', city: '', district: '', state: '', region: '', block: '', country: 'India', pincode: '' });
     toast.success('Address saved');
   }
 
@@ -134,6 +148,39 @@ export function CheckoutClient() {
     router.push(`/account/orders/${order.id}`);
   }
 
+  async function lookupPincode() {
+    const code = newAddr.pincode.trim();
+    if (!/^\d{6}$/.test(code)) {
+      toast.error('Enter a valid 6-digit pincode');
+      return;
+    }
+    setPincodeLoading(true);
+    try {
+      const res = await fetch(`https://api.postalpincode.in/pincode/${code}`);
+      const data = await res.json();
+      const result = data?.[0];
+      if (result?.Status === 'Success' && result.PostOffice?.length > 0) {
+        const po = result.PostOffice[0];
+        setNewAddr((prev) => ({
+          ...prev,
+          country: po.Country ?? prev.country,
+          state: po.State ?? prev.state,
+          district: po.District ?? prev.district,
+          region: po.Region ?? prev.region,
+          block: po.Block ?? prev.block,
+          city: po.District ?? po.Block ?? prev.city,
+        }));
+        toast.success('Address details auto-filled from pincode');
+      } else {
+        toast.error('Invalid pincode or not found');
+      }
+    } catch {
+      toast.error('Could not look up pincode');
+    } finally {
+      setPincodeLoading(false);
+    }
+  }
+
   if (!user) return null;
 
   return (
@@ -154,7 +201,7 @@ export function CheckoutClient() {
                     <Label htmlFor={`addr-${a.id}`} className="flex-1 cursor-pointer text-sm">
                       <span className="font-medium">{a.full_name}</span> · {a.phone}
                       <br />
-                      {a.line1}, {a.line2 ? `${a.line2}, ` : ''}{a.city}, {a.state} - {a.pincode}
+                      {a.line1}, {a.line2 ? `${a.line2}, ` : ''}{a.city}, {a.district ? `${a.district}, ` : ''}{a.state} - {a.pincode}
                     </Label>
                   </div>
                 ))}
@@ -185,12 +232,51 @@ export function CheckoutClient() {
                   <Input id="city" value={newAddr.city} onChange={(e) => setNewAddr({ ...newAddr, city: e.target.value })} className="mt-1" />
                 </div>
                 <div>
+                  <Label htmlFor="district" className="text-xs">District</Label>
+                  <Input id="district" value={newAddr.district} onChange={(e) => setNewAddr({ ...newAddr, district: e.target.value })} className="mt-1" />
+                </div>
+                <div>
                   <Label htmlFor="state" className="text-xs">State</Label>
                   <Input id="state" value={newAddr.state} onChange={(e) => setNewAddr({ ...newAddr, state: e.target.value })} className="mt-1" />
                 </div>
                 <div>
+                  <Label htmlFor="region" className="text-xs">Region</Label>
+                  <Input id="region" value={newAddr.region} onChange={(e) => setNewAddr({ ...newAddr, region: e.target.value })} className="mt-1" />
+                </div>
+                <div>
+                  <Label htmlFor="block" className="text-xs">Block</Label>
+                  <Input id="block" value={newAddr.block} onChange={(e) => setNewAddr({ ...newAddr, block: e.target.value })} className="mt-1" />
+                </div>
+                <div>
+                  <Label htmlFor="country" className="text-xs">Country</Label>
+                  <Input id="country" value={newAddr.country} onChange={(e) => setNewAddr({ ...newAddr, country: e.target.value })} className="mt-1" />
+                </div>
+                <div>
                   <Label htmlFor="pincode" className="text-xs">Pincode</Label>
-                  <Input id="pincode" value={newAddr.pincode} onChange={(e) => setNewAddr({ ...newAddr, pincode: e.target.value })} className="mt-1" />
+                  <div className="mt-1 flex gap-2">
+                    <Input
+                      id="pincode"
+                      value={newAddr.pincode}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                        setNewAddr({ ...newAddr, pincode: val });
+                        if (val.length === 6) lookupPincode();
+                      }}
+                      onBlur={lookupPincode}
+                      placeholder="6-digit pincode"
+                      maxLength={6}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={lookupPincode}
+                      disabled={pincodeLoading || !/^\d{6}$/.test(newAddr.pincode.trim())}
+                      className="h-10 whitespace-nowrap"
+                    >
+                      {pincodeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Lookup'}
+                    </Button>
+                  </div>
                 </div>
               </div>
               <Button variant="secondary" className="mt-3" onClick={saveAddress}>Save address</Button>
