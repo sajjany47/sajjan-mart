@@ -42,6 +42,30 @@ const GENERAL_GENDER_OPTIONS = [
   { value: 'all', label: 'All' },
 ];
 
+const PUJA_SAMAGRI_CATEGORIES = [
+  { value: 'coconut_nariyal', label: 'Coconut (Nariyal)' },
+  { value: 'agarbatti', label: 'Agarbatti (Incense)' },
+  { value: 'camphor_kapur', label: 'Camphor (Kapur)' },
+  { value: 'deep_diya', label: 'Deep (Diya)' },
+  { value: 'kapor_vastra', label: 'Kapor (Vastra)' },
+  { value: 'fool_flowers', label: 'Fool (Flowers)' },
+  { value: 'gamcha', label: 'Gamcha' },
+  { value: 'ghee', label: 'Ghee' },
+  { value: 'rice_akshat', label: 'Rice (Akshat)' },
+  { value: 'kalash', label: 'Kalash' },
+  { value: 'betel_leaf', label: 'Betel Leaf (Paan)' },
+  { value: 'fruits_fal', label: 'Fruits (Fal)' },
+  { value: 'roli_kumkum', label: 'Roli & Kumkum' },
+  { value: 'haldi', label: 'Haldi (Turmeric)' },
+  { value: 'chandan', label: 'Chandan (Sandalwood)' },
+  { value: 'supari', label: 'Supari (Betel Nut)' },
+  { value: 'elaichi', label: 'Elaichi (Cardamom)' },
+  { value: 'ganga_jal', label: 'Ganga Jal' },
+  { value: 'moli_kalava', label: 'Moli (Kalava)' },
+  { value: 'bel_patra', label: 'Bel Patra' },
+  { value: 'other', label: 'Other' },
+];
+
 async function getFilters() {
   const supabase = createServerSupabase();
   const [categories, subCategories, brands] = await Promise.all([
@@ -84,6 +108,7 @@ export default async function CategoryPage({
   const isFoodCategory = params.slug === 'food';
   const isNaturalCategory = params.slug === 'natural-products';
   const isGeneralCategory = params.slug === 'general';
+  const isPujaSamagriCategory = params.slug === 'puja-samagri';
 
   return (
     <StoreShell>
@@ -99,8 +124,8 @@ export default async function CategoryPage({
             <ShopClient
               filters={filters}
               searchParams={sp}
-              productType={isNaturalCategory || isGeneralCategory ? (isNaturalCategory ? 'natural' : 'general') : undefined}
-              productCategories={isNaturalCategory ? NATURAL_PRODUCT_CATEGORIES : isGeneralCategory ? GENERAL_PRODUCT_CATEGORIES : undefined}
+              productType={isNaturalCategory || isGeneralCategory || isPujaSamagriCategory ? (isNaturalCategory ? 'natural' : isGeneralCategory ? 'general' : 'puja_samagri') : undefined}
+              productCategories={isNaturalCategory ? NATURAL_PRODUCT_CATEGORIES : isGeneralCategory ? GENERAL_PRODUCT_CATEGORIES : isPujaSamagriCategory ? PUJA_SAMAGRI_CATEGORIES : undefined}
               genderOptions={isGeneralCategory ? GENERAL_GENDER_OPTIONS : undefined}
               showBrands={isGeneralCategory}
             />

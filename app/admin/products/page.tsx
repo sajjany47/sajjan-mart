@@ -92,6 +92,30 @@ const NATURAL_PRODUCT_CATEGORIES = [
   { value: 'other', label: 'Other' },
 ];
 
+const PUJA_SAMAGRI_CATEGORIES = [
+  { value: 'coconut_nariyal', label: 'Coconut (Nariyal)' },
+  { value: 'agarbatti', label: 'Agarbatti (Incense)' },
+  { value: 'camphor_kapur', label: 'Camphor (Kapur)' },
+  { value: 'deep_diya', label: 'Deep (Diya)' },
+  { value: 'kapor_vastra', label: 'Kapor (Vastra)' },
+  { value: 'fool_flowers', label: 'Fool (Flowers)' },
+  { value: 'gamcha', label: 'Gamcha' },
+  { value: 'ghee', label: 'Ghee' },
+  { value: 'rice_akshat', label: 'Rice (Akshat)' },
+  { value: 'kalash', label: 'Kalash' },
+  { value: 'betel_leaf', label: 'Betel Leaf (Paan)' },
+  { value: 'fruits_fal', label: 'Fruits (Fal)' },
+  { value: 'roli_kumkum', label: 'Roli & Kumkum' },
+  { value: 'haldi', label: 'Haldi (Turmeric)' },
+  { value: 'chandan', label: 'Chandan (Sandalwood)' },
+  { value: 'supari', label: 'Supari (Betel Nut)' },
+  { value: 'elaichi', label: 'Elaichi (Cardamom)' },
+  { value: 'ganga_jal', label: 'Ganga Jal' },
+  { value: 'moli_kalava', label: 'Moli (Kalava)' },
+  { value: 'bel_patra', label: 'Bel Patra' },
+  { value: 'other', label: 'Other' },
+];
+
 const CATEGORY_SLUG_MAP: Record<string, string> = {
   food: 'food',
   puja_samagri: 'puja-samagri',
@@ -364,7 +388,7 @@ export default function AdminProductsPage() {
                     <th className="px-4 py-3 text-left font-medium">Purchase</th>
                     <th className="px-4 py-3 text-left font-medium">Discount</th>
                     {t.value === 'food' && <th className="px-4 py-3 text-left font-medium">Type</th>}
-                    {(t.value === 'food' || t.value === 'general' || t.value === 'natural') && <th className="px-4 py-3 text-left font-medium">Category</th>}
+                    {(t.value === 'food' || t.value === 'general' || t.value === 'natural' || t.value === 'puja_samagri') && <th className="px-4 py-3 text-left font-medium">Category</th>}
                     <th className="px-4 py-3 text-left font-medium">Status</th>
                     <th className="px-4 py-3 text-right font-medium">Actions</th>
                   </tr>
@@ -392,7 +416,7 @@ export default function AdminProductsPage() {
                         <td className="px-4 py-3 text-muted-foreground">{formatINR(p.purchase_price)}</td>
                         <td className="px-4 py-3">{p.discount_percent > 0 ? `${p.discount_percent}%` : '-'}</td>
                         {t.value === 'food' && <td className="px-4 py-3">{FOOD_TYPES.find((f) => f.value === p.food_type)?.label ?? p.food_type ?? '-'}</td>}
-                        {(t.value === 'food' || t.value === 'general' || t.value === 'natural') && <td className="px-4 py-3 capitalize">{p.product_category?.replace(/_/g, ' ') ?? '-'}</td>}
+                        {(t.value === 'food' || t.value === 'general' || t.value === 'natural' || t.value === 'puja_samagri') && <td className="px-4 py-3 capitalize">{p.product_category?.replace(/_/g, ' ') ?? '-'}</td>}
                         <td className="px-4 py-3">
                           <Badge className={p.is_active ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground'}>
                             {p.is_active ? 'Active' : 'Inactive'}
@@ -523,6 +547,9 @@ function ProductFormContent({
             )}
             {pt === 'natural' && (
               <Field name="product_category" label="Product Category" placeholder="Select category" options={NATURAL_PRODUCT_CATEGORIES} component={FormikSelect} />
+            )}
+            {pt === 'puja_samagri' && (
+              <Field name="product_category" label="Puja Samagri Item" placeholder="Select item" options={PUJA_SAMAGRI_CATEGORIES} component={FormikSelect} />
             )}
           </div>
 

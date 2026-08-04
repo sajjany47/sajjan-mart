@@ -141,6 +141,34 @@ async function main() {
   }
   console.log(`Created ${generalProducts.length} general products`);
 
+  // Puja samagri products
+  const pujaSamagriProducts = [
+    { name: 'Fresh Coconut (Nariyal)', slug: 'puja-coconut', description: 'Fresh green coconut for puja, prasad and offering', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'coconut_nariyal', purchasePrice: 30, salesPrice: 49, quantityType: 'piece', quantity: 1, stockType: 'piece', stock: 200, rating: 4.7, reviewCount: 56, isFeatured: true, isBestSeller: true, isPopular: true },
+    { name: 'Agarbatti (Incense Sticks)', slug: 'puja-agarbatti', description: 'Hand-rolled sandalwood incense sticks for daily puja', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'agarbatti', purchasePrice: 18, salesPrice: 35, quantityType: 'pack', quantity: 1, stockType: 'pack', stock: 300, rating: 4.5, reviewCount: 120, isFeatured: true, isBestSeller: true, isPopular: true },
+    { name: 'Camphor (Kapur)', slug: 'puja-camphor', description: 'Pure natural camphor tablets for aarti and havan', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'camphor_kapur', purchasePrice: 28, salesPrice: 49, quantityType: 'pack', quantity: 1, stockType: 'pack', stock: 250, rating: 4.6, reviewCount: 78, isFeatured: true, isPopular: true },
+    { name: 'Deep (Earthen Diya Set)', slug: 'puja-deep-diya', description: 'Pack of 10 earthen diyas with cotton wicks', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'deep_diya', purchasePrice: 42, salesPrice: 69, quantityType: 'piece', quantity: 10, stockType: 'piece', stock: 150, rating: 4.8, reviewCount: 95, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
+    { name: 'Kapor (Red Vastra)', slug: 'puja-kapor', description: 'Traditional red kapor cloth used in puja and god seating', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'kapor_vastra', purchasePrice: 55, salesPrice: 89, quantityType: 'piece', quantity: 1, stockType: 'piece', stock: 180, rating: 4.4, reviewCount: 40, isBestSeller: true, isPopular: true },
+    { name: 'Fool (Marigold Flowers)', slug: 'puja-fool', description: 'Fresh marigold flowers garland and loose petals for offering', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'fool_flowers', purchasePrice: 45, salesPrice: 75, quantityType: 'bunch', quantity: 1, stockType: 'bunch', stock: 220, rating: 4.7, reviewCount: 88, isFeatured: true, isBestSeller: true, isPopular: true },
+    { name: 'Gamcha (Pandit Dhoti)', slug: 'puja-gamcha', description: 'Cotton gamcha cloth offered as dakshina to pandit', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'gamcha', purchasePrice: 80, salesPrice: 129, quantityType: 'piece', quantity: 1, stockType: 'piece', stock: 120, rating: 4.3, reviewCount: 32, isPopular: true },
+    { name: 'Pure Desi Ghee (500ml)', slug: 'puja-ghee', description: 'A2 cow ghee for havan ahuti, diya and prasad', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'ghee', purchasePrice: 290, salesPrice: 399, quantityType: 'pack', quantity: 1, stockType: 'pack', stock: 90, rating: 4.9, reviewCount: 150, isFeatured: true, isBestSeller: true, isPopular: true },
+    { name: 'Akshat (Rice)', slug: 'puja-rice-akshat', description: 'Yellow-coloured akshat rice for abhishek and offerings', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'rice_akshat', purchasePrice: 35, salesPrice: 59, quantityType: 'pack', quantity: 1, stockType: 'pack', stock: 260, rating: 4.5, reviewCount: 66, isBestSeller: true, isPopular: true },
+    { name: 'Brass Kalash', slug: 'puja-brass-kalash', description: 'Traditional brass kalash for purnima and griha pravesh', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'kalash', purchasePrice: 260, salesPrice: 449, quantityType: 'piece', quantity: 1, stockType: 'piece', stock: 40, rating: 4.8, reviewCount: 52, isFeatured: true, isPopular: true },
+    { name: 'Betel Leaf (Paan Patta)', slug: 'puja-betel-leaf', description: 'Fresh betel leaves for puja offerings and paan', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'betel_leaf', purchasePrice: 22, salesPrice: 39, quantityType: 'bunch', quantity: 1, stockType: 'bunch', stock: 200, rating: 4.4, reviewCount: 28, isPopular: true },
+    { name: 'Fruits (Fal for Prasad)', slug: 'puja-fruits', description: 'Seasonal assorted fruits selected fresh for prasad', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'fruits_fal', purchasePrice: 110, salesPrice: 169, quantityType: 'kg', quantity: 1, stockType: 'kg', stock: 80, rating: 4.6, reviewCount: 45, isFeatured: true, isPopular: true },
+    { name: 'Roli & Kumkum', slug: 'puja-roli-kumkum', description: 'Sacred roli and kumkum for tilak and worship', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'roli_kumkum', purchasePrice: 25, salesPrice: 45, quantityType: 'pack', quantity: 1, stockType: 'pack', stock: 300, rating: 4.6, reviewCount: 74, isBestSeller: true, isPopular: true },
+    { name: 'Haldi (Turmeric) Powder', slug: 'puja-haldi', description: 'Natural haldi for puja, havan and marriage rituals', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'haldi', purchasePrice: 30, salesPrice: 49, quantityType: 'pack', quantity: 1, stockType: 'pack', stock: 280, rating: 4.5, reviewCount: 38, isPopular: true },
+    { name: 'Chandan (Sandalwood) Powder', slug: 'puja-chandan', description: 'Pure sandalwood powder for tilak and abhishek', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'chandan', purchasePrice: 55, salesPrice: 89, quantityType: 'pack', quantity: 1, stockType: 'pack', stock: 160, rating: 4.7, reviewCount: 61, isFeatured: true, isPopular: true },
+    { name: 'Supari (Betel Nut)', slug: 'puja-supari', description: 'Whole betel nuts for puja and panchamrit', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'supari', purchasePrice: 35, salesPrice: 55, quantityType: 'pack', quantity: 1, stockType: 'pack', stock: 190, rating: 4.4, reviewCount: 24, isPopular: true },
+    { name: 'Elaichi (Cardamom)', slug: 'puja-elaichi', description: 'Premium green cardamom for prasad and havan', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'elaichi', purchasePrice: 130, salesPrice: 199, quantityType: 'pack', quantity: 1, stockType: 'pack', stock: 70, rating: 4.7, reviewCount: 42, isFeatured: true, isPopular: true },
+    { name: 'Ganga Jal (Holy Water)', slug: 'puja-ganga-jal', description: 'Bottled Ganga jal for abhishek and home purification', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'ganga_jal', purchasePrice: 70, salesPrice: 110, quantityType: 'bottle', quantity: 1, stockType: 'bottle', stock: 250, rating: 4.8, reviewCount: 133, isFeatured: true, isBestSeller: true, isPopular: true, isTodayDeal: true },
+    { name: 'Moli (Kalava)', slug: 'puja-moli-kalava', description: 'Sacred red moli thread for tying around wrist and kalash', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'moli_kalava', purchasePrice: 10, salesPrice: 19, quantityType: 'piece', quantity: 1, stockType: 'piece', stock: 400, rating: 4.5, reviewCount: 84, isBestSeller: true, isPopular: true },
+    { name: 'Bel Patra (Leaves)', slug: 'puja-bel-patra', description: 'Fresh bel patra leaves for Shiva puja and abhishek', categoryId: pujaSamagri.id, productType: 'puja_samagri', productCategory: 'bel_patra', purchasePrice: 14, salesPrice: 29, quantityType: 'bunch', quantity: 1, stockType: 'bunch', stock: 220, rating: 4.6, reviewCount: 57, isFeatured: true, isPopular: true },
+  ];
+  for (const p of pujaSamagriProducts) {
+    await prisma.product.upsert({ where: { slug: p.slug }, update: {}, create: p as any });
+  }
+  console.log(`Created ${pujaSamagriProducts.length} puja samagri products`);
+
   // Product images
   const allProducts = await prisma.product.findMany();
   const imageMap: Record<string, string[]> = {
@@ -169,6 +197,26 @@ async function main() {
     'ayurvedic-face-wash': ['https://images.pexels.com/photos/3373508/pexels-photo-3373508.jpeg?auto=compress&cs=tinysrgb&w=800'],
     'stainless-steel-water-bottle': ['https://images.pexels.com/photos/1188649/pexels-photo-1188649.jpeg?auto=compress&cs=tinysrgb&w=800'],
     'yoga-mat-premium': ['https://images.pexels.com/photos/3823039/pexels-photo-3823039.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-coconut': ['https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-agarbatti': ['https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-camphor': ['https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-deep-diya': ['https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-kapor': ['https://images.pexels.com/photos/8230812/pexels-photo-8230812.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-fool': ['https://images.pexels.com/photos/8230812/pexels-photo-8230812.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-gamcha': ['https://images.pexels.com/photos/8230812/pexels-photo-8230812.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-ghee': ['https://images.pexels.com/photos/248412/pexels-photo-248412.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-rice-akshat': ['https://images.pexels.com/photos/1393382/pexels-photo-1393382.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-brass-kalash': ['https://images.pexels.com/photos/8230812/pexels-photo-8230812.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-betel-leaf': ['https://images.pexels.com/photos/1340116/pexels-photo-1340116.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-fruits': ['https://images.pexels.com/photos/12737656/pexels-photo-12737656.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-roli-kumkum': ['https://images.pexels.com/photos/1340116/pexels-photo-1340116.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-haldi': ['https://images.pexels.com/photos/1340116/pexels-photo-1340116.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-chandan': ['https://images.pexels.com/photos/1340116/pexels-photo-1340116.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-supari': ['https://images.pexels.com/photos/1340116/pexels-photo-1340116.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-elaichi': ['https://images.pexels.com/photos/1340116/pexels-photo-1340116.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-ganga-jal': ['https://images.pexels.com/photos/1188649/pexels-photo-1188649.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-moli-kalava': ['https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=800'],
+    'puja-bel-patra': ['https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=800'],
   };
   let imgCount = 0;
   for (const p of allProducts) {
@@ -202,15 +250,26 @@ async function main() {
   // Puja items
   const allPujas = await prisma.puja.findMany();
   const pujaItemTemplates = [
-    { name: 'Coconut', unit: 'pc', price: 40, defaultQty: 1, sortOrder: 1 },
-    { name: 'Agarbatti', unit: 'pack', price: 25, defaultQty: 2, sortOrder: 2 },
-    { name: 'Camphor', unit: 'pack', price: 50, defaultQty: 1, sortOrder: 3 },
-    { name: 'Ghee', unit: 'kg', price: 250, defaultQty: 1, sortOrder: 4 },
-    { name: 'Rice', unit: 'kg', price: 60, defaultQty: 1, sortOrder: 5 },
-    { name: 'Flowers', unit: 'bunch', price: 50, defaultQty: 2, sortOrder: 6 },
-    { name: 'Kalash', unit: 'pc', price: 120, defaultQty: 1, sortOrder: 7 },
-    { name: 'Betel Leaf', unit: 'bunch', price: 30, defaultQty: 1, sortOrder: 8 },
-    { name: 'Fruits', unit: 'kg', price: 100, defaultQty: 2, sortOrder: 9 },
+    { name: 'Coconut (Nariyal)', unit: 'pc', price: 40, defaultQty: 1, sortOrder: 1 },
+    { name: 'Agarbatti (Incense)', unit: 'pack', price: 25, defaultQty: 2, sortOrder: 2 },
+    { name: 'Camphor (Kapur)', unit: 'pack', price: 50, defaultQty: 1, sortOrder: 3 },
+    { name: 'Deep (Diya)', unit: 'pc', price: 60, defaultQty: 4, sortOrder: 4 },
+    { name: 'Kapor (Vastra)', unit: 'pc', price: 80, defaultQty: 1, sortOrder: 5 },
+    { name: 'Fool (Flowers)', unit: 'bunch', price: 50, defaultQty: 2, sortOrder: 6 },
+    { name: 'Gamcha', unit: 'pc', price: 100, defaultQty: 1, sortOrder: 7 },
+    { name: 'Ghee', unit: 'kg', price: 250, defaultQty: 1, sortOrder: 8 },
+    { name: 'Rice (Akshat)', unit: 'kg', price: 60, defaultQty: 1, sortOrder: 9 },
+    { name: 'Kalash', unit: 'pc', price: 120, defaultQty: 1, sortOrder: 10 },
+    { name: 'Betel Leaf (Paan)', unit: 'bunch', price: 30, defaultQty: 1, sortOrder: 11 },
+    { name: 'Fruits (Fal)', unit: 'kg', price: 100, defaultQty: 2, sortOrder: 12 },
+    { name: 'Roli & Kumkum', unit: 'pack', price: 40, defaultQty: 1, sortOrder: 13 },
+    { name: 'Haldi (Turmeric)', unit: 'pack', price: 40, defaultQty: 1, sortOrder: 14 },
+    { name: 'Chandan (Sandalwood)', unit: 'pack', price: 60, defaultQty: 1, sortOrder: 15 },
+    { name: 'Supari (Betel Nut)', unit: 'pack', price: 50, defaultQty: 1, sortOrder: 16 },
+    { name: 'Elaichi (Cardamom)', unit: 'pack', price: 120, defaultQty: 1, sortOrder: 17 },
+    { name: 'Ganga Jal', unit: 'bottle', price: 90, defaultQty: 1, sortOrder: 18 },
+    { name: 'Moli (Kalava)', unit: 'pc', price: 15, defaultQty: 1, sortOrder: 19 },
+    { name: 'Bel Patra', unit: 'bunch', price: 20, defaultQty: 5, sortOrder: 20 },
   ];
   let pujaItemCount = 0;
   for (const puja of allPujas) {
