@@ -77,18 +77,18 @@ const PRODUCT_CATEGORIES = [
 ];
 
 const NATURAL_PRODUCT_CATEGORIES = [
-  { value: 'fruits_vegetables', label: 'Fruits & Vegetables' },
+  { value: 'fruits_vegetables', label: 'Fruits & Veg' },
   { value: 'oil_ghee', label: 'Oil & Ghee' },
   { value: 'masala_spices', label: 'Masala & Spices' },
   { value: 'noodles_pasta', label: 'Noodles & Pasta' },
-  { value: 'grains_rice', label: 'Grains, Atta & Rice' },
+  { value: 'grains_rice', label: 'Grains & Rice' },
   { value: 'dal_legumes', label: 'Dal & Legumes' },
   { value: 'honey_jaggery', label: 'Honey & Jaggery' },
-  { value: 'dry_fruits', label: 'Dry Fruits & Nuts' },
+  { value: 'dry_fruits', label: 'Dry Fruits' },
   { value: 'dairy_bread', label: 'Dairy & Bread' },
-  { value: 'snacks', label: 'Snacks & Namkeen' },
-  { value: 'beverages', label: 'Beverages & Drinks' },
-  { value: 'health_wellness', label: 'Health & Wellness' },
+  { value: 'snacks', label: 'Snacks' },
+  { value: 'beverages', label: 'Beverages' },
+  { value: 'health_wellness', label: 'Health & Care' },
   { value: 'other', label: 'Other' },
 ];
 

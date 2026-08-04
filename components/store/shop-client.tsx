@@ -41,9 +41,11 @@ const PAGE_SIZE = 12;
 interface Props {
   filters: { categories: { id: string; name: string; slug: string }[]; brands: { id: string; name: string; slug: string }[] };
   searchParams: { [k: string]: string | string[] | undefined };
+  productType?: string;
+  productCategories?: { value: string; label: string }[];
 }
 
-export function ShopClient({ filters, searchParams }: Props) {
+export function ShopClient({ filters, searchParams, productType, productCategories }: Props) {
   const params = useSearchParams();
   const initialQ = (params.get('q') as string) || '';
   const initialCategory = (params.get('category') as string) || '';
@@ -52,6 +54,7 @@ export function ShopClient({ filters, searchParams }: Props) {
   const [q, setQ] = useState(initialQ);
   const [selectedCats, setSelectedCats] = useState<string[]>(initialCategory ? [initialCategory] : []);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [selectedProductCategory, setSelectedProductCategory] = useState<string>('');
   const [priceRange, setPriceRange] = useState<number[]>([0, 6000]);
   const [minRating, setMinRating] = useState(0);
   const [inStockOnly, setInStockOnly] = useState(false);
@@ -83,6 +86,8 @@ export function ShopClient({ filters, searchParams }: Props) {
       const brandIds = filters.brands.filter((b) => selectedBrands.includes(b.slug)).map((b) => b.id);
       query = query.in('brand_id', brandIds);
     }
+    if (productType) query = query.eq('product_type', productType);
+    if (selectedProductCategory) query = query.eq('product_category', selectedProductCategory);
     query = query.gte('sales_price', priceRange[0]).lte('sales_price', priceRange[1]);
     if (minRating > 0) query = query.gte('rating', minRating);
     if (deals) query = query.eq('is_today_deal', true);
@@ -108,57 +113,80 @@ export function ShopClient({ filters, searchParams }: Props) {
       }
       setLoading(false);
     });
-  }, [q, selectedCats, selectedBrands, priceRange, minRating, inStockOnly, deals, sort, page, filters.categories, filters.brands]);
+  }, [q, selectedCats, selectedBrands, selectedProductCategory, productType, priceRange, minRating, inStockOnly, deals, sort, page, filters.categories, filters.brands]);
 
-  useEffect(() => setPage(1), [q, selectedCats, selectedBrands, priceRange, minRating, deals, sort]);
+  useEffect(() => setPage(1), [q, selectedCats, selectedBrands, selectedProductCategory, priceRange, minRating, deals, sort]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const FilterPanel = (
     <div className="space-y-6">
-      <div>
-        <h3 className="mb-3 text-sm font-semibold">Categories</h3>
-        <div className="space-y-2">
-          {filters.categories.map((c) => (
-            <div key={c.id} className="flex items-center gap-2">
-              <Checkbox
-                id={`cat-${c.slug}`}
-                checked={selectedCats.includes(c.slug)}
-                onCheckedChange={(v) =>
-                  setSelectedCats((prev) =>
-                    v ? [...prev, c.slug] : prev.filter((s) => s !== c.slug)
-                  )
-                }
-              />
-              <Label htmlFor={`cat-${c.slug}`} className="text-sm font-normal cursor-pointer">
-                {c.name}
-              </Label>
-            </div>
-          ))}
+      {!productType && (
+        <div>
+          <h3 className="mb-3 text-sm font-semibold">Categories</h3>
+          <div className="space-y-2">
+            {filters.categories.map((c) => (
+              <div key={c.id} className="flex items-center gap-2">
+                <Checkbox
+                  id={`cat-${c.slug}`}
+                  checked={selectedCats.includes(c.slug)}
+                  onCheckedChange={(v) =>
+                    setSelectedCats((prev) =>
+                      v ? [...prev, c.slug] : prev.filter((s) => s !== c.slug)
+                    )
+                  }
+                />
+                <Label htmlFor={`cat-${c.slug}`} className="text-sm font-normal cursor-pointer">
+                  {c.name}
+                </Label>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      <div>
-        <h3 className="mb-3 text-sm font-semibold">Brands</h3>
-        <div className="space-y-2">
-          {filters.brands.map((b) => (
-            <div key={b.id} className="flex items-center gap-2">
-              <Checkbox
-                id={`brand-${b.slug}`}
-                checked={selectedBrands.includes(b.slug)}
-                onCheckedChange={(v) =>
-                  setSelectedBrands((prev) =>
-                    v ? [...prev, b.slug] : prev.filter((s) => s !== b.slug)
-                  )
-                }
-              />
-              <Label htmlFor={`brand-${b.slug}`} className="text-sm font-normal cursor-pointer">
-                {b.name}
-              </Label>
-            </div>
-          ))}
+      {!productType && (
+        <div>
+          <h3 className="mb-3 text-sm font-semibold">Brands</h3>
+          <div className="space-y-2">
+            {filters.brands.map((b) => (
+              <div key={b.id} className="flex items-center gap-2">
+                <Checkbox
+                  id={`brand-${b.slug}`}
+                  checked={selectedBrands.includes(b.slug)}
+                  onCheckedChange={(v) =>
+                    setSelectedBrands((prev) =>
+                      v ? [...prev, b.slug] : prev.filter((s) => s !== b.slug)
+                    )
+                  }
+                />
+                <Label htmlFor={`brand-${b.slug}`} className="text-sm font-normal cursor-pointer">
+                  {b.name}
+                </Label>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {productCategories && productCategories.length > 0 && (
+        <div>
+          <h3 className="mb-3 text-sm font-semibold">Product Category</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {productCategories.map((c) => (
+              <Button
+                key={c.value}
+                variant={selectedProductCategory === c.value ? 'default' : 'outline'}
+                size="sm"
+                className="text-xs justify-center"
+                onClick={() => setSelectedProductCategory(selectedProductCategory === c.value ? '' : c.value)}
+              >
+                {c.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div>
         <h3 className="mb-3 text-sm font-semibold">Price Range</h3>
@@ -207,6 +235,32 @@ export function ShopClient({ filters, searchParams }: Props) {
   return (
     <div className="container-px mx-auto max-w-7xl py-6">
       <SectionHeader title="Shop" subtitle={`${total} products`} />
+
+      {productCategories && productCategories.length > 0 && (
+        <div className="mb-4 flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+          <Button
+            variant={selectedProductCategory === '' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="rounded-xl text-xs whitespace-nowrap font-medium"
+            onClick={() => setSelectedProductCategory('')}
+          >
+            All Categories
+          </Button>
+          {productCategories.map((c) => (
+            <Button
+              key={c.value}
+              variant={selectedProductCategory === c.value ? 'secondary' : 'ghost'}
+              size="sm"
+              className={`rounded-xl text-xs whitespace-nowrap font-medium transition-all ${
+                selectedProductCategory === c.value ? 'bg-primary/15 text-primary font-semibold' : ''
+              }`}
+              onClick={() => setSelectedProductCategory(selectedProductCategory === c.value ? '' : c.value)}
+            >
+              {c.label}
+            </Button>
+          ))}
+        </div>
+      )}
 
       <div className="mb-4 flex items-center gap-2">
         <div className="relative flex-1 max-w-md">
@@ -269,6 +323,7 @@ export function ShopClient({ filters, searchParams }: Props) {
                   setQ('');
                   setSelectedCats([]);
                   setSelectedBrands([]);
+                  setSelectedProductCategory('');
                   setPriceRange([0, 6000]);
                   setMinRating(0);
                   setDeals(false);
