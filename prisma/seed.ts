@@ -247,35 +247,28 @@ async function main() {
   }
   console.log(`Created ${pujas.length} pujas`);
 
-  // Puja items
+  // Puja items (derived from puja samagri products)
   const allPujas = await prisma.puja.findMany();
-  const pujaItemTemplates = [
-    { name: 'Coconut (Nariyal)', unit: 'pc', price: 40, defaultQty: 1, sortOrder: 1 },
-    { name: 'Agarbatti (Incense)', unit: 'pack', price: 25, defaultQty: 2, sortOrder: 2 },
-    { name: 'Camphor (Kapur)', unit: 'pack', price: 50, defaultQty: 1, sortOrder: 3 },
-    { name: 'Deep (Diya)', unit: 'pc', price: 60, defaultQty: 4, sortOrder: 4 },
-    { name: 'Kapor (Vastra)', unit: 'pc', price: 80, defaultQty: 1, sortOrder: 5 },
-    { name: 'Fool (Flowers)', unit: 'bunch', price: 50, defaultQty: 2, sortOrder: 6 },
-    { name: 'Gamcha', unit: 'pc', price: 100, defaultQty: 1, sortOrder: 7 },
-    { name: 'Ghee', unit: 'kg', price: 250, defaultQty: 1, sortOrder: 8 },
-    { name: 'Rice (Akshat)', unit: 'kg', price: 60, defaultQty: 1, sortOrder: 9 },
-    { name: 'Kalash', unit: 'pc', price: 120, defaultQty: 1, sortOrder: 10 },
-    { name: 'Betel Leaf (Paan)', unit: 'bunch', price: 30, defaultQty: 1, sortOrder: 11 },
-    { name: 'Fruits (Fal)', unit: 'kg', price: 100, defaultQty: 2, sortOrder: 12 },
-    { name: 'Roli & Kumkum', unit: 'pack', price: 40, defaultQty: 1, sortOrder: 13 },
-    { name: 'Haldi (Turmeric)', unit: 'pack', price: 40, defaultQty: 1, sortOrder: 14 },
-    { name: 'Chandan (Sandalwood)', unit: 'pack', price: 60, defaultQty: 1, sortOrder: 15 },
-    { name: 'Supari (Betel Nut)', unit: 'pack', price: 50, defaultQty: 1, sortOrder: 16 },
-    { name: 'Elaichi (Cardamom)', unit: 'pack', price: 120, defaultQty: 1, sortOrder: 17 },
-    { name: 'Ganga Jal', unit: 'bottle', price: 90, defaultQty: 1, sortOrder: 18 },
-    { name: 'Moli (Kalava)', unit: 'pc', price: 15, defaultQty: 1, sortOrder: 19 },
-    { name: 'Bel Patra', unit: 'bunch', price: 20, defaultQty: 5, sortOrder: 20 },
-  ];
+  const pujaSamagriProductsInDb = await prisma.product.findMany({
+    where: { productType: 'puja_samagri', isActive: true },
+    orderBy: { name: 'asc' },
+  });
   let pujaItemCount = 0;
   for (const puja of allPujas) {
     await prisma.pujaItem.deleteMany({ where: { pujaId: puja.id } });
-    for (const item of pujaItemTemplates) {
-      await prisma.pujaItem.create({ data: { pujaId: puja.id, ...item } });
+    let sort = 1;
+    for (const prod of pujaSamagriProductsInDb) {
+      await prisma.pujaItem.create({
+        data: {
+          pujaId: puja.id,
+          productId: prod.id,
+          name: prod.name,
+          unit: prod.quantityType ?? 'pc',
+          price: prod.salesPrice,
+          defaultQty: 1,
+          sortOrder: sort++,
+        },
+      });
       pujaItemCount++;
     }
   }

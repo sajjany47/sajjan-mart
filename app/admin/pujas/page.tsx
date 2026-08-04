@@ -15,31 +15,51 @@ import { PageLoader } from '@/components/ui/page-loader';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { Puja } from '@/lib/types';
 
+interface PujaSamagriProduct {
+  id: string;
+  name: string;
+  sales_price: number;
+  quantity_type: string | null;
+}
+
 const EMPTY = { name: '', description: '', image_url: '', base_price: 0, is_active: true };
 
 export default function AdminPujasPage() {
   const [pujas, setPujas] = useState<Puja[]>([]);
+  const [products, setProducts] = useState<PujaSamagriProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Puja | null>(null);
   const [form, setForm] = useState<any>(EMPTY);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<Puja | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase.from('pujas').select('*').order('name');
-    setPujas((data ?? []) as Puja[]);
+    const [pujasRes, productsRes] = await Promise.all([
+      supabase.from('pujas').select('*').order('name'),
+      supabase.from('products').select('id,name,sales_price,quantity_type').eq('product_type', 'puja_samagri').eq('active', 'true').order('name'),
+    ]);
+    setPujas((pujasRes.data ?? []) as Puja[]);
+    setProducts((productsRes.data ?? []) as PujaSamagriProduct[]);
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
 
-  function openNew() { setEditing(null); setForm(EMPTY); setOpen(true); }
-  function openEdit(p: Puja) {
+  function openNew() { setEditing(null); setForm(EMPTY); setSelectedItems([]); setOpen(true); }
+
+  async function openEdit(p: Puja) {
     setEditing(p);
     setForm({ name: p.name, description: p.description ?? '', image_url: p.image_url ?? '', base_price: p.base_price, is_active: p.is_active });
+    const { data } = await supabase.from('puja_items').select('*').eq('puja_id', p.id);
+    setSelectedItems((data ?? []).map((i: any) => i.product_id).filter(Boolean));
     setOpen(true);
+  }
+
+  function toggleItem(id: string) {
+    setSelectedItems((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
   async function save(e: React.FormEvent) {
@@ -47,6 +67,8 @@ export default function AdminPujasPage() {
     if (!form.name) { toast.error('Name required.'); return; }
     setSaving(true);
     const slug = slugify(form.name);
+    let pujaId = editing?.id ?? '';
+
     if (editing) {
       const { error } = await supabase.from('pujas').update({
         name: form.name, description: form.description, image_url: form.image_url, base_price: Number(form.base_price), is_active: form.is_active,
@@ -54,12 +76,30 @@ export default function AdminPujasPage() {
       if (error) { toast.error(error.message); setSaving(false); return; }
       toast.success('Puja updated');
     } else {
-      const { error } = await supabase.from('pujas').insert({
+      const { data, error } = await supabase.from('pujas').insert({
         name: form.name, slug, description: form.description, image_url: form.image_url, base_price: Number(form.base_price), is_active: form.is_active,
       });
       if (error) { toast.error(error.message); setSaving(false); return; }
+      pujaId = data?.id ?? '';
       toast.success('Puja created');
     }
+
+    if (pujaId) {
+      await supabase.from('puja_items').delete().eq('puja_id', pujaId);
+      const selected = products.filter((p) => selectedItems.includes(p.id));
+      for (let i = 0; i < selected.length; i++) {
+        await supabase.from('puja_items').insert({
+          puja_id: pujaId,
+          product_id: selected[i].id,
+          name: selected[i].name,
+          unit: selected[i].quantity_type ?? 'pc',
+          price: selected[i].sales_price,
+          default_qty: 1,
+          sort_order: i + 1,
+        });
+      }
+    }
+
     setSaving(false); setOpen(false); load();
   }
 
@@ -107,13 +147,48 @@ export default function AdminPujasPage() {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editing ? 'Edit Puja' : 'New Puja'}</DialogTitle></DialogHeader>
           <form onSubmit={save} className="space-y-3">
             <div><Label className="text-xs">Name</Label><Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="mt-1" /></div>
             <div><Label className="text-xs">Description</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="mt-1" /></div>
             <div><Label className="text-xs">Image URL</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="mt-1" /></div>
             <div><Label className="text-xs">Base Price (Rs)</Label><Input type="number" value={form.base_price} onChange={(e) => setForm({ ...form, base_price: e.target.value })} className="mt-1" /></div>
+            <div>
+              <Label className="text-xs">Puja Samagri Items</Label>
+              <div className="mt-2 max-h-64 overflow-y-auto rounded-lg border border-border p-2 space-y-1">
+                {products.length === 0 && (
+                  <p className="px-2 py-4 text-center text-xs text-muted-foreground">No puja samagri products found. Add them under Products.</p>
+                )}
+                {products.map((p) => {
+                  const checked = selectedItems.includes(p.id);
+                  return (
+                    <label
+                      key={p.id}
+                      className={`flex items-center justify-between gap-2 rounded-md px-2 py-1.5 cursor-pointer text-sm transition ${checked ? 'bg-primary/10' : 'hover:bg-muted'}`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleItem(p.id)}
+                          className="h-4 w-4 rounded border-input"
+                        />
+                        <span>{p.name}</span>
+                      </span>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">{formatINR(p.sales_price)}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              {products.length > 0 && (
+                <div className="mt-1 flex gap-3 text-xs">
+                  <button type="button" onClick={() => setSelectedItems(products.map((p) => p.id))} className="text-primary font-medium">Select all</button>
+                  <button type="button" onClick={() => setSelectedItems([])} className="text-muted-foreground">Clear</button>
+                </div>
+              )}
+              <p className="mt-1 text-xs text-muted-foreground">{selectedItems.length} of {products.length} items selected</p>
+            </div>
             <div className="flex items-center gap-2 pt-1">
               <input
                 type="checkbox"

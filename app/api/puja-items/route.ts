@@ -5,7 +5,7 @@ import { jsonResponse, parseBody } from '@/lib/api-utils';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const pujaId = searchParams.get('pujaId');
+    const pujaId = searchParams.get('pujaId') || searchParams.get('puja_id');
 
     const where = pujaId ? { pujaId } : {};
 
@@ -27,5 +27,18 @@ export async function POST(request: NextRequest) {
     return jsonResponse(item, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to create' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const pujaId = searchParams.get('pujaId') || searchParams.get('puja_id');
+    const result = pujaId
+      ? await prisma.pujaItem.deleteMany({ where: { pujaId } })
+      : await prisma.pujaItem.deleteMany({});
+    return jsonResponse({ success: true, count: result.count });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
   }
 }

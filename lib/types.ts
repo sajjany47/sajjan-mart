@@ -118,6 +118,7 @@ export interface Puja {
 export interface PujaItem {
   id: string;
   puja_id: string;
+  product_id: string | null;
   name: string;
   unit: string;
   price: number;
