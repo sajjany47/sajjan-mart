@@ -176,15 +176,15 @@ export function CheckoutClient() {
     router.push(`/account/orders/${order.id}`);
   }
 
-  async function lookupPincode() {
-    const code = newAddr.pincode.trim();
-    if (!/^\d{6}$/.test(code)) {
+  async function lookupPincode(code?: string) {
+    const pincode = (code ?? newAddr.pincode).trim();
+    if (!/^\d{6}$/.test(pincode)) {
       toast.error("Enter a valid 6-digit pincode");
       return;
     }
     setPincodeLoading(true);
     try {
-      const res = await fetch(`https://api.postalpincode.in/pincode/${code}`);
+      const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
       const data = await res.json();
       const result = data?.[0];
       if (result?.Status === "Success" && result.PostOffice?.length > 0) {
@@ -323,9 +323,9 @@ export function CheckoutClient() {
                           .replace(/\D/g, "")
                           .slice(0, 6);
                         setNewAddr({ ...newAddr, pincode: val });
-                        if (val.length === 6) lookupPincode();
+                        if (val.length === 6) lookupPincode(val);
                       }}
-                      onBlur={lookupPincode}
+                      onBlur={(e) => lookupPincode(e.target.value)}
                       placeholder="6-digit pincode"
                       maxLength={6}
                       className="flex-1"
@@ -333,7 +333,7 @@ export function CheckoutClient() {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={lookupPincode}
+                      onClick={() => lookupPincode(newAddr.pincode)}
                       disabled={
                         pincodeLoading ||
                         !/^\d{6}$/.test(newAddr.pincode.trim())
