@@ -257,6 +257,7 @@ async function main() {
   for (const puja of allPujas) {
     await prisma.pujaItem.deleteMany({ where: { pujaId: puja.id } });
     let sort = 1;
+    let itemTotal = 0;
     for (const prod of pujaSamagriProductsInDb) {
       await prisma.pujaItem.create({
         data: {
@@ -269,8 +270,10 @@ async function main() {
           sortOrder: sort++,
         },
       });
+      itemTotal += Number(prod.salesPrice);
       pujaItemCount++;
     }
+    await prisma.puja.update({ where: { id: puja.id }, data: { basePrice: itemTotal } });
   }
   console.log(`Created ${pujaItemCount} puja items`);
 

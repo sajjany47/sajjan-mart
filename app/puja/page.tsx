@@ -4,14 +4,23 @@ import { Search, Clock, Star } from 'lucide-react';
 import { StoreShell } from '@/components/store/store-shell';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { formatINR } from '@/lib/format';
-import type { Puja } from '@/lib/types';
+import type { Puja, PujaItem } from '@/lib/types';
 
 export const revalidate = 60;
 
 async function getPujas() {
   const supabase = createServerSupabase();
   const { data } = await supabase.from('pujas').select('*').eq('is_active', true).order('name');
-  return (data ?? []) as Puja[];
+  const pujas = (data ?? []) as Puja[];
+  const ids = pujas.map((p) => p.id);
+  const { data: items } = ids.length > 0
+    ? await supabase.from('puja_items').select('*').in('puja_id', ids).order('sort_order')
+    : { data: [] };
+  const byPuja: Record<string, PujaItem[]> = {};
+  for (const it of (items ?? []) as PujaItem[]) {
+    (byPuja[it.puja_id] = byPuja[it.puja_id] ?? []).push(it);
+  }
+  return pujas.map((p) => ({ ...p, items: byPuja[p.id] ?? [] }));
 }
 
 export default async function PujaPage({
@@ -65,6 +74,16 @@ export default async function PujaPage({
               <div className="p-4">
                 <h3 className="font-display text-lg font-semibold">{p.name}</h3>
                 <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{p.description}</p>
+                {p.items.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {p.items.slice(0, 6).map((it) => (
+                      <span key={it.id} className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">{it.name}</span>
+                    ))}
+                    {p.items.length > 6 && (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">+{p.items.length - 6} more</span>
+                    )}
+                  </div>
+                )}
                 <div className="mt-3 flex items-center justify-between">
                   <span className="text-lg font-semibold">{formatINR(p.base_price)}</span>
                   <span className="text-xs text-muted-foreground">Pandit + Samagri</span>

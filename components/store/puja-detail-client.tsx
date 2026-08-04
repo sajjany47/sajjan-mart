@@ -46,7 +46,7 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
     [selected]
   );
 
-  const grandTotal = puja.base_price + itemsTotal + (pandit?.price ?? 0);
+  const grandTotal = itemsTotal + (pandit?.price ?? 0);
 
   function toggle(id: string) {
     setSelected((prev) => ({ ...prev, [id]: { ...prev[id], checked: !prev[id].checked } }));
@@ -192,10 +192,6 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
           <div className="rounded-2xl border border-border bg-card p-5">
             <h3 className="font-display text-lg font-semibold">Booking Summary</h3>
             <div className="mt-4 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Puja base</span>
-                <span>{formatINR(puja.base_price)}</span>
-              </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Items ({selectedCount})</span>
                 <span>{formatINR(itemsTotal)}</span>
