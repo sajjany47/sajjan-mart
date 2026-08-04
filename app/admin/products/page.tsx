@@ -391,7 +391,7 @@ export default function AdminProductsPage() {
                         <td className="px-4 py-3">{formatINR(p.sales_price)}</td>
                         <td className="px-4 py-3 text-muted-foreground">{formatINR(p.purchase_price)}</td>
                         <td className="px-4 py-3">{p.discount_percent > 0 ? `${p.discount_percent}%` : '-'}</td>
-                        {t.value === 'food' && <td className="px-4 py-3 capitalize">{p.food_type ?? '-'}</td>}
+                        {t.value === 'food' && <td className="px-4 py-3">{FOOD_TYPES.find((f) => f.value === p.food_type)?.label ?? p.food_type ?? '-'}</td>}
                         {(t.value === 'food' || t.value === 'general' || t.value === 'natural') && <td className="px-4 py-3 capitalize">{p.product_category?.replace(/_/g, ' ') ?? '-'}</td>}
                         <td className="px-4 py-3">
                           <Badge className={p.is_active ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground'}>
