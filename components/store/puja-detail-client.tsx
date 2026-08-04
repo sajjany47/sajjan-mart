@@ -20,7 +20,7 @@ interface Props {
 }
 
 export function PujaDetailClient({ puja, items, pandits }: Props) {
-  const { addItem } = useCart();
+  const { items: cartItems, addItem, updateQty, removeItem } = useCart();
   const [selected, setSelected] = useState<Record<string, { checked: boolean; qty: number }>>(
     () =>
       Object.fromEntries(
@@ -32,6 +32,9 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
   const [bookingTime, setBookingTime] = useState('');
 
   const pandit = pandits.find((p) => p.id === panditId);
+  const cartItem = cartItems.find(
+    (i) => i.type === 'puja' && i.pujaId === puja.id && (i.panditId ?? '') === (pandit?.id ?? '')
+  );
 
   const itemsTotal = useMemo(() => {
     return items.reduce((sum, i) => {
@@ -219,9 +222,40 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
               </div>
             </div>
 
-            <Button onClick={handleAddToCart} className="mt-5 w-full" size="lg">
-              <ShoppingBag className="mr-2 h-4 w-4" /> Add Package to Cart
-            </Button>
+            {cartItem ? (
+              <div className="mt-5 flex h-12 items-center justify-between rounded-lg border border-primary bg-background overflow-hidden">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-full w-12 rounded-none hover:bg-primary/10 text-primary"
+                  onClick={() => {
+                    if (cartItem.quantity > 1) {
+                      updateQty(cartItem.id, cartItem.quantity - 1);
+                    } else {
+                      removeItem(cartItem.id);
+                      toast.success('Package removed from cart');
+                    }
+                  }}
+                  aria-label="Decrease quantity"
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-bold text-foreground select-none">{cartItem.quantity}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-full w-12 rounded-none hover:bg-primary/10 text-primary"
+                  onClick={() => updateQty(cartItem.id, cartItem.quantity + 1)}
+                  aria-label="Increase quantity"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button onClick={handleAddToCart} className="mt-5 w-full" size="lg">
+                <ShoppingBag className="mr-2 h-4 w-4" /> Add Package to Cart
+              </Button>
+            )}
 
             <div className="mt-4 space-y-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-2"><Check className="h-3 w-3 text-success" /> All samagri included</div>
