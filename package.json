@@ -15,6 +15,8 @@
     "prisma:push": "dotenv -e .env.development -- prisma db push",
     "prisma:pull": "dotenv -e .env.development -- prisma db pull",
     "prisma:studio": "dotenv -e .env.development -- prisma studio",
+    "db:setup": "npm install && powershell -ExecutionPolicy Bypass -File scripts/db-setup.ps1",
+    "db:reset": "dotenv -e .env.development -- prisma db push --force-reset && npm run seed",
     "postinstall": "prisma generate",
     "seed": "dotenv -e .env.development -- npx tsx prisma/seed.ts",
     "prisma:seed": "dotenv -e .env.development -- npx tsx prisma/seed.ts"

@@ -26,7 +26,6 @@ const NAV = [
   { href: '/puja', label: 'Puja Samagri' },
   { href: '/category/natural-products', label: 'Natural Products', category: 'natural-products' },
   { href: '/category/general', label: 'General', category: 'general' },
-  { href: '/shop', label: 'Shop All' },
 ];
 
 export function Header({ activeCategories }: { activeCategories: string[] }) {

@@ -1,5 +1,26 @@
 # AGENTS.md — Project Change Log
 
+## 2026-08-04: Local PostgreSQL setup (no Docker) + one-command DB setup
+
+### PostgreSQL (no Docker)
+- Dev database now runs on **local PostgreSQL** installed natively on Windows (no Docker/Supabase).
+- Installed PostgreSQL 16 via winget (`PostgreSQL.PostgreSQL.16`) → `C:\Program Files\PostgreSQL\16`
+- Connection used everywhere: `postgresql://postgres:postgres@localhost:5432/sajjan_mart` (in `.env.development`)
+- Created `sajjan_mart` database with `pgcrypto` extension enabled (needed for `gen_random_uuid()` defaults)
+- Created all tables via `prisma db push` and loaded sample data via `prisma/seed.ts`
+
+### One-command setup for a fresh clone (office laptop)
+- Created `scripts/db-setup.ps1` — detects `psql`, reads `DATABASE_URL` from `.env.development`,
+  creates the database if missing, enables `pgcrypto`, then runs `prisma db push` + `seed`.
+- Added npm scripts:
+  - `npm run db:setup` — installs deps, then runs `scripts/db-setup.ps1` (idempotent)
+  - `npm run db:reset` — force-resets schema (`prisma db push --force-reset`) then reseeds
+
+### Fresh-clone steps (office laptop)
+1. Install PostgreSQL: `winget install --id PostgreSQL.PostgreSQL.16 -e --accept-source-agreements --accept-package-agreements` (set postgres password to `postgres`, or update `.env.development`)
+2. `npm run db:setup`
+3. `npm run dev`
+
 ## 2026-07-19: Dual environment setup (dev & production)
 
 - Created `.env.development` — local Supabase pointing to local PostgreSQL (`postgresql://postgres:postgres@localhost:54322/postgres`)

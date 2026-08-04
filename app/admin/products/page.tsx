@@ -60,6 +60,22 @@ const PRODUCT_CATEGORIES = [
   { value: 'other', label: 'Other' },
 ];
 
+const NATURAL_PRODUCT_CATEGORIES = [
+  { value: 'fruits_vegetables', label: 'Fruits & Vegetables' },
+  { value: 'oil_ghee', label: 'Oil & Ghee' },
+  { value: 'masala_spices', label: 'Masala & Spices' },
+  { value: 'noodles_pasta', label: 'Noodles & Pasta' },
+  { value: 'grains_rice', label: 'Grains, Atta & Rice' },
+  { value: 'dal_legumes', label: 'Dal & Legumes' },
+  { value: 'honey_jaggery', label: 'Honey & Jaggery' },
+  { value: 'dry_fruits', label: 'Dry Fruits & Nuts' },
+  { value: 'dairy_bread', label: 'Dairy & Bread' },
+  { value: 'snacks', label: 'Snacks & Namkeen' },
+  { value: 'beverages', label: 'Beverages & Drinks' },
+  { value: 'health_wellness', label: 'Health & Wellness' },
+  { value: 'other', label: 'Other' },
+];
+
 const CATEGORY_SLUG_MAP: Record<string, string> = {
   food: 'food',
   puja_samagri: 'puja-samagri',
@@ -332,7 +348,7 @@ export default function AdminProductsPage() {
                     <th className="px-4 py-3 text-left font-medium">Purchase</th>
                     <th className="px-4 py-3 text-left font-medium">Discount</th>
                     {t.value === 'food' && <th className="px-4 py-3 text-left font-medium">Type</th>}
-                    {t.value === 'general' && <th className="px-4 py-3 text-left font-medium">Category</th>}
+                    {(t.value === 'general' || t.value === 'natural') && <th className="px-4 py-3 text-left font-medium">Category</th>}
                     <th className="px-4 py-3 text-left font-medium">Status</th>
                     <th className="px-4 py-3 text-right font-medium">Actions</th>
                   </tr>
@@ -360,7 +376,7 @@ export default function AdminProductsPage() {
                         <td className="px-4 py-3 text-muted-foreground">{formatINR(p.purchase_price)}</td>
                         <td className="px-4 py-3">{p.discount_percent > 0 ? `${p.discount_percent}%` : '-'}</td>
                         {t.value === 'food' && <td className="px-4 py-3 capitalize">{p.food_type ?? '-'}</td>}
-                        {t.value === 'general' && <td className="px-4 py-3 capitalize">{p.product_category ?? '-'}</td>}
+                        {(t.value === 'general' || t.value === 'natural') && <td className="px-4 py-3 capitalize">{p.product_category?.replace(/_/g, ' ') ?? '-'}</td>}
                         <td className="px-4 py-3">
                           <Badge className={p.is_active ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground'}>
                             {p.is_active ? 'Active' : 'Inactive'}
@@ -488,6 +504,9 @@ function ProductFormContent({
             )}
             {pt === 'food' && (
               <Field name="food_type" label="Food Type *" placeholder="Select food type" options={FOOD_TYPES} component={FormikSelect} />
+            )}
+            {pt === 'natural' && (
+              <Field name="product_category" label="Product Category" placeholder="Select category" options={NATURAL_PRODUCT_CATEGORIES} component={FormikSelect} />
             )}
           </div>
 
