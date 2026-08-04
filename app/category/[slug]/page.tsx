@@ -22,6 +22,26 @@ const NATURAL_PRODUCT_CATEGORIES = [
   { value: 'other', label: 'Other' },
 ];
 
+const GENERAL_PRODUCT_CATEGORIES = [
+  { value: 'electronics', label: 'Electronics' },
+  { value: 'fashion', label: 'Fashion' },
+  { value: 'home', label: 'Home & Kitchen' },
+  { value: 'beauty', label: 'Beauty' },
+  { value: 'sports', label: 'Sports' },
+  { value: 'books', label: 'Books' },
+  { value: 'toys', label: 'Toys' },
+  { value: 'automotive', label: 'Automotive' },
+  { value: 'other', label: 'Other' },
+];
+
+const GENERAL_GENDER_OPTIONS = [
+  { value: 'men', label: 'Men' },
+  { value: 'women', label: 'Women' },
+  { value: 'baby', label: 'Baby' },
+  { value: 'men_women_both', label: 'Men & Women' },
+  { value: 'all', label: 'All' },
+];
+
 async function getFilters() {
   const supabase = createServerSupabase();
   const [categories, subCategories, brands] = await Promise.all([
@@ -63,6 +83,7 @@ export default async function CategoryPage({
 
   const isFoodCategory = params.slug === 'food';
   const isNaturalCategory = params.slug === 'natural-products';
+  const isGeneralCategory = params.slug === 'general';
 
   return (
     <StoreShell>
@@ -78,8 +99,10 @@ export default async function CategoryPage({
             <ShopClient
               filters={filters}
               searchParams={sp}
-              productType={isNaturalCategory ? 'natural' : undefined}
-              productCategories={isNaturalCategory ? NATURAL_PRODUCT_CATEGORIES : undefined}
+              productType={isNaturalCategory || isGeneralCategory ? (isNaturalCategory ? 'natural' : 'general') : undefined}
+              productCategories={isNaturalCategory ? NATURAL_PRODUCT_CATEGORIES : isGeneralCategory ? GENERAL_PRODUCT_CATEGORIES : undefined}
+              genderOptions={isGeneralCategory ? GENERAL_GENDER_OPTIONS : undefined}
+              showBrands={isGeneralCategory}
             />
           </>
         )}

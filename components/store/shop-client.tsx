@@ -43,9 +43,11 @@ interface Props {
   searchParams: { [k: string]: string | string[] | undefined };
   productType?: string;
   productCategories?: { value: string; label: string }[];
+  genderOptions?: { value: string; label: string }[];
+  showBrands?: boolean;
 }
 
-export function ShopClient({ filters, searchParams, productType, productCategories }: Props) {
+export function ShopClient({ filters, searchParams, productType, productCategories, genderOptions, showBrands }: Props) {
   const params = useSearchParams();
   const initialQ = (params.get('q') as string) || '';
   const initialCategory = (params.get('category') as string) || '';
@@ -55,6 +57,7 @@ export function ShopClient({ filters, searchParams, productType, productCategori
   const [selectedCats, setSelectedCats] = useState<string[]>(initialCategory ? [initialCategory] : []);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedProductCategory, setSelectedProductCategory] = useState<string>('');
+  const [selectedGender, setSelectedGender] = useState<string>('');
   const [priceRange, setPriceRange] = useState<number[]>([0, 6000]);
   const [minRating, setMinRating] = useState(0);
   const [inStockOnly, setInStockOnly] = useState(false);
@@ -88,6 +91,17 @@ export function ShopClient({ filters, searchParams, productType, productCategori
     }
     if (productType) query = query.eq('product_type', productType);
     if (selectedProductCategory) query = query.eq('product_category', selectedProductCategory);
+    if (selectedGender) {
+      if (selectedGender === 'all') {
+        query = query.in('gender', ['all']);
+      } else {
+        const genderList =
+          selectedGender === 'men' || selectedGender === 'women'
+            ? [selectedGender, 'all', 'men_women_both']
+            : [selectedGender, 'all'];
+        query = query.in('gender', genderList);
+      }
+    }
     query = query.gte('sales_price', priceRange[0]).lte('sales_price', priceRange[1]);
     if (minRating > 0) query = query.gte('rating', minRating);
     if (deals) query = query.eq('is_today_deal', true);
@@ -113,9 +127,9 @@ export function ShopClient({ filters, searchParams, productType, productCategori
       }
       setLoading(false);
     });
-  }, [q, selectedCats, selectedBrands, selectedProductCategory, productType, priceRange, minRating, inStockOnly, deals, sort, page, filters.categories, filters.brands]);
+  }, [q, selectedCats, selectedBrands, selectedProductCategory, selectedGender, productType, priceRange, minRating, inStockOnly, deals, sort, page, filters.categories, filters.brands]);
 
-  useEffect(() => setPage(1), [q, selectedCats, selectedBrands, selectedProductCategory, priceRange, minRating, deals, sort]);
+  useEffect(() => setPage(1), [q, selectedCats, selectedBrands, selectedProductCategory, selectedGender, priceRange, minRating, deals, sort]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -145,7 +159,7 @@ export function ShopClient({ filters, searchParams, productType, productCategori
         </div>
       )}
 
-      {!productType && (
+      {(showBrands || !productType) && (
         <div>
           <h3 className="mb-3 text-sm font-semibold">Brands</h3>
           <div className="space-y-2">
@@ -182,6 +196,25 @@ export function ShopClient({ filters, searchParams, productType, productCategori
                 onClick={() => setSelectedProductCategory(selectedProductCategory === c.value ? '' : c.value)}
               >
                 {c.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {genderOptions && genderOptions.length > 0 && (
+        <div>
+          <h3 className="mb-3 text-sm font-semibold">Style / Gender</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {genderOptions.map((g) => (
+              <Button
+                key={g.value}
+                variant={selectedGender === g.value ? 'default' : 'outline'}
+                size="sm"
+                className="text-xs justify-center"
+                onClick={() => setSelectedGender(selectedGender === g.value ? '' : g.value)}
+              >
+                {g.label}
               </Button>
             ))}
           </div>
@@ -324,6 +357,7 @@ export function ShopClient({ filters, searchParams, productType, productCategori
                   setSelectedCats([]);
                   setSelectedBrands([]);
                   setSelectedProductCategory('');
+                  setSelectedGender('');
                   setPriceRange([0, 6000]);
                   setMinRating(0);
                   setDeals(false);
