@@ -514,7 +514,7 @@ function ProductFormContent({
         </h3>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-4">
-            <Field name="category_id" label="Category" placeholder="Select category" options={categoryOptions} component={FormikSelect} disabled={!isEditing} />
+            <Field name="category_id" label="Category" placeholder="Select category" options={categoryOptions} component={FormikSelect} disabled />
             {pt === 'general' && (
               <Field name="brand_id" label="Brand" placeholder="Select brand" options={brandOptions} component={FormikSelect} />
             )}
