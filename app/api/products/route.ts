@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const brandId = searchParams.get('brandId');
     const foodType = searchParams.get('foodType') || searchParams.get('food_type');
     const productType = searchParams.get('productType') || searchParams.get('product_type');
+    const productCategory = searchParams.get('productCategory') || searchParams.get('product_category');
     const minPrice = searchParams.get('minPrice') || searchParams.get('sales_price_min');
     const maxPrice = searchParams.get('maxPrice') || searchParams.get('sales_price_max');
     const minRating = searchParams.get('minRating') || searchParams.get('rating_min');
@@ -60,6 +61,15 @@ export async function GET(request: NextRequest) {
 
     if (productType) {
       where.productType = productType;
+    }
+
+    if (productCategory) {
+      const cats = productCategory.split(',').map((c) => c.trim()).filter(Boolean);
+      if (cats.length === 1) {
+        where.productCategory = cats[0];
+      } else if (cats.length > 1) {
+        where.productCategory = { in: cats };
+      }
     }
 
     if (foodType) {

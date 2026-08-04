@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -49,6 +49,21 @@ const SORTS = [
   { value: 'newest', label: 'Newest Arrivals' },
 ];
 
+const FOOD_CATEGORIES = [
+  { value: 'pizza', label: 'Pizza' },
+  { value: 'burger', label: 'Burger' },
+  { value: 'biryani', label: 'Biryani' },
+  { value: 'rolls_wraps', label: 'Rolls & Wraps' },
+  { value: 'momos', label: 'Momos' },
+  { value: 'chinese', label: 'Chinese' },
+  { value: 'north_indian', label: 'North Indian' },
+  { value: 'south_indian', label: 'South Indian' },
+  { value: 'fast_food', label: 'Fast Food' },
+  { value: 'snacks', label: 'Snacks & Starters' },
+  { value: 'desserts', label: 'Desserts & Ice Cream' },
+  { value: 'beverages', label: 'Beverages & Shakes' },
+];
+
 const PAGE_SIZE = 12;
 
 interface Props {
@@ -63,11 +78,10 @@ interface Props {
 export function FoodShopClient({ filters }: Props) {
   const params = useSearchParams();
   const initialQ = params.get('q') || '';
-  const initialSubCat = params.get('subCategory') || '';
 
   const [q, setQ] = useState(initialQ);
   const [selectedFoodTypes, setSelectedFoodTypes] = useState<FoodType[]>([]);
-  const [selectedSubCat, setSelectedSubCat] = useState<string>(initialSubCat);
+  const [selectedFoodCategory, setSelectedFoodCategory] = useState<string>('');
   const [priceRange, setPriceRange] = useState<number[]>([0, 1000]);
   const [minRating, setMinRating] = useState<number>(0);
   const [sort, setSort] = useState('relevance');
@@ -79,25 +93,7 @@ export function FoodShopClient({ filters }: Props) {
   // Sync initial params
   useEffect(() => {
     setQ(initialQ);
-    setSelectedSubCat(initialSubCat);
-  }, [initialQ, initialSubCat]);
-
-  // Food Subcategories list
-  const foodSubCategories = useMemo(() => {
-    const allSubCats = filters.subCategories || [];
-    const foodCat = filters.categories.find((c) => c.slug === 'food');
-    if (foodCat && allSubCats.length > 0) {
-      return allSubCats.filter((sc) => sc.categoryId === foodCat.id);
-    }
-    return [
-      { id: '1', name: 'Pizza', slug: 'pizza' },
-      { id: '2', name: 'Burger', slug: 'burger' },
-      { id: '3', name: 'Momos', slug: 'momos' },
-      { id: '4', name: 'Biryani', slug: 'biryani' },
-      { id: '5', name: 'Rolls', slug: 'rolls' },
-      { id: '6', name: 'Beverages', slug: 'beverages' },
-    ];
-  }, [filters.subCategories, filters.categories]);
+  }, [initialQ]);
 
   // Main data fetching
   useEffect(() => {
@@ -110,7 +106,7 @@ export function FoodShopClient({ filters }: Props) {
         queryParams.set('productType', 'food');
 
         if (q.trim()) queryParams.set('q', q.trim());
-        if (selectedSubCat) queryParams.set('subCategorySlug', selectedSubCat);
+        if (selectedFoodCategory) queryParams.set('productCategory', selectedFoodCategory);
         if (selectedFoodTypes.length > 0) {
           queryParams.set('foodType', selectedFoodTypes.join(','));
         }
@@ -153,11 +149,11 @@ export function FoodShopClient({ filters }: Props) {
     return () => {
       isCancelled = true;
     };
-  }, [q, selectedSubCat, selectedFoodTypes, priceRange, minRating, sort, page]);
+  }, [q, selectedFoodCategory, selectedFoodTypes, priceRange, minRating, sort, page]);
 
   useEffect(() => {
     setPage(1);
-  }, [q, selectedSubCat, selectedFoodTypes, priceRange, minRating, sort]);
+  }, [q, selectedFoodCategory, selectedFoodTypes, priceRange, minRating, sort]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -170,7 +166,7 @@ export function FoodShopClient({ filters }: Props) {
   function clearAllFilters() {
     setQ('');
     setSelectedFoodTypes([]);
-    setSelectedSubCat('');
+    setSelectedFoodCategory('');
     setPriceRange([0, 1000]);
     setMinRating(0);
     setSort('relevance');
@@ -178,7 +174,7 @@ export function FoodShopClient({ filters }: Props) {
   }
 
   const hasActiveFilters =
-    q || selectedFoodTypes.length > 0 || selectedSubCat || priceRange[0] > 0 || priceRange[1] < 1000 || minRating > 0;
+    q || selectedFoodTypes.length > 0 || selectedFoodCategory || priceRange[0] > 0 || priceRange[1] < 1000 || minRating > 0;
 
   // Render Filter Panel Component
   const FilterPanel = (
@@ -277,6 +273,38 @@ export function FoodShopClient({ filters }: Props) {
             </div>
             <span className="text-xs text-muted-foreground font-normal">🟡</span>
           </label>
+        </div>
+      </div>
+
+      {/* Food Category Filter */}
+      <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+        <div className="flex items-center justify-between pb-3 border-b border-border">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+            <Pizza className="h-4 w-4 text-primary" />
+            Food Category
+          </h3>
+          {selectedFoodCategory && (
+            <button
+              onClick={() => setSelectedFoodCategory('')}
+              className="text-xs text-primary hover:underline font-medium"
+            >
+              Reset
+            </button>
+          )}
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          {FOOD_CATEGORIES.map((c) => (
+            <Button
+              key={c.value}
+              type="button"
+              variant={selectedFoodCategory === c.value ? 'default' : 'outline'}
+              size="sm"
+              className="text-xs justify-center h-8"
+              onClick={() => setSelectedFoodCategory(selectedFoodCategory === c.value ? '' : c.value)}
+            >
+              {c.label}
+            </Button>
+          ))}
         </div>
       </div>
 
@@ -486,27 +514,27 @@ export function FoodShopClient({ filters }: Props) {
         </div>
       </div>
 
-      {/* Subcategories Horizontal Scroll Bar */}
+      {/* Food Categories Horizontal Scroll Bar */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
         <Button
-          variant={selectedSubCat === '' ? 'secondary' : 'ghost'}
+          variant={selectedFoodCategory === '' ? 'secondary' : 'ghost'}
           size="sm"
           className="rounded-xl text-xs whitespace-nowrap font-medium"
-          onClick={() => setSelectedSubCat('')}
+          onClick={() => setSelectedFoodCategory('')}
         >
-          All Categories
+          All Food
         </Button>
-        {foodSubCategories.map((sc) => (
+        {FOOD_CATEGORIES.map((c) => (
           <Button
-            key={sc.id}
-            variant={selectedSubCat === sc.slug ? 'secondary' : 'ghost'}
+            key={c.value}
+            variant={selectedFoodCategory === c.value ? 'secondary' : 'ghost'}
             size="sm"
             className={`rounded-xl text-xs whitespace-nowrap font-medium transition-all ${
-              selectedSubCat === sc.slug ? 'bg-primary/15 text-primary font-semibold' : ''
+              selectedFoodCategory === c.value ? 'bg-primary/15 text-primary font-semibold' : ''
             }`}
-            onClick={() => setSelectedSubCat(selectedSubCat === sc.slug ? '' : sc.slug)}
+            onClick={() => setSelectedFoodCategory(selectedFoodCategory === c.value ? '' : c.value)}
           >
-            {sc.name}
+            {c.label}
           </Button>
         ))}
       </div>
