@@ -1,41 +1,43 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-  import { useRouter } from 'next/navigation';
-  import { Button } from '@/components/ui/button';
-  import { Input } from '@/components/ui/input';
-  import { Label } from '@/components/ui/label';
-  import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-  import { Loader2 } from 'lucide-react';
-  import { useCart } from '@/components/providers/cart-provider';
-  import { useAuth } from '@/components/providers/auth-provider';
-  import { supabase } from '@/lib/supabase/client';
-  import { formatINR, generateOrderNumber } from '@/lib/format';
-  import { toast } from 'sonner';
-  import type { Address } from '@/lib/types';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Loader2 } from "lucide-react";
+import { useCart } from "@/components/providers/cart-provider";
+import { useAuth } from "@/components/providers/auth-provider";
+import { supabase } from "@/lib/supabase/client";
+import { formatINR, generateOrderNumber } from "@/lib/format";
+import { toast } from "sonner";
+import type { Address } from "@/lib/types";
 
 export function CheckoutClient() {
   const { items, subtotal, clearCart } = useCart();
   const { user } = useAuth();
   const router = useRouter();
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'razorpay' | 'cashfree'>('cod');
-  const [notes, setNotes] = useState('');
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState<
+    "cod" | "razorpay" | "cashfree"
+  >("cod");
+  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [pincodeLoading, setPincodeLoading] = useState(false);
   const [newAddr, setNewAddr] = useState({
-    full_name: '',
-    phone: '',
-    line1: '',
-    line2: '',
-    city: '',
-    district: '',
-    state: '',
-    region: '',
-    block: '',
-    country: 'India',
-    pincode: '',
+    full_name: "",
+    phone: "",
+    line1: "",
+    line2: "",
+    city: "",
+    district: "",
+    state: "",
+    region: "",
+    block: "",
+    country: "India",
+    pincode: "",
   });
 
   const shipping = subtotal > 499 ? 0 : 49;
@@ -44,18 +46,18 @@ export function CheckoutClient() {
 
   useEffect(() => {
     if (!user) {
-      router.push('/login?redirect=/checkout');
+      router.push("/login?redirect=/checkout");
       return;
     }
     if (items.length === 0) {
-      router.push('/cart');
+      router.push("/cart");
       return;
     }
     supabase
-      .from('addresses')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('is_default', { ascending: false })
+      .from("addresses")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("is_default", { ascending: false })
       .then(({ data }: any) => {
         setAddresses((data ?? []) as Address[]);
         if (data && data.length > 0) setSelectedAddressId(data[0].id);
@@ -64,14 +66,22 @@ export function CheckoutClient() {
 
   async function saveAddress() {
     if (!user) return;
-    if (!newAddr.full_name || !newAddr.phone || !newAddr.line1 || !newAddr.city || !newAddr.district || !newAddr.state || !newAddr.pincode) {
-      toast.error('Please fill all address fields.');
+    if (
+      !newAddr.full_name ||
+      !newAddr.phone ||
+      !newAddr.line1 ||
+      !newAddr.city ||
+      !newAddr.district ||
+      !newAddr.state ||
+      !newAddr.pincode
+    ) {
+      toast.error("Please fill all address fields.");
       return;
     }
     const { data, error } = await supabase
-      .from('addresses')
+      .from("addresses")
       .insert({ ...newAddr, user_id: user.id })
-      .select('*')
+      .select("*")
       .single();
     if (error) {
       toast.error(error.message);
@@ -79,39 +89,52 @@ export function CheckoutClient() {
     }
     setAddresses((prev) => [...prev, data as Address]);
     setSelectedAddressId(data.id);
-    setNewAddr({ full_name: '', phone: '', line1: '', line2: '', city: '', district: '', state: '', region: '', block: '', country: 'India', pincode: '' });
-    toast.success('Address saved');
+    setNewAddr({
+      full_name: "",
+      phone: "",
+      line1: "",
+      line2: "",
+      city: "",
+      district: "",
+      state: "",
+      region: "",
+      block: "",
+      country: "India",
+      pincode: "",
+    });
+    toast.success("Address saved");
   }
 
   async function placeOrder() {
     if (!user) return;
     if (!selectedAddressId && addresses.length === 0) {
-      toast.error('Please add a delivery address.');
+      toast.error("Please add a delivery address.");
       return;
     }
-    const address = addresses.find((a) => a.id === selectedAddressId) ?? addresses[0];
+    const address =
+      addresses.find((a) => a.id === selectedAddressId) ?? addresses[0];
     if (!address) {
-      toast.error('Please select a delivery address.');
+      toast.error("Please select a delivery address.");
       return;
     }
     setLoading(true);
     const orderNumber = generateOrderNumber();
     const { data: order, error } = await supabase
-      .from('orders')
+      .from("orders")
       .insert({
         user_id: user.id,
         order_number: orderNumber,
-        status: 'pending',
+        status: "pending",
         subtotal,
         shipping,
         tax,
         total,
         payment_method: paymentMethod,
-        payment_status: paymentMethod === 'cod' ? 'pending' : 'paid',
+        payment_status: paymentMethod === "cod" ? "pending" : "paid",
         address: address as any,
         notes,
       })
-      .select('*')
+      .select("*")
       .single();
 
     if (error) {
@@ -132,10 +155,15 @@ export function CheckoutClient() {
       quantity: i.quantity,
       total: i.price * i.quantity,
       item_type: i.type,
-      metadata: { selectedItems: i.selectedItems ?? [], panditName: i.panditName } as any,
+      metadata: {
+        selectedItems: i.selectedItems ?? [],
+        panditName: i.panditName,
+      } as any,
     }));
 
-    const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+    const { error: itemsError } = await supabase
+      .from("order_items")
+      .insert(orderItems);
     if (itemsError) {
       setLoading(false);
       toast.error(itemsError.message);
@@ -144,14 +172,14 @@ export function CheckoutClient() {
 
     clearCart();
     setLoading(false);
-    toast.success('Order placed successfully!');
+    toast.success("Order placed successfully!");
     router.push(`/account/orders/${order.id}`);
   }
 
   async function lookupPincode() {
     const code = newAddr.pincode.trim();
     if (!/^\d{6}$/.test(code)) {
-      toast.error('Enter a valid 6-digit pincode');
+      toast.error("Enter a valid 6-digit pincode");
       return;
     }
     setPincodeLoading(true);
@@ -159,7 +187,7 @@ export function CheckoutClient() {
       const res = await fetch(`https://api.postalpincode.in/pincode/${code}`);
       const data = await res.json();
       const result = data?.[0];
-      if (result?.Status === 'Success' && result.PostOffice?.length > 0) {
+      if (result?.Status === "Success" && result.PostOffice?.length > 0) {
         const po = result.PostOffice[0];
         setNewAddr((prev) => ({
           ...prev,
@@ -170,12 +198,12 @@ export function CheckoutClient() {
           block: po.Block ?? prev.block,
           city: po.District ?? po.Block ?? prev.city,
         }));
-        toast.success('Address details auto-filled from pincode');
+        toast.success("Address details auto-filled from pincode");
       } else {
-        toast.error('Invalid pincode or not found');
+        toast.error("Invalid pincode or not found");
       }
     } catch {
-      toast.error('Could not look up pincode');
+      toast.error("Could not look up pincode");
     } finally {
       setPincodeLoading(false);
     }
@@ -191,17 +219,36 @@ export function CheckoutClient() {
         <div className="space-y-6">
           {/* Address */}
           <section className="rounded-2xl border border-border bg-card p-5">
-            <h2 className="font-display text-lg font-semibold">Delivery Address</h2>
+            <h2 className="font-display text-lg font-semibold">
+              Delivery Address
+            </h2>
 
             {addresses.length > 0 && (
-              <RadioGroup value={selectedAddressId} onValueChange={setSelectedAddressId} className="mt-4 space-y-2">
+              <RadioGroup
+                value={selectedAddressId}
+                onValueChange={setSelectedAddressId}
+                className="mt-4 space-y-2"
+              >
                 {addresses.map((a) => (
-                  <div key={a.id} className="flex items-start gap-3 rounded-xl border border-border p-3 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                    <RadioGroupItem value={a.id} id={`addr-${a.id}`} className="mt-1" />
-                    <Label htmlFor={`addr-${a.id}`} className="flex-1 cursor-pointer text-sm">
-                      <span className="font-medium">{a.full_name}</span> · {a.phone}
+                  <div
+                    key={a.id}
+                    className="flex items-start gap-3 rounded-xl border border-border p-3 has-[:checked]:border-primary has-[:checked]:bg-primary/5"
+                  >
+                    <RadioGroupItem
+                      value={a.id}
+                      id={`addr-${a.id}`}
+                      className="mt-1"
+                    />
+                    <Label
+                      htmlFor={`addr-${a.id}`}
+                      className="flex-1 cursor-pointer text-sm"
+                    >
+                      <span className="font-medium">{a.full_name}</span> ·{" "}
+                      {a.phone}
                       <br />
-                      {a.line1}, {a.line2 ? `${a.line2}, ` : ''}{a.city}, {a.district ? `${a.district}, ` : ''}{a.state} - {a.pincode}
+                      {a.line1}, {a.line2 ? `${a.line2}, ` : ""}
+                      {a.city}, {a.district ? `${a.district}, ` : ""}
+                      {a.state} - {a.pincode}
                     </Label>
                   </div>
                 ))}
@@ -212,53 +259,69 @@ export function CheckoutClient() {
               <h3 className="text-sm font-semibold">Add new address</h3>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <div>
-                  <Label htmlFor="full_name" className="text-xs">Full Name</Label>
-                  <Input id="full_name" value={newAddr.full_name} onChange={(e) => setNewAddr({ ...newAddr, full_name: e.target.value })} className="mt-1" />
+                  <Label htmlFor="full_name" className="text-xs">
+                    Full Name
+                  </Label>
+                  <Input
+                    id="full_name"
+                    value={newAddr.full_name}
+                    onChange={(e) =>
+                      setNewAddr({ ...newAddr, full_name: e.target.value })
+                    }
+                    className="mt-1"
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="phone" className="text-xs">Phone</Label>
-                  <Input id="phone" value={newAddr.phone} onChange={(e) => setNewAddr({ ...newAddr, phone: e.target.value })} className="mt-1" />
+                  <Label htmlFor="phone" className="text-xs">
+                    Phone
+                  </Label>
+                  <Input
+                    id="phone"
+                    value={newAddr.phone}
+                    onChange={(e) =>
+                      setNewAddr({ ...newAddr, phone: e.target.value })
+                    }
+                    className="mt-1"
+                  />
                 </div>
                 <div className="sm:col-span-2">
-                  <Label htmlFor="line1" className="text-xs">Address Line 1</Label>
-                  <Input id="line1" value={newAddr.line1} onChange={(e) => setNewAddr({ ...newAddr, line1: e.target.value })} className="mt-1" />
+                  <Label htmlFor="line1" className="text-xs">
+                    Address Line 1
+                  </Label>
+                  <Input
+                    id="line1"
+                    value={newAddr.line1}
+                    onChange={(e) =>
+                      setNewAddr({ ...newAddr, line1: e.target.value })
+                    }
+                    className="mt-1"
+                  />
                 </div>
                 <div className="sm:col-span-2">
-                  <Label htmlFor="line2" className="text-xs">Address Line 2 (optional)</Label>
-                  <Input id="line2" value={newAddr.line2} onChange={(e) => setNewAddr({ ...newAddr, line2: e.target.value })} className="mt-1" />
+                  <Label htmlFor="line2" className="text-xs">
+                    Address Line 2 (optional)
+                  </Label>
+                  <Input
+                    id="line2"
+                    value={newAddr.line2}
+                    onChange={(e) =>
+                      setNewAddr({ ...newAddr, line2: e.target.value })
+                    }
+                    className="mt-1"
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="city" className="text-xs">City</Label>
-                  <Input id="city" value={newAddr.city} onChange={(e) => setNewAddr({ ...newAddr, city: e.target.value })} className="mt-1" />
-                </div>
-                <div>
-                  <Label htmlFor="district" className="text-xs">District</Label>
-                  <Input id="district" value={newAddr.district} onChange={(e) => setNewAddr({ ...newAddr, district: e.target.value })} className="mt-1" />
-                </div>
-                <div>
-                  <Label htmlFor="state" className="text-xs">State</Label>
-                  <Input id="state" value={newAddr.state} onChange={(e) => setNewAddr({ ...newAddr, state: e.target.value })} className="mt-1" />
-                </div>
-                <div>
-                  <Label htmlFor="region" className="text-xs">Region</Label>
-                  <Input id="region" value={newAddr.region} onChange={(e) => setNewAddr({ ...newAddr, region: e.target.value })} className="mt-1" />
-                </div>
-                <div>
-                  <Label htmlFor="block" className="text-xs">Block</Label>
-                  <Input id="block" value={newAddr.block} onChange={(e) => setNewAddr({ ...newAddr, block: e.target.value })} className="mt-1" />
-                </div>
-                <div>
-                  <Label htmlFor="country" className="text-xs">Country</Label>
-                  <Input id="country" value={newAddr.country} onChange={(e) => setNewAddr({ ...newAddr, country: e.target.value })} className="mt-1" />
-                </div>
-                <div>
-                  <Label htmlFor="pincode" className="text-xs">Pincode</Label>
+                  <Label htmlFor="pincode" className="text-xs">
+                    Pincode
+                  </Label>
                   <div className="mt-1 flex gap-2">
                     <Input
                       id="pincode"
                       value={newAddr.pincode}
                       onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                        const val = e.target.value
+                          .replace(/\D/g, "")
+                          .slice(0, 6);
                         setNewAddr({ ...newAddr, pincode: val });
                         if (val.length === 6) lookupPincode();
                       }}
@@ -271,33 +334,154 @@ export function CheckoutClient() {
                       type="button"
                       variant="outline"
                       onClick={lookupPincode}
-                      disabled={pincodeLoading || !/^\d{6}$/.test(newAddr.pincode.trim())}
+                      disabled={
+                        pincodeLoading ||
+                        !/^\d{6}$/.test(newAddr.pincode.trim())
+                      }
                       className="h-10 whitespace-nowrap"
                     >
-                      {pincodeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Lookup'}
+                      {pincodeLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Lookup"
+                      )}
                     </Button>
                   </div>
                 </div>
+                <div>
+                  <Label htmlFor="city" className="text-xs">
+                    City
+                  </Label>
+                  <Input
+                    id="city"
+                    value={newAddr.city}
+                    onChange={(e) =>
+                      setNewAddr({ ...newAddr, city: e.target.value })
+                    }
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="district" className="text-xs">
+                    District
+                  </Label>
+                  <Input
+                    id="district"
+                    value={newAddr.district}
+                    onChange={(e) =>
+                      setNewAddr({ ...newAddr, district: e.target.value })
+                    }
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="state" className="text-xs">
+                    State
+                  </Label>
+                  <Input
+                    id="state"
+                    value={newAddr.state}
+                    onChange={(e) =>
+                      setNewAddr({ ...newAddr, state: e.target.value })
+                    }
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="region" className="text-xs">
+                    Region
+                  </Label>
+                  <Input
+                    id="region"
+                    value={newAddr.region}
+                    onChange={(e) =>
+                      setNewAddr({ ...newAddr, region: e.target.value })
+                    }
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="block" className="text-xs">
+                    Block
+                  </Label>
+                  <Input
+                    id="block"
+                    value={newAddr.block}
+                    onChange={(e) =>
+                      setNewAddr({ ...newAddr, block: e.target.value })
+                    }
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="country" className="text-xs">
+                    Country
+                  </Label>
+                  <Input
+                    id="country"
+                    value={newAddr.country}
+                    onChange={(e) =>
+                      setNewAddr({ ...newAddr, country: e.target.value })
+                    }
+                    className="mt-1"
+                  />
+                </div>
               </div>
-              <Button variant="secondary" className="mt-3" onClick={saveAddress}>Save address</Button>
+              <Button
+                variant="secondary"
+                className="mt-3"
+                onClick={saveAddress}
+              >
+                Save address
+              </Button>
             </div>
           </section>
 
           {/* Payment */}
           <section className="rounded-2xl border border-border bg-card p-5">
-            <h2 className="font-display text-lg font-semibold">Payment Method</h2>
-            <RadioGroup value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as any)} className="mt-4 space-y-2">
+            <h2 className="font-display text-lg font-semibold">
+              Payment Method
+            </h2>
+            <RadioGroup
+              value={paymentMethod}
+              onValueChange={(v) => setPaymentMethod(v as any)}
+              className="mt-4 space-y-2"
+            >
               {[
-                { value: 'cod', label: 'Cash on Delivery', desc: 'Pay when your order arrives' },
-                { value: 'razorpay', label: 'Razorpay', desc: 'Credit / Debit card, UPI, Netbanking' },
-                { value: 'cashfree', label: 'Cashfree', desc: 'Multiple payment options' },
+                {
+                  value: "cod",
+                  label: "Cash on Delivery",
+                  desc: "Pay when your order arrives",
+                },
+                {
+                  value: "razorpay",
+                  label: "Razorpay",
+                  desc: "Credit / Debit card, UPI, Netbanking",
+                },
+                {
+                  value: "cashfree",
+                  label: "Cashfree",
+                  desc: "Multiple payment options",
+                },
               ].map((p) => (
-                <div key={p.value} className="flex items-start gap-3 rounded-xl border border-border p-3 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                  <RadioGroupItem value={p.value} id={`pay-${p.value}`} className="mt-1" />
-                  <Label htmlFor={`pay-${p.value}`} className="flex-1 cursor-pointer text-sm">
+                <div
+                  key={p.value}
+                  className="flex items-start gap-3 rounded-xl border border-border p-3 has-[:checked]:border-primary has-[:checked]:bg-primary/5"
+                >
+                  <RadioGroupItem
+                    value={p.value}
+                    id={`pay-${p.value}`}
+                    className="mt-1"
+                  />
+                  <Label
+                    htmlFor={`pay-${p.value}`}
+                    className="flex-1 cursor-pointer text-sm"
+                  >
                     <span className="font-medium">{p.label}</span>
                     <br />
-                    <span className="text-xs text-muted-foreground">{p.desc}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {p.desc}
+                    </span>
                   </Label>
                 </div>
               ))}
@@ -308,33 +492,64 @@ export function CheckoutClient() {
           </section>
 
           <section className="rounded-2xl border border-border bg-card p-5">
-            <Label htmlFor="notes" className="text-sm font-semibold">Order Notes (optional)</Label>
-            <Input id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any special instructions..." className="mt-2" />
+            <Label htmlFor="notes" className="text-sm font-semibold">
+              Order Notes (optional)
+            </Label>
+            <Input
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Any special instructions..."
+              className="mt-2"
+            />
           </section>
         </div>
 
         {/* Summary */}
         <aside className="lg:sticky lg:top-32 lg:self-start">
           <div className="rounded-2xl border border-border bg-card p-5">
-            <h2 className="font-display text-lg font-semibold">Order Summary</h2>
+            <h2 className="font-display text-lg font-semibold">
+              Order Summary
+            </h2>
             <div className="mt-4 max-h-64 space-y-2 overflow-y-auto">
               {items.map((i) => (
                 <div key={i.id} className="flex justify-between text-sm">
-                  <span className="pr-2">{i.name} x{i.quantity}</span>
-                  <span className="whitespace-nowrap font-medium">{formatINR(i.price * i.quantity)}</span>
+                  <span className="pr-2">
+                    {i.name} x{i.quantity}
+                  </span>
+                  <span className="whitespace-nowrap font-medium">
+                    {formatINR(i.price * i.quantity)}
+                  </span>
                 </div>
               ))}
             </div>
             <div className="mt-4 space-y-2 border-t border-border pt-3 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatINR(subtotal)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span>{shipping === 0 ? 'Free' : formatINR(shipping)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Tax (5%)</span><span>{formatINR(tax)}</span></div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span>{formatINR(subtotal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Shipping</span>
+                <span>{shipping === 0 ? "Free" : formatINR(shipping)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Tax (5%)</span>
+                <span>{formatINR(tax)}</span>
+              </div>
               <div className="border-t border-border pt-2 flex justify-between text-base font-semibold">
-                <span>Total</span><span>{formatINR(total)}</span>
+                <span>Total</span>
+                <span>{formatINR(total)}</span>
               </div>
             </div>
-            <Button onClick={placeOrder} disabled={loading} className="mt-5 w-full" size="lg">
-              {loading ? 'Placing order...' : `Place Order · ${formatINR(total)}`}
+            <Button
+              onClick={placeOrder}
+              disabled={loading}
+              className="mt-5 w-full"
+              size="lg"
+            >
+              {loading
+                ? "Placing order..."
+                : `Place Order · ${formatINR(total)}`}
             </Button>
           </div>
         </aside>
