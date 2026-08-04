@@ -133,6 +133,12 @@ export function ShopClient({ filters, searchParams, productType, productCategori
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+  function toggleBrand(slug: string) {
+    setSelectedBrands((prev) =>
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
+    );
+  }
+
   const FilterPanel = (
     <div className="space-y-6">
       {!productType && (
@@ -290,6 +296,32 @@ export function ShopClient({ filters, searchParams, productType, productCategori
               onClick={() => setSelectedProductCategory(selectedProductCategory === c.value ? '' : c.value)}
             >
               {c.label}
+            </Button>
+          ))}
+        </div>
+      )}
+
+      {(showBrands || !productType) && filters.brands.length > 0 && (
+        <div className="mb-4 flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+          <Button
+            variant={selectedBrands.length === 0 ? 'secondary' : 'ghost'}
+            size="sm"
+            className="rounded-xl text-xs whitespace-nowrap font-medium"
+            onClick={() => setSelectedBrands([])}
+          >
+            All Brands
+          </Button>
+          {filters.brands.map((b) => (
+            <Button
+              key={b.id}
+              variant={selectedBrands.includes(b.slug) ? 'secondary' : 'ghost'}
+              size="sm"
+              className={`rounded-xl text-xs whitespace-nowrap font-medium transition-all ${
+                selectedBrands.includes(b.slug) ? 'bg-primary/15 text-primary font-semibold' : ''
+              }`}
+              onClick={() => toggleBrand(b.slug)}
+            >
+              {b.name}
             </Button>
           ))}
         </div>
