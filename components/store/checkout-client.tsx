@@ -13,7 +13,7 @@ import { supabase } from "@/lib/supabase/client";
 import { formatINR, generateOrderNumber } from "@/lib/format";
 import { toast } from "sonner";
 import type { Address } from "@/lib/types";
-import { isFoodOpenNow, isPaymentModeAllowed, PAYMENT_METHODS } from "@/lib/store-config-utils";
+import { isFoodOpenNow, isPaymentModeAllowed, PAYMENT_METHODS, computeTotals, getTaxRate } from "@/lib/store-config-utils";
 
 interface StoreConfigData {
   id: string;
@@ -21,6 +21,9 @@ interface StoreConfigData {
   food_close_time: string;
   food_is_open: boolean;
   payment_mode: "offline" | "online" | "both";
+  tax_rate: number;
+  shipping_charge: number;
+  free_shipping_threshold: number;
 }
 
 export function CheckoutClient() {
@@ -50,9 +53,8 @@ export function CheckoutClient() {
     pincode: "",
   });
 
-  const shipping = subtotal > 499 ? 0 : 49;
-  const tax = Math.round(subtotal * 0.05);
-  const total = subtotal + shipping + tax;
+  const { shipping, tax, total } = computeTotals(subtotal, 0, config ?? {});
+  const taxRate = getTaxRate(config ?? {});
 
   const hasFood = items.some((i) => i.productType === "food");
   const foodClosed = hasFood && config ? !isFoodOpenNow(config) : false;
@@ -558,7 +560,7 @@ export function CheckoutClient() {
                 <span>{shipping === 0 ? "Free" : formatINR(shipping)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Tax (5%)</span>
+                <span className="text-muted-foreground">Tax ({taxRate}%)</span>
                 <span>{formatINR(tax)}</span>
               </div>
               <div className="border-t border-border pt-2 flex justify-between text-base font-semibold">

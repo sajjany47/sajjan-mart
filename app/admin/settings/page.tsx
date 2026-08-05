@@ -19,6 +19,9 @@ interface StoreConfigData {
   food_close_time: string;
   food_is_open: boolean;
   payment_mode: 'offline' | 'online' | 'both';
+  tax_rate: number;
+  shipping_charge: number;
+  free_shipping_threshold: number;
 }
 
 const PAYMENT_OPTIONS = [
@@ -51,6 +54,9 @@ export default function AdminSettingsPage() {
         food_close_time: config.food_close_time,
         food_is_open: config.food_is_open,
         payment_mode: config.payment_mode,
+        tax_rate: config.tax_rate,
+        shipping_charge: config.shipping_charge,
+        free_shipping_threshold: config.free_shipping_threshold,
       });
     setSaving(false);
     if (error) {
@@ -155,6 +161,56 @@ export default function AdminSettingsPage() {
               </div>
             ))}
           </RadioGroup>
+        </section>
+
+        {/* Tax & delivery */}
+        <section className="rounded-xl border border-border bg-card p-6">
+          <h2 className="text-sm font-semibold">Tax &amp; Delivery Charges</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            These values are used to compute the order total at cart and checkout.
+          </p>
+
+          <div className="mt-4 space-y-4">
+            <div>
+              <Label htmlFor="tax-rate" className="text-xs">Tax rate (%)</Label>
+              <Input
+                id="tax-rate"
+                type="number"
+                min={0}
+                step={0.5}
+                value={config.tax_rate}
+                onChange={(e) => setConfig({ ...config, tax_rate: parseFloat(e.target.value) || 0 })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="shipping-charge" className="text-xs">Delivery charge (Rs)</Label>
+              <Input
+                id="shipping-charge"
+                type="number"
+                min={0}
+                step={1}
+                value={config.shipping_charge}
+                onChange={(e) => setConfig({ ...config, shipping_charge: parseFloat(e.target.value) || 0 })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="free-shipping-threshold" className="text-xs">Free delivery above (Rs)</Label>
+              <Input
+                id="free-shipping-threshold"
+                type="number"
+                min={0}
+                step={1}
+                value={config.free_shipping_threshold}
+                onChange={(e) => setConfig({ ...config, free_shipping_threshold: parseFloat(e.target.value) || 0 })}
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Set the free delivery threshold to 0 to always charge the delivery fee.
+          </p>
         </section>
       </div>
     </div>

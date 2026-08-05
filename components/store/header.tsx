@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ShoppingBag, Search, User, Menu, X, LayoutDashboard, LogOut, Heart, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,8 +18,11 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useCart } from '@/components/providers/cart-provider';
 import { useAuth } from '@/components/providers/auth-provider';
+import { supabase } from '@/lib/supabase/client';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { cn } from '@/lib/utils';
+import { formatINR } from '@/lib/format';
+import { getFreeShippingThreshold } from '@/lib/store-config-utils';
 
 const NAV = [
   { href: '/category/food', label: 'Food', category: 'food' },
@@ -36,6 +39,17 @@ export function Header({ activeCategories }: { activeCategories: string[] }) {
   const pathname = usePathname();
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from('settings')
+      .select('*')
+      .single()
+      .then(({ data }: any) => {
+        if (data) setFreeShippingThreshold(getFreeShippingThreshold(data));
+      });
+  }, []);
 
   function search(e: React.FormEvent) {
     e.preventDefault();
@@ -47,7 +61,10 @@ export function Header({ activeCategories }: { activeCategories: string[] }) {
       <div className="bg-primary text-primary-foreground">
         <div className="container-px mx-auto flex max-w-7xl items-center justify-center py-1.5 text-xs">
           <Sparkles className="mr-1.5 h-3 w-3" />
-          Free delivery on orders above Rs 499 · Use code <span className="font-semibold">WELCOME10</span> for 10% off
+          {freeShippingThreshold !== null && freeShippingThreshold > 0
+            ? `Free delivery on orders above ${formatINR(freeShippingThreshold)}`
+            : 'Free delivery on orders above Rs 499'}{' '}
+          · Use code <span className="font-semibold">WELCOME10</span> for 10% off
         </div>
       </div>
 

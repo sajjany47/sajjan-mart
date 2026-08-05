@@ -20,6 +20,9 @@ export async function PUT(request: NextRequest) {
     if (typeof body.food_close_time === 'string') data.foodCloseTime = body.food_close_time;
     if (typeof body.food_is_open === 'boolean') data.foodIsOpen = body.food_is_open;
     if (typeof body.payment_mode === 'string') data.paymentMode = body.payment_mode;
+    if (typeof body.tax_rate === 'number') data.taxRate = body.tax_rate;
+    if (typeof body.shipping_charge === 'number') data.shippingCharge = body.shipping_charge;
+    if (typeof body.free_shipping_threshold === 'number') data.freeShippingThreshold = body.free_shipping_threshold;
 
     const config = await prisma.storeConfig.upsert({
       where: { id: 'store' },

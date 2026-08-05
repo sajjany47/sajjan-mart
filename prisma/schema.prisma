@@ -413,12 +413,15 @@ model SupportTicket {
 }
 
 model StoreConfig {
-  id            String   @id @default("store")
-  foodOpenTime  String   @default("10:00") @map("food_open_time")
-  foodCloseTime String   @default("22:00") @map("food_close_time")
-  foodIsOpen    Boolean  @default(true) @map("food_is_open")
-  paymentMode   String   @default("both") @map("payment_mode")
-  updatedAt     DateTime @default(now()) @map("updated_at")
+  id                   String   @id @default("store")
+  foodOpenTime         String   @default("10:00") @map("food_open_time")
+  foodCloseTime        String   @default("22:00") @map("food_close_time")
+  foodIsOpen           Boolean  @default(true) @map("food_is_open")
+  paymentMode          String   @default("both") @map("payment_mode")
+  taxRate              Float    @default(5) @map("tax_rate")
+  shippingCharge       Float    @default(49) @map("shipping_charge")
+  freeShippingThreshold Float   @default(499) @map("free_shipping_threshold")
+  updatedAt            DateTime @default(now()) @map("updated_at")
 
   @@map("store_config")
 }

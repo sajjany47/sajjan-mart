@@ -15,6 +15,9 @@ export interface StoreConfigData {
   foodCloseTime: string;
   foodIsOpen: boolean;
   paymentMode: string;
+  taxRate: number;
+  shippingCharge: number;
+  freeShippingThreshold: number;
   updatedAt: Date;
 }
 
@@ -24,6 +27,9 @@ export const DEFAULT_STORE_CONFIG = {
   foodCloseTime: '22:00',
   foodIsOpen: true,
   paymentMode: 'both',
+  taxRate: 5,
+  shippingCharge: 49,
+  freeShippingThreshold: 499,
 } as const;
 
 export async function getStoreConfig(): Promise<StoreConfigData> {

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Tag } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/components/providers/cart-provider';
@@ -11,6 +11,13 @@ import { useAuth } from '@/components/providers/auth-provider';
 import { supabase } from '@/lib/supabase/client';
 import { formatINR } from '@/lib/format';
 import { toast } from 'sonner';
+import { computeTotals, getTaxRate, getFreeShippingThreshold } from '@/lib/store-config-utils';
+
+interface StoreConfigData {
+  tax_rate: number;
+  shipping_charge: number;
+  free_shipping_threshold: number;
+}
 
 export function CartClient() {
   const { items, removeItem, updateQty, subtotal, clearCart } = useCart();
@@ -18,10 +25,21 @@ export function CartClient() {
   const [coupon, setCoupon] = useState('');
   const [discount, setDiscount] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState('');
+  const [config, setConfig] = useState<StoreConfigData | null>(null);
 
-  const shipping = subtotal > 499 ? 0 : 49;
-  const tax = Math.round(subtotal * 0.05);
-  const total = Math.max(0, subtotal - discount + shipping + tax);
+  useEffect(() => {
+    supabase
+      .from('settings')
+      .select('*')
+      .single()
+      .then(({ data }: any) => {
+        if (data) setConfig(data as StoreConfigData);
+      });
+  }, []);
+
+  const { shipping, tax, total } = computeTotals(subtotal, discount, config ?? {});
+  const taxRate = getTaxRate(config ?? {});
+  const freeShippingThreshold = getFreeShippingThreshold(config ?? {});
 
   async function applyCoupon() {
     if (!coupon.trim()) return;
@@ -141,6 +159,11 @@ export function CartClient() {
             {appliedCoupon && (
               <p className="mt-2 text-xs text-success">Coupon &quot;{appliedCoupon}&quot; applied</p>
             )}
+            {freeShippingThreshold > 0 && shipping > 0 && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Add {formatINR(freeShippingThreshold - subtotal)} more for free delivery
+              </p>
+            )}
 
             <div className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between">
@@ -158,7 +181,7 @@ export function CartClient() {
                 <span>{shipping === 0 ? 'Free' : formatINR(shipping)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Tax (5%)</span>
+                <span className="text-muted-foreground">Tax ({taxRate}%)</span>
                 <span>{formatINR(tax)}</span>
               </div>
               <div className="border-t border-border pt-2">
