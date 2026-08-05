@@ -89,18 +89,16 @@ function makeClientQueryBuilder(table: string) {
       params.set('single', 'true');
       return builder;
     },
-    maybeSingle() {
-      return builder.then(async (resolve: any) => {
-        const url = `${API_BASE}/${apiTable}?${params.toString()}`;
-        try {
-          const res = await fetch(url);
-          const data = await safeJson(res);
-          if (Array.isArray(data)) return resolve({ data: data[0] || null, error: null });
-          return resolve({ data: data || null, error: null });
-        } catch (e) {
-          return resolve({ data: null, error: e });
-        }
-      });
+    async maybeSingle() {
+      const url = `${API_BASE}/${apiTable}?${params.toString()}`;
+      try {
+        const res = await fetch(url);
+        const data = await safeJson(res);
+        if (Array.isArray(data)) return { data: data[0] || null, error: null };
+        return { data: data || null, error: null };
+      } catch (e) {
+        return { data: null, error: e };
+      }
     },
     async then(resolve: any) {
       if (mutationType) {
