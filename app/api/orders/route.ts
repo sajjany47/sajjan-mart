@@ -23,7 +23,11 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: 'desc' },
     });
-    return jsonResponse(items);
+    const orders = items.map(({ items: orderItems, ...order }) => ({
+      ...order,
+      order_items: orderItems,
+    }));
+    return jsonResponse(orders);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
   }
