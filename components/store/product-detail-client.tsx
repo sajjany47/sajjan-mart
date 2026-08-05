@@ -51,6 +51,7 @@ export function ProductDetailClient({ product, reviews }: Props) {
   function handleAdd(buyNow = false) {
     addItem({
       type: 'product',
+      productType: product.product_type,
       productId: product.id,
       slug: product.slug,
       name: product.name,

@@ -314,7 +314,7 @@ model Address {
   district  String?
   region    String?
   block     String?
-  country   String? @default("India)
+  country   String? @default("India")
   state     String
   pincode   String
   isDefault Boolean  @default(false) @map("is_default")
@@ -410,4 +410,15 @@ model SupportTicket {
   user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("support_tickets")
+}
+
+model StoreConfig {
+  id            String   @id @default("store")
+  foodOpenTime  String   @default("10:00") @map("food_open_time")
+  foodCloseTime String   @default("22:00") @map("food_close_time")
+  foodIsOpen    Boolean  @default(true) @map("food_is_open")
+  paymentMode   String   @default("both") @map("payment_mode")
+  updatedAt     DateTime @default(now()) @map("updated_at")
+
+  @@map("store_config")
 }

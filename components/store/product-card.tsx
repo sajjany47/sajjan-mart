@@ -46,6 +46,7 @@ export function ProductCard({ product }: { product: Product }) {
   function handleAdd() {
     addItem({
       type: 'product',
+      productType: product.product_type,
       productId: product.id,
       slug: product.slug,
       name: product.name,

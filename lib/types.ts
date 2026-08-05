@@ -236,6 +236,7 @@ export interface Banner {
 export interface CartItem {
   id: string;
   type: 'product' | 'puja';
+  productType?: ProductType;
   productId?: string;
   slug?: string;
   name: string;

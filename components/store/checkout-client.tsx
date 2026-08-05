@@ -13,6 +13,15 @@ import { supabase } from "@/lib/supabase/client";
 import { formatINR, generateOrderNumber } from "@/lib/format";
 import { toast } from "sonner";
 import type { Address } from "@/lib/types";
+import { isFoodOpenNow, isPaymentModeAllowed, PAYMENT_METHODS } from "@/lib/store-config-utils";
+
+interface StoreConfigData {
+  id: string;
+  food_open_time: string;
+  food_close_time: string;
+  food_is_open: boolean;
+  payment_mode: "offline" | "online" | "both";
+}
 
 export function CheckoutClient() {
   const { items, subtotal, clearCart } = useCart();
@@ -23,6 +32,7 @@ export function CheckoutClient() {
   const [paymentMethod, setPaymentMethod] = useState<
     "cod" | "razorpay" | "cashfree"
   >("cod");
+  const [config, setConfig] = useState<StoreConfigData | null>(null);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [pincodeLoading, setPincodeLoading] = useState(false);
@@ -44,6 +54,13 @@ export function CheckoutClient() {
   const tax = Math.round(subtotal * 0.05);
   const total = subtotal + shipping + tax;
 
+  const hasFood = items.some((i) => i.productType === "food");
+  const foodClosed = hasFood && config ? !isFoodOpenNow(config) : false;
+
+  const enabledPayments = config
+    ? (PAYMENT_METHODS[config.payment_mode] ?? PAYMENT_METHODS.both)
+    : PAYMENT_METHODS.both;
+
   useEffect(() => {
     if (!user) {
       router.push("/login?redirect=/checkout");
@@ -61,6 +78,19 @@ export function CheckoutClient() {
       .then(({ data }: any) => {
         setAddresses((data ?? []) as Address[]);
         if (data && data.length > 0) setSelectedAddressId(data[0].id);
+      });
+    supabase
+      .from("settings")
+      .select("*")
+      .single()
+      .then(({ data }: any) => {
+        if (data) {
+          setConfig(data as StoreConfigData);
+          const list = PAYMENT_METHODS[data.payment_mode] ?? PAYMENT_METHODS.both;
+          setPaymentMethod((prev) =>
+            isPaymentModeAllowed(data.payment_mode, prev) ? prev : (list[0].value as any)
+          );
+        }
       });
   }, [user, items.length, router]);
 
@@ -117,6 +147,16 @@ export function CheckoutClient() {
       toast.error("Please select a delivery address.");
       return;
     }
+    if (foodClosed) {
+      toast.error(
+        `The Food section is currently closed (${config?.food_open_time} - ${config?.food_close_time}). Please try again later.`
+      );
+      return;
+    }
+    if (!enabledPayments.some((p) => p.value === paymentMethod)) {
+      toast.error("This payment method is not available.");
+      return;
+    }
     setLoading(true);
     const orderNumber = generateOrderNumber();
     const { data: order, error } = await supabase
@@ -133,6 +173,7 @@ export function CheckoutClient() {
         payment_status: paymentMethod === "cod" ? "pending" : "paid",
         address: address as any,
         notes,
+        has_food: hasFood,
       })
       .select("*")
       .single();
@@ -447,23 +488,7 @@ export function CheckoutClient() {
               onValueChange={(v) => setPaymentMethod(v as any)}
               className="mt-4 space-y-2"
             >
-              {[
-                {
-                  value: "cod",
-                  label: "Cash on Delivery",
-                  desc: "Pay when your order arrives",
-                },
-                {
-                  value: "razorpay",
-                  label: "Razorpay",
-                  desc: "Credit / Debit card, UPI, Netbanking",
-                },
-                {
-                  value: "cashfree",
-                  label: "Cashfree",
-                  desc: "Multiple payment options",
-                },
-              ].map((p) => (
+              {enabledPayments.map((p) => (
                 <div
                   key={p.value}
                   className="flex items-start gap-3 rounded-xl border border-border p-3 has-[:checked]:border-primary has-[:checked]:bg-primary/5"
@@ -543,14 +568,22 @@ export function CheckoutClient() {
             </div>
             <Button
               onClick={placeOrder}
-              disabled={loading}
+              disabled={loading || foodClosed}
               className="mt-5 w-full"
               size="lg"
             >
-              {loading
-                ? "Placing order..."
-                : `Place Order · ${formatINR(total)}`}
+              {foodClosed
+                ? "Food Section Closed"
+                : loading
+                  ? "Placing order..."
+                  : `Place Order · ${formatINR(total)}`}
             </Button>
+            {foodClosed && (
+              <p className="mt-2 text-center text-xs text-destructive">
+                Food orders are not accepted right now. Store hours:{" "}
+                {config?.food_open_time} - {config?.food_close_time}
+              </p>
+            )}
           </div>
         </aside>
       </div>

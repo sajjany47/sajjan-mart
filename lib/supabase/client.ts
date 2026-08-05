@@ -9,6 +9,7 @@ const TABLE_MAP: Record<string, string> = {
   puja_pandits: 'puja-pandits',
   support_tickets: 'support-tickets',
   essential_images: 'essential-images',
+  order_items: 'order-items',
 };
 
 function makeClientQueryBuilder(table: string) {
@@ -152,6 +153,12 @@ function makeClientQueryBuilder(table: string) {
       try {
         const res = await fetch(url);
         const data = await safeJson(res);
+        if (params.get('single') === 'true') {
+          return resolve({
+            data: Array.isArray(data) ? data[0] || null : data || null,
+            error: null,
+          });
+        }
         const dataArr = Array.isArray(data) ? data : [data];
         return resolve({
           data: headOnly ? [] : dataArr,

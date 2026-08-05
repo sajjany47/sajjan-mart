@@ -25,6 +25,7 @@ const modelMap: Record<string, PrismaModel> = {
   sub_categories: prisma.subCategory as any,
   support_tickets: prisma.supportTicket as any,
   puja_pandits: prisma.pujaPandit as any,
+  settings: prisma.storeConfig as any,
 };
 
 function toCamel(s: string): string {

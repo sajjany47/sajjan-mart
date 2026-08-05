@@ -11,7 +11,6 @@ export async function GET(request: NextRequest) {
 
     const items = await prisma.address.findMany({
       where,
-      include: { user: true },
       orderBy: { createdAt: 'desc' },
     });
     return jsonResponse(items);

@@ -40,6 +40,14 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import type { Product, FoodType } from '@/lib/types';
+import { isFoodOpenNow } from '@/lib/store-config-utils';
+
+interface StoreConfigData {
+  id: string;
+  food_open_time: string;
+  food_close_time: string;
+  food_is_open: boolean;
+}
 
 const SORTS = [
   { value: 'relevance', label: 'Recommended' },
@@ -89,6 +97,17 @@ export function FoodShopClient({ filters }: Props) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
+  const [storeConfig, setStoreConfig] = useState<StoreConfigData | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from('settings')
+      .select('*')
+      .single()
+      .then(({ data }: any) => setStoreConfig(data as StoreConfigData | null));
+  }, []);
+
+  const foodOpen = storeConfig ? isFoodOpenNow(storeConfig) : true;
 
   // Sync initial params
   useEffect(() => {
@@ -422,6 +441,14 @@ export function FoodShopClient({ filters }: Props) {
           <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-3.5 py-1 text-xs font-semibold text-orange-400 backdrop-blur-sm">
             <Flame className="h-3.5 w-3.5 text-orange-500 animate-pulse" />
             <span>Sajjan Cloud Kitchen</span>
+            <span className="mx-1 h-1 w-1 rounded-full bg-orange-500/50" />
+            <span className={`inline-flex items-center gap-1.5 ${foodOpen ? 'text-emerald-400' : 'text-rose-400'}`}>
+              {foodOpen ? (
+                <><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> Open now</>
+              ) : (
+                <><span className="h-1.5 w-1.5 rounded-full bg-rose-400" /> Closed</>
+              )}
+            </span>
           </div>
           
           <h1 className="font-display text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl bg-gradient-to-r from-white via-stone-100 to-orange-200 bg-clip-text text-transparent leading-tight">
@@ -448,6 +475,18 @@ export function FoodShopClient({ filters }: Props) {
       </div>
 
       {/* Quick Dietary Selector Bar */}
+      {!foodOpen && storeConfig && (
+        <div className="flex items-center gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm">
+          <Clock className="h-5 w-5 shrink-0 text-destructive" />
+          <div>
+            <p className="font-semibold text-destructive">The kitchen is currently closed.</p>
+            <p className="text-xs text-muted-foreground">
+              Orders will be accepted again from {storeConfig.food_open_time}. Opening hours: {storeConfig.food_open_time} - {storeConfig.food_close_time}.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
         <div className="flex items-center gap-2 overflow-x-auto py-1 no-scrollbar">
           <span className="text-xs font-semibold text-muted-foreground mr-1 hidden sm:inline">
