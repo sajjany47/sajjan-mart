@@ -340,6 +340,10 @@ model Order {
   paymentStatus String    @default("pending") @map("payment_status")
   address       Json      @default("{}")
   notes         String?
+  cancelRequestedAt DateTime? @map("cancel_requested_at")
+  cancelReason  String?   @map("cancel_reason")
+  previousStatus String?  @map("previous_status")
+  refundedAmount Decimal? @map("refunded_amount")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @default(now()) @map("updated_at")
 
@@ -363,6 +367,8 @@ model OrderItem {
   total      Decimal  @default(0)
   itemType   String   @default("product") @map("item_type")
   metadata   Json     @default("{}")
+  cancelled  Boolean  @default(false)
+  refunded   Boolean  @default(false)
 
   order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)

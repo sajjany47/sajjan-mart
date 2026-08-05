@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma/client';
 import { jsonResponse, parseBody } from '@/lib/api-utils';
+import { requireAdmin } from '@/lib/admin-auth';
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -16,6 +17,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+  const { payload, response } = await requireAdmin(request);
+  if (!payload) return response as NextResponse;
   try {
     const body = await parseBody(request);
     const item = await prisma.order.update({ where: { id: params.id }, data: body });

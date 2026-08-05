@@ -18,6 +18,7 @@ const STATUS_COLORS: Record<string, string> = {
   shipped: 'bg-indigo-100 text-indigo-700 dark:text-indigo-300',
   delivered: 'bg-success/15 text-success',
   cancelled: 'bg-destructive/15 text-destructive',
+  cancel_request: 'bg-orange-100 text-orange-700 dark:text-orange-300',
   return: 'bg-warning/15 text-warning',
   refunded: 'bg-muted text-muted-foreground',
 };

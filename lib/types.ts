@@ -12,6 +12,7 @@ export type OrderStatus =
   | 'shipped'
   | 'delivered'
   | 'cancelled'
+  | 'cancel_request'
   | 'return'
   | 'refunded';
 export type PaymentMethod = 'cod' | 'razorpay' | 'cashfree';
@@ -201,6 +202,10 @@ export interface Order {
   payment_status: PaymentStatus;
   address: Record<string, any>;
   notes: string | null;
+  cancel_requested_at: string | null;
+  cancel_reason: string | null;
+  previous_status: string | null;
+  refunded_amount: number | null;
   created_at: string;
   updated_at: string;
   order_items?: OrderItem[];
@@ -220,6 +225,8 @@ export interface OrderItem {
   total: number;
   item_type: 'product' | 'puja';
   metadata: Record<string, any>;
+  cancelled: boolean;
+  refunded: boolean;
 }
 
 export interface Banner {
