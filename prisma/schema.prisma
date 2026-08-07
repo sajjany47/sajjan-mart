@@ -342,6 +342,7 @@ model Order {
   notes         String?
   cancelRequestedAt DateTime? @map("cancel_requested_at")
   cancelReason  String?   @map("cancel_reason")
+  cancelRequestItems Json? @map("cancel_request_items")
   previousStatus String?  @map("previous_status")
   refundedAmount Decimal? @map("refunded_amount")
   createdAt     DateTime  @default(now()) @map("created_at")
@@ -367,6 +368,7 @@ model OrderItem {
   total      Decimal  @default(0)
   itemType   String   @default("product") @map("item_type")
   metadata   Json     @default("{}")
+  ready      Boolean  @default(false)
   cancelled  Boolean  @default(false)
   refunded   Boolean  @default(false)
 

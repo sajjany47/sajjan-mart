@@ -11,6 +11,7 @@ import { formatINR } from '@/lib/format';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from 'sonner';
 import type { Order } from '@/lib/types';
@@ -38,6 +39,7 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [cancelSelection, setCancelSelection] = useState<string[]>([]);
 
   useEffect(() => {
     if (!user || !id) return;
@@ -48,23 +50,42 @@ export default function OrderDetailPage() {
       .eq('user_id', user.id)
       .maybeSingle()
       .then(({ data }: any) => {
-        setOrder((data as Order) ?? null);
+        const o = (data as Order) ?? null;
+        setOrder(o);
+        // Pre-select the items the user already requested for cancellation.
+        if (o?.cancel_request_items && o.cancel_request_items.length > 0) {
+          setCancelSelection(o.cancel_request_items);
+        }
         setLoading(false);
       });
   }, [user, id]);
 
+  function toggleCancelItem(itemId: string) {
+    setCancelSelection((prev) =>
+      prev.includes(itemId) ? prev.filter((i) => i !== itemId) : [...prev, itemId]
+    );
+  }
+
   async function cancelOrder() {
     if (!id) return;
+    if (cancelSelection.length === 0) {
+      toast.error('Select at least one item to cancel.');
+      return;
+    }
     setCancelling(true);
     try {
-      const res = await fetch(`/api/orders/${id}/cancel`, { method: 'POST' });
+      const res = await fetch(`/api/orders/${id}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item_ids: cancelSelection }),
+      });
       const data = await res.json();
       if (!res.ok) {
         toast.error(data.error ?? 'Failed to cancel order');
         setCancelling(false);
         return;
       }
-      setOrder((prev) => (prev ? { ...prev, status: 'cancel_request', cancel_requested_at: new Date().toISOString(), previous_status: prev.status } : prev));
+      setOrder((prev) => (prev ? { ...prev, status: 'cancel_request', cancel_requested_at: new Date().toISOString(), cancel_request_items: cancelSelection, previous_status: prev.status } : prev));
       setCancelOpen(false);
       toast.success('Cancellation requested. Waiting for admin approval.');
       router.refresh();
@@ -79,7 +100,15 @@ export default function OrderDetailPage() {
   if (!order) return notFound();
 
   const addr = order.address as any;
+  const refundedAmount = Number(order.refunded_amount ?? 0);
+  const payableAmount = Number(order.total) - refundedAmount;
   const cancellable = CANCELLABLE_STATUSES.includes(order.status);
+  const selectableItems = cancellable
+    ? (order.order_items ?? []).filter((it) => !it.cancelled)
+    : [];
+  const cancelTotal = selectableItems
+    .filter((it) => cancelSelection.includes(it.id))
+    .reduce((sum, it) => sum + Number(it.total), 0);
 
   return (
     <div>
@@ -106,7 +135,7 @@ export default function OrderDetailPage() {
               variant="destructive"
               size="sm"
               onClick={() => setCancelOpen(true)}
-              disabled={cancelling}
+              disabled={cancelling || cancelSelection.length === 0}
             >
               <XCircle className="mr-1.5 h-4 w-4" /> Cancel Order
             </Button>
@@ -129,8 +158,23 @@ export default function OrderDetailPage() {
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-3">
           <h2 className="font-display text-base font-semibold">Items ({order.order_items?.length ?? 0})</h2>
+          {cancellable && (
+            <div className="rounded-xl border border-warning/30 bg-warning/5 px-4 py-3 text-sm text-muted-foreground">
+              Select the items you want to cancel, then press <span className="font-medium">Cancel Order</span>.
+              The request will be sent to the admin for approval.
+            </div>
+          )}
           {order.order_items?.map((it) => (
             <div key={it.id} className={`flex gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm ${it.cancelled ? 'opacity-60' : ''}`}>
+              {cancellable && !it.cancelled && (
+                <div className="pt-6">
+                  <Checkbox
+                    checked={cancelSelection.includes(it.id)}
+                    onCheckedChange={() => toggleCancelItem(it.id)}
+                    aria-label={`Select ${it.name}`}
+                  />
+                </div>
+              )}
               <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
                 {it.image_url ? (
                   <Image src={it.image_url} alt={it.name} fill sizes="64px" className="object-cover" />
@@ -170,6 +214,14 @@ export default function OrderDetailPage() {
               <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span>{shippingLabel(Number(order.shipping))}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Tax</span><span>{formatINR(Number(order.tax))}</span></div>
               <div className="flex justify-between border-t border-border pt-2 text-base font-semibold"><span>Total</span><span>{formatINR(Number(order.total))}</span></div>
+              {refundedAmount > 0 && (
+                <div className="flex justify-between text-destructive">
+                  <span>Refunded</span><span>- {formatINR(refundedAmount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between border-t border-border pt-2 text-base font-bold text-success">
+                <span>Amount to pay</span><span>{formatINR(Math.max(0, payableAmount))}</span>
+              </div>
             </div>
           </div>
 
@@ -203,9 +255,9 @@ export default function OrderDetailPage() {
       <ConfirmDialog
         open={cancelOpen}
         onOpenChange={setCancelOpen}
-        title="Cancel this order?"
-        description={`Are you sure you want to cancel order #${order.order_number}? This action cannot be undone.`}
-        confirmText="Yes, cancel order"
+        title="Cancel selected items?"
+        description={`You are about to request cancellation of ${cancelSelection.length} item(s) worth ${formatINR(cancelTotal)} from order #${order.order_number}. The admin will review and approve before refund.`}
+        confirmText="Request cancellation"
         onConfirm={cancelOrder}
         loading={cancelling}
       />

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma/client';
 import { requireAdmin } from '@/lib/admin-auth';
 import { jsonResponse } from '@/lib/api-utils';
@@ -25,11 +26,17 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       );
     }
 
-    // Decide which items to cancel: selected, or all if none selected.
+    // Decide which items to cancel: admin's selection, or fall back to the
+    // items the user requested for cancellation.
+    const requested = Array.isArray(order.cancelRequestItems)
+      ? order.cancelRequestItems.map((r) => String(r))
+      : [];
+    let itemIds = selectedItemIds;
+    if (itemIds.length === 0) {
+      itemIds = requested;
+    }
     const itemsToCancel =
-      selectedItemIds.length > 0
-        ? order.items.filter((i) => selectedItemIds.includes(i.id))
-        : order.items;
+      itemIds.length > 0 ? order.items.filter((i) => itemIds.includes(i.id)) : order.items;
 
     if (itemsToCancel.length === 0) {
       return NextResponse.json({ error: 'No valid items selected for cancellation.' }, { status: 400 });
@@ -38,9 +45,28 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const cancelledIds = itemsToCancel.map((i) => i.id);
     const refundedAmount = itemsToCancel.reduce((sum, i) => sum + Number(i.total), 0);
 
-    // If all items are being cancelled, cancel the whole order. Otherwise keep it alive
-    // under its previous status (partial cancellation) and just refund the cancelled items.
-    const cancellingAll = cancelledIds.length === order.items.length;
+    // Items still pending after this approval.
+    const remainingRequested = requested.filter((id) => !cancelledIds.includes(id));
+    const allItemsHandled = order.items.every((i) => i.cancelled || cancelledIds.includes(i.id));
+
+    const orderUpdate: Record<string, unknown> = {
+      refundedAmount,
+      paymentStatus: order.paymentStatus === 'paid' ? 'refunded' : order.paymentStatus,
+    };
+
+    if (remainingRequested.length > 0) {
+      // Other requested items are still pending — keep the request open.
+      orderUpdate.status = 'cancel_request';
+      orderUpdate.cancelRequestItems = remainingRequested;
+    } else {
+      // Request fully resolved. If every item is now cancelled, cancel the whole
+      // order; otherwise restore it under its previous status (partial cancel).
+      orderUpdate.status = allItemsHandled ? 'cancelled' : order.previousStatus ?? 'confirmed';
+      orderUpdate.cancelRequestItems = Prisma.DbNull;
+      orderUpdate.cancelRequestedAt = null;
+      orderUpdate.cancelReason = null;
+      orderUpdate.previousStatus = null;
+    }
 
     await prisma.$transaction([
       prisma.orderItem.updateMany({
@@ -49,14 +75,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       }),
       prisma.order.update({
         where: { id: order.id },
-        data: {
-          status: cancellingAll ? 'cancelled' : order.previousStatus ?? 'confirmed',
-          refundedAmount,
-          cancelRequestedAt: null,
-          cancelReason: null,
-          previousStatus: null,
-          paymentStatus: order.paymentStatus === 'paid' ? 'refunded' : order.paymentStatus,
-        },
+        data: orderUpdate as any,
       }),
     ]);
 

@@ -22,6 +22,11 @@ const STATUS_COLORS: Record<string, string> = {
   refunded: 'bg-muted text-muted-foreground',
 };
 
+function payableAmount(o: Order): number {
+  const refunded = Number(o.refunded_amount ?? 0);
+  return Math.max(0, Number(o.total) - refunded);
+}
+
 interface Stats {
   orders: number;
   wishlist: number;
@@ -172,7 +177,7 @@ export default function AccountOverview() {
                   </div>
                   <div className="flex shrink-0 items-center gap-3">
                     <Badge className={STATUS_COLORS[o.status] ?? 'bg-muted text-muted-foreground'}>{o.status}</Badge>
-                    <span className="text-sm font-semibold">{formatINR(Number(o.total))}</span>
+                    <span className="text-sm font-semibold">{formatINR(payableAmount(o))}</span>
                   </div>
                 </Link>
               ))}

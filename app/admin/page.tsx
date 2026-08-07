@@ -8,6 +8,11 @@ import { formatINR } from '@/lib/format';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 
+function payableAmount(o: any): number {
+  const refunded = Number(o.refunded_amount ?? 0);
+  return Math.max(0, Number(o.total) - refunded);
+}
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ products: 0, orders: 0, customers: 0, revenue: 0 });
   const [recent, setRecent] = useState<any[]>([]);
@@ -16,7 +21,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     Promise.all([
       supabase.from('products').select('id', { count: 'exact', head: true }),
-      supabase.from('orders').select('total, status, created_at, order_number').order('created_at', { ascending: false }).limit(5),
+      supabase.from('orders').select('total, refunded_amount, status, created_at, order_number').order('created_at', { ascending: false }).limit(5),
       supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer'),
     ]).then(([p, o, c]) => {
       const orders = o.data ?? [];
@@ -74,7 +79,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex items-center gap-3">
                   <Badge className="bg-warning/15 text-warning capitalize">{o.status}</Badge>
-                  <span className="text-sm font-semibold">{formatINR(Number(o.total))}</span>
+                  <span className="text-sm font-semibold">{formatINR(payableAmount(o))}</span>
                 </div>
               </div>
             ))

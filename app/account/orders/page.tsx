@@ -23,6 +23,11 @@ const STATUS_COLORS: Record<string, string> = {
   refunded: 'bg-muted text-muted-foreground',
 };
 
+function payableAmount(o: Order): number {
+  const refunded = Number(o.refunded_amount ?? 0);
+  return Math.max(0, Number(o.total) - refunded);
+}
+
 export default function OrdersPage() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -96,7 +101,7 @@ export default function OrdersPage() {
                     {o.order_items?.length ?? 0} item(s)
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold">{formatINR(Number(o.total))}</span>
+                    <span className="text-lg font-bold">{formatINR(payableAmount(o))}</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground/50 transition group-hover:translate-x-0.5 group-hover:text-primary" />
                   </div>
                 </div>

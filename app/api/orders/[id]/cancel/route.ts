@@ -16,7 +16,13 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
-    const order = await prisma.order.findUnique({ where: { id: params.id } });
+    const body = await request.json().catch(() => ({}));
+    const requestedItemIds: string[] = Array.isArray(body.item_ids) ? body.item_ids : [];
+
+    const order = await prisma.order.findUnique({
+      where: { id: params.id },
+      include: { items: true },
+    });
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
@@ -33,11 +39,24 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       );
     }
 
+    // If no items were selected, the user wants to cancel the entire order.
+    let itemIdsToCancel: string[] = requestedItemIds;
+    if (itemIdsToCancel.length === 0) {
+      itemIdsToCancel = order.items.map((i) => i.id);
+    } else {
+      const validIds = new Set(order.items.map((i) => i.id));
+      itemIdsToCancel = itemIdsToCancel.filter((id) => validIds.has(id));
+      if (itemIdsToCancel.length === 0) {
+        return NextResponse.json({ error: 'No valid items selected for cancellation.' }, { status: 400 });
+      }
+    }
+
     const updated = await prisma.order.update({
       where: { id: order.id },
       data: {
         status: 'cancel_request',
         cancelRequestedAt: new Date(),
+        cancelRequestItems: itemIdsToCancel,
         previousStatus: order.status,
       },
     });

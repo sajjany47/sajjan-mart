@@ -204,6 +204,7 @@ export interface Order {
   notes: string | null;
   cancel_requested_at: string | null;
   cancel_reason: string | null;
+  cancel_request_items: string[] | null;
   previous_status: string | null;
   refunded_amount: number | null;
   created_at: string;
@@ -225,6 +226,7 @@ export interface OrderItem {
   total: number;
   item_type: 'product' | 'puja';
   metadata: Record<string, any>;
+  ready: boolean;
   cancelled: boolean;
   refunded: boolean;
 }

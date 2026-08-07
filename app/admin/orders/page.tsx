@@ -42,6 +42,11 @@ const STATUS_COLORS: Record<string, string> = {
   refunded: 'bg-muted text-muted-foreground',
 };
 
+function payableAmount(order: Order): number {
+  const refunded = Number(order.refunded_amount ?? 0);
+  return Math.max(0, Number(order.total) - refunded);
+}
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +62,16 @@ export default function AdminOrdersPage() {
       .select('*, order_items(*)')
       .order('created_at', { ascending: false });
     setOrders((data ?? []) as Order[]);
+    // Pre-select the items each user requested for cancellation.
+    setCancelSelection((prev) => {
+      const next = { ...prev };
+      for (const o of (data ?? []) as Order[]) {
+        if (o.status === 'cancel_request' && o.cancel_request_items && o.cancel_request_items.length > 0) {
+          next[o.id] = o.cancel_request_items;
+        }
+      }
+      return next;
+    });
     setLoading(false);
   }
 
@@ -91,16 +106,47 @@ export default function AdminOrdersPage() {
     }
   }
 
-  async function rejectCancel(id: string) {
+  async function rejectCancel(id: string, itemIds?: string[]) {
     setBusyId(id);
     try {
-      const res = await fetch(`/api/orders/${id}/cancel/reject`, { method: 'POST' });
+      const res = await fetch(`/api/orders/${id}/cancel/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(itemIds && itemIds.length > 0 ? { item_ids: itemIds } : {}),
+      });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error ?? 'Failed to reject cancellation'); return; }
-      toast.success('Cancellation request rejected.');
+      toast.success(itemIds && itemIds.length > 0 ? 'Item rejection submitted.' : 'Cancellation request rejected.');
+      setCancelSelection((prev) => ({ ...prev, [id]: [] }));
       load();
     } catch {
       toast.error('Failed to reject cancellation');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function processItem(id: string, itemId: string, action: 'ready' | 'cancel') {
+    setBusyId(id);
+    try {
+      const res = await fetch(`/api/orders/${id}/process-item`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item_id: itemId, action }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error ?? 'Failed to process item'); return; }
+      toast.success(
+        action === 'cancel'
+          ? 'Item cancelled. Refund amount updated.'
+          : 'Item marked ready.'
+      );
+      if (data.status === 'shipped') {
+        toast.success('All items processed. Order moved to Dispatch.');
+      }
+      load();
+    } catch {
+      toast.error('Failed to process item');
     } finally {
       setBusyId(null);
     }
@@ -159,7 +205,7 @@ export default function AdminOrdersPage() {
                     order={o}
                     tab={tab.value}
                     busy={busyId === o.id}
-                    expanded={expandedId === o.id}
+                    expanded={tab.value === 'cancel' || expandedId === o.id}
                     onToggleExpand={() => setExpandedId(expandedId === o.id ? null : o.id)}
                     onAccept={() => updateStatus(o.id, 'confirmed')}
                     onReject={() => updateStatus(o.id, 'cancelled')}
@@ -169,6 +215,9 @@ export default function AdminOrdersPage() {
                     onToggleCancelItem={(itemId) => toggleCancelItem(o.id, itemId)}
                     onApproveCancel={() => approveCancel(o.id, cancelSelection[o.id] ?? [])}
                     onRejectCancel={() => rejectCancel(o.id)}
+                    onApproveItem={(itemId) => approveCancel(o.id, [itemId])}
+                    onRejectItem={(itemId) => rejectCancel(o.id, [itemId])}
+                    onProcessItem={(itemId, action) => processItem(o.id, itemId, action)}
                   />
                 ))
               )}
@@ -194,6 +243,9 @@ function OrderCard({
   onToggleCancelItem,
   onApproveCancel,
   onRejectCancel,
+  onApproveItem,
+  onRejectItem,
+  onProcessItem,
 }: {
   order: Order;
   tab: TabValue;
@@ -208,9 +260,13 @@ function OrderCard({
   onToggleCancelItem: (itemId: string) => void;
   onApproveCancel: () => void;
   onRejectCancel: () => void;
+  onApproveItem: (itemId: string) => void;
+  onRejectItem: (itemId: string) => void;
+  onProcessItem: (itemId: string, action: 'ready' | 'cancel') => void;
 }) {
   const addr = order.address as any;
   const items = order.order_items ?? [];
+  const allItemsHandled = items.length > 0 && items.every((it) => it.ready || it.cancelled);
 
   return (
     <div className="rounded-2xl border border-border bg-card shadow-sm">
@@ -228,7 +284,10 @@ function OrderCard({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-base font-bold">{formatINR(Number(order.total))}</span>
+          <span className="text-base font-bold">{formatINR(payableAmount(order))}</span>
+          {Number(order.refunded_amount ?? 0) > 0 && (
+            <span className="text-xs text-success">({formatINR(Number(order.total))} - refund)</span>
+          )}
           {tab === 'new' && (
             <>
               <Button size="sm" variant="default" onClick={onAccept} disabled={busy}>
@@ -265,6 +324,11 @@ function OrderCard({
         {order.status === 'cancel_request' && (
           <span className="text-warning">Requested {order.cancel_requested_at ? new Date(order.cancel_requested_at).toLocaleString() : ''}</span>
         )}
+        {tab === 'processing' && (
+          <span>
+            Progress: {items.filter((i) => i.ready || i.cancelled).length} / {items.length} items handled
+          </span>
+        )}
       </div>
 
       {expanded && (
@@ -272,6 +336,8 @@ function OrderCard({
           <div className="space-y-2">
             {items.map((it) => {
               const cancelled = !!it.cancelled;
+              const ready = !!it.ready;
+              const requestedByUser = (order.cancel_request_items ?? []).includes(it.id);
               return (
                 <div key={it.id} className={`flex items-center gap-3 rounded-xl border border-border p-3 ${cancelled ? 'opacity-60' : ''}`}>
                   {tab === 'cancel' && !cancelled && (
@@ -288,9 +354,33 @@ function OrderCard({
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
+                    {requestedByUser && tab === 'cancel' && !cancelled && (
+                      <Badge variant="secondary" className="text-warning">Requested</Badge>
+                    )}
+                    {ready && <Badge variant="secondary" className="text-blue-700 dark:text-blue-300">Ready</Badge>}
                     {cancelled && <Badge variant="secondary">Cancelled</Badge>}
                     {!!it.refunded && <Badge variant="secondary" className="text-success">Refunded</Badge>}
                     <span className="text-sm font-semibold">{formatINR(Number(it.total))}</span>
+                    {tab === 'cancel' && !cancelled && (
+                      <>
+                        <Button size="sm" variant="default" className="h-7 px-2 text-xs" onClick={() => onApproveItem(it.id)} disabled={busy}>
+                          <CheckCircle2 className="mr-1 h-3 w-3" /> Approve
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => onRejectItem(it.id)} disabled={busy}>
+                          <XCircle className="mr-1 h-3 w-3" /> Reject
+                        </Button>
+                      </>
+                    )}
+                    {tab === 'processing' && !cancelled && !ready && (
+                      <>
+                        <Button size="sm" variant="default" className="h-7 px-2 text-xs" onClick={() => onProcessItem(it.id, 'ready')} disabled={busy}>
+                          <CheckCircle2 className="mr-1 h-3 w-3" /> Ready
+                        </Button>
+                        <Button size="sm" variant="destructive" className="h-7 px-2 text-xs" onClick={() => onProcessItem(it.id, 'cancel')} disabled={busy}>
+                          <XCircle className="mr-1 h-3 w-3" /> Cancel
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               );
@@ -311,11 +401,11 @@ function OrderCard({
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Button size="sm" variant="default" onClick={onApproveCancel} disabled={busy || cancelSelected.length === 0}>
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-1 h-4 w-4" />}
-                Approve cancellation
+                Approve selected
               </Button>
               <Button size="sm" variant="outline" onClick={onRejectCancel} disabled={busy}>
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="mr-1 h-4 w-4" />}
-                Reject request
+                Reject all
               </Button>
               {cancelSelected.length > 0 && (
                 <span className="text-xs text-muted-foreground">
