@@ -322,6 +322,7 @@ model Coupon {
   maxDiscount    Decimal   @default(0) @map("max_discount")
   minOrder       Decimal   @default(0) @map("min_order")
   isActive       Boolean   @default(true) @map("is_active")
+  isOneTime      Boolean   @default(false) @map("is_one_time")
   validUntil     DateTime? @map("valid_until")
   createdAt      DateTime  @default(now()) @map("created_at")
 

@@ -1,5 +1,10 @@
 # AGENTS.md — Project Change Log
 
+## 2026-08-08: One-time coupon usage
+- `Coupon` model: new `isOneTime` field (`is_one_time`, default false) pushed to DB and added to `Coupon` type.
+- Admin coupon form: "One-Time Use (can be used only once per customer)" checkbox + a `Usage` column (One-Time vs Repeat badge).
+- One-time enforcement: cart apply checks the user's past orders (live statuses); server-side `/api/orders` POST also rejects re-use of a one-time coupon per customer so it can't be bypassed.
+
 ## 2026-08-08: Admin Coupons page + coupon apply at checkout
 
 - New admin page `app/admin/coupons/page.tsx` ("Coupons" in sidebar nav) — data table with add/edit/delete for coupons (code, description, discount %, max discount, min order, valid until, active). Expired/inactive shown with badges.

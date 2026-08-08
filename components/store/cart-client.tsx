@@ -55,6 +55,24 @@ export function CartClient() {
       toast.error('This coupon has expired.');
       return;
     }
+    if (data.is_one_time && !user) {
+      toast.error('Please login to use this coupon.');
+      return;
+    }
+    if (data.is_one_time && user) {
+      const liveStatuses = ['pending', 'paid', 'confirmed', 'processing', 'packed', 'shipped', 'delivered'];
+      const { data: pastOrders } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', user.id);
+      const alreadyUsed = (pastOrders ?? []).some(
+        (o: any) => o.coupon_code === data.code && liveStatuses.includes(o.status)
+      );
+      if (alreadyUsed) {
+        toast.error('This coupon can only be used once per customer.');
+        return;
+      }
+    }
     if (subtotal < data.min_order) {
       toast.error(`Minimum order of ${formatINR(data.min_order)} required.`);
       return;

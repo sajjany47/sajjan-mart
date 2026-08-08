@@ -47,6 +47,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (orderData.couponCode) {
+      const coupon = await prisma.coupon.findUnique({ where: { code: orderData.couponCode } });
+      if (!coupon || !coupon.isActive) {
+        return NextResponse.json({ error: 'Invalid or inactive coupon code.' }, { status: 400 });
+      }
+      if (coupon.isOneTime && orderData.userId) {
+        const liveStatuses = ['pending', 'paid', 'confirmed', 'processing', 'packed', 'shipped', 'delivered'];
+        const used = await prisma.order.count({
+          where: {
+            userId: orderData.userId,
+            couponCode: orderData.couponCode,
+            status: { in: liveStatuses },
+          },
+        });
+        if (used > 0) {
+          return NextResponse.json(
+            { error: 'This coupon can only be used once per customer.' },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     const item = await prisma.order.create({ data: orderData });
     return jsonResponse(item, { status: 201 });
   } catch (error) {

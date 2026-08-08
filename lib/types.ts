@@ -173,7 +173,9 @@ export interface Coupon {
   max_discount: number;
   min_order: number;
   is_active: boolean;
+  is_one_time: boolean;
   valid_until: string | null;
+  created_at?: string;
 }
 
 export interface Review {

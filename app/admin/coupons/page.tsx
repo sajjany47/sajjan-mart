@@ -31,6 +31,7 @@ function getInitialValues(editing: Coupon | null) {
       min_order: editing.min_order,
       valid_until: toDateInputValue(editing.valid_until),
       is_active: editing.is_active,
+      is_one_time: editing.is_one_time,
     };
   }
   return {
@@ -41,6 +42,7 @@ function getInitialValues(editing: Coupon | null) {
     min_order: 0,
     valid_until: '',
     is_active: true,
+    is_one_time: false,
   };
 }
 
@@ -53,6 +55,7 @@ function getValidationSchema() {
     min_order: Yup.number().min(0, 'Cannot be negative').required('Min order is required'),
     valid_until: Yup.string(),
     is_active: Yup.boolean(),
+    is_one_time: Yup.boolean(),
   });
 }
 
@@ -100,6 +103,7 @@ export default function AdminCouponsPage() {
       min_order: Number(values.min_order) || 0,
       valid_until: values.valid_until ? new Date(values.valid_until + 'T23:59:59').toISOString() : null,
       is_active: values.is_active,
+      is_one_time: values.is_one_time,
     };
 
     if (editing) {
@@ -164,6 +168,7 @@ export default function AdminCouponsPage() {
               <th className="px-4 py-3 text-left font-medium">Discount</th>
               <th className="px-4 py-3 text-left font-medium">Max Discount</th>
               <th className="px-4 py-3 text-left font-medium">Min Order</th>
+              <th className="px-4 py-3 text-left font-medium">Usage</th>
               <th className="px-4 py-3 text-left font-medium">Valid Until</th>
               <th className="px-4 py-3 text-left font-medium">Status</th>
               <th className="px-4 py-3 text-right font-medium">Actions</th>
@@ -171,7 +176,7 @@ export default function AdminCouponsPage() {
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No coupons found.</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">No coupons found.</td></tr>
             ) : (
               filtered.map((c) => {
                 const expired = isExpired(c);
@@ -182,6 +187,13 @@ export default function AdminCouponsPage() {
                     <td className="px-4 py-3">{c.discount_percent}%</td>
                     <td className="px-4 py-3">{formatINR(c.max_discount)}</td>
                     <td className="px-4 py-3">{formatINR(c.min_order)}</td>
+                    <td className="px-4 py-3">
+                      {c.is_one_time ? (
+                        <Badge variant="secondary">One-Time</Badge>
+                      ) : (
+                        <span className="text-muted-foreground">Repeat</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {c.valid_until ? new Date(c.valid_until).toLocaleDateString() : 'No expiry'}
                     </td>
@@ -234,6 +246,12 @@ export default function AdminCouponsPage() {
                 </div>
                 <Field name="valid_until" label="Valid Until" type="date" component={FormikTextInput} />
                 <Field name="is_active" label="Active" component={FormikCheckBox} />
+                <div className="rounded-lg border border-border p-3">
+                  <Field name="is_one_time" label="One-Time Use (can be used only once per customer)" component={FormikCheckBox} />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    If enabled, this coupon can be applied to only one order per customer.
+                  </p>
+                </div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
                   <Button type="submit" disabled={isSubmitting}>
