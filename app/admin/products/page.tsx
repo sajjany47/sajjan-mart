@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Plus, Pencil, Trash2, Search, X, Upload, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -16,7 +17,8 @@ import * as Yup from 'yup';
 import { FormikTextInput, FormikTextArea, FormikCheckBox, FormikSelect } from '@/components/FormikTextInput';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { PageLoader } from '@/components/ui/page-loader';
-import type { Product, Category, Brand } from '@/lib/types';
+import { Checkbox } from '@/components/ui/checkbox';
+import type { Product, Category, Brand, AddOnItem } from '@/lib/types';
 
 const PRODUCT_TYPES = [
   { value: 'food', label: 'Food (Cloud Kitchen)' },
@@ -145,6 +147,7 @@ function getInitialValues(productType: string, editing: Product | null, categori
       food_type: editing.food_type ?? '',
       gender: editing.gender ?? '',
       product_category: editing.product_category ?? '',
+      add_on_ids: (editing.add_on_links ?? []).map((pa) => pa.add_on_id),
       is_featured: editing.is_featured,
       is_best_seller: editing.is_best_seller,
       is_popular: editing.is_popular,
@@ -169,6 +172,7 @@ function getInitialValues(productType: string, editing: Product | null, categori
     food_type: '',
     gender: '',
     product_category: '',
+    add_on_ids: [],
     is_featured: false,
     is_best_seller: false,
     is_popular: false,
@@ -194,6 +198,7 @@ function getValidationSchema(productType: string) {
     brand_id: Yup.string(),
     gender: Yup.string(),
     product_category: Yup.string(),
+    add_on_ids: Yup.array().of(Yup.string()),
     is_featured: Yup.boolean(),
     is_best_seller: Yup.boolean(),
     is_popular: Yup.boolean(),
@@ -208,6 +213,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [addOns, setAddOns] = useState<AddOnItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
   const [activeTab, setActiveTab] = useState('food');
@@ -233,6 +239,7 @@ export default function AdminProductsPage() {
   useEffect(() => {
     supabase.from('categories').select('*').order('sort_order').then(({ data }: any) => setCategories((data ?? []) as Category[]));
     supabase.from('brands').select('*').order('name').then(({ data }: any) => setBrands((data ?? []) as Brand[]));
+    supabase.from('add_on_items').select('*').eq('is_active', true).order('name').then(({ data }: any) => setAddOns((data ?? []) as AddOnItem[]));
     load();
   }, [load]);
 
@@ -302,6 +309,7 @@ export default function AdminProductsPage() {
       foodType: values.food_type || null,
       gender: values.gender || null,
       productCategory: values.product_category || null,
+      addOnIds: values.add_on_ids ?? [],
       isFeatured: values.is_featured,
       isBestSeller: values.is_best_seller,
       isPopular: values.is_popular,
@@ -456,6 +464,7 @@ export default function AdminProductsPage() {
                   setFieldValue={setFieldValue}
                   categories={categories}
                   brands={brands}
+                  addOns={addOns}
                   isEditing={!!editing}
                   images={images}
                   imageInputMode={imageInputMode}
@@ -492,7 +501,7 @@ export default function AdminProductsPage() {
 }
 
 function ProductFormContent({
-  values, setFieldValue, categories, brands, isEditing,
+  values, setFieldValue, categories, brands, addOns, isEditing,
   images, imageInputMode, setImageInputMode, imageUrl, setImageUrl,
   addImageUrl, removeImage, uploading, uploadFile,
 }: {
@@ -500,6 +509,7 @@ function ProductFormContent({
   setFieldValue: any;
   categories: Category[];
   brands: Brand[];
+  addOns: AddOnItem[];
   isEditing: boolean;
   images: string[];
   imageInputMode: 'url' | 'upload';
@@ -654,6 +664,54 @@ function ProductFormContent({
           )}
         </div>
       </div>
+
+      {/* Add-On Items (food) */}
+      {pt === 'food' && (
+        <div className="rounded-lg border border-border bg-muted/30 p-4">
+          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+            <span className="flex h-5 w-5 items-center justify-center rounded bg-primary/10 text-xs font-bold text-primary">6</span>
+            Add-On Items
+          </h3>
+          {addOns.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No active add-on items yet. Create them in the{' '}
+              <Link href="/admin/addons" className="text-primary hover:underline">Add-On Menu</Link> first.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {addOns.map((a) => {
+                const selected = (values.add_on_ids ?? []).includes(a.id);
+                return (
+                  <label
+                    key={a.id}
+                    className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition ${
+                      selected ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/40'
+                    }`}
+                  >
+                    <Checkbox
+                      checked={selected}
+                      onCheckedChange={(checked) => {
+                        const current: string[] = values.add_on_ids ?? [];
+                        setFieldValue(
+                          'add_on_ids',
+                          checked
+                            ? [...current, a.id]
+                            : current.filter((id) => id !== a.id)
+                        );
+                      }}
+                    />
+                    <span className="flex-1 text-sm font-medium">{a.name}</span>
+                    <span className="text-xs text-muted-foreground">+ {formatINR(a.price)}</span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+          <p className="mt-2 text-xs text-muted-foreground">
+            Customers will be able to pick from these when adding this food to cart.
+          </p>
+        </div>
+      )}
 
       {/* Status & Flags */}
       <div className="rounded-lg border border-border bg-muted/30 p-4">

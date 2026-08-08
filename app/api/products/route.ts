@@ -25,10 +25,19 @@ export async function GET(request: NextRequest) {
     const q = searchParams.get('q') || searchParams.get('name_like');
     const sort = searchParams.get('sort') || searchParams.get('order');
 
+    const productInclude = {
+      productImages: true,
+      variants: true,
+      category: true,
+      subCategory: true,
+      brand: true,
+      addOnLinks: { include: { addOn: true } },
+    };
+
     if (slug) {
       const item = await prisma.product.findUnique({
         where: { slug },
-        include: { productImages: true, variants: true, category: true, subCategory: true, brand: true },
+        include: productInclude,
       });
       if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 });
       return jsonResponse(item);
@@ -103,7 +112,7 @@ export async function GET(request: NextRequest) {
 
     const items = await prisma.product.findMany({
       where,
-      include: { productImages: true, variants: true, category: true, subCategory: true, brand: true },
+      include: productInclude,
       orderBy,
     });
     return jsonResponse(items);
@@ -115,7 +124,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await parseBody(request);
-    const item = await prisma.product.create({ data: body });
+    const { addOnIds, ...data } = body;
+    const item = await prisma.product.create({ data });
+    if (Array.isArray(addOnIds) && addOnIds.length > 0) {
+      await prisma.productAddOn.createMany({
+        data: addOnIds.map((addOnId: string) => ({ productId: item.id, addOnId })),
+      });
+    }
     return jsonResponse(item, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to create' }, { status: 500 });

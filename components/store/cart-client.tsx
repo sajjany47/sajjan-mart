@@ -109,6 +109,11 @@ export function CartClient() {
                     {item.panditName && (
                       <p className="text-xs text-muted-foreground">Pandit: {item.panditName}</p>
                     )}
+                    {item.addOns && item.addOns.length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Adds: {item.addOns.map((a) => `${a.name} (+${formatINR(a.price)})`).join(', ')}
+                      </p>
+                    )}
                     {item.selectedItems && item.selectedItems.length > 0 && (
                       <p className="text-xs text-muted-foreground">
                         Includes: {item.selectedItems.map((s) => `${s.name} x${s.qty}`).join(', ')}

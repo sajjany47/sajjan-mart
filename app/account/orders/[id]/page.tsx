@@ -187,6 +187,11 @@ export default function OrderDetailPage() {
               <div className="flex-1">
                 <p className="text-sm font-medium">{it.name}</p>
                 {it.variant_name && <p className="text-xs text-muted-foreground">Variant: {it.variant_name}</p>}
+                {(it.metadata?.addOns ?? []).length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Adds: {(it.metadata?.addOns ?? []).map((a: any) => `${a.name} (+${formatINR(Number(a.price))})`).join(', ')}
+                  </p>
+                )}
                 <p className="mt-1 text-xs text-muted-foreground">{formatINR(Number(it.unit_price))} x {it.quantity}</p>
                 {it.cancelled && (
                   <p className="mt-1 text-xs text-destructive">

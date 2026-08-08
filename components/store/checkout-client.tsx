@@ -201,6 +201,7 @@ export function CheckoutClient() {
       metadata: {
         selectedItems: i.selectedItems ?? [],
         panditName: i.panditName,
+        addOns: i.addOns ?? [],
       } as any,
     }));
 
@@ -543,6 +544,11 @@ export function CheckoutClient() {
                 <div key={i.id} className="flex justify-between text-sm">
                   <span className="pr-2">
                     {i.name} x{i.quantity}
+                    {i.addOns && i.addOns.length > 0 && (
+                      <span className="block text-xs text-muted-foreground">
+                        {i.addOns.map((a) => a.name).join(', ')}
+                      </span>
+                    )}
                   </span>
                   <span className="whitespace-nowrap font-medium">
                     {formatINR(i.price * i.quantity)}

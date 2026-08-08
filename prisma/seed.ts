@@ -110,6 +110,46 @@ async function main() {
   }
   console.log(`Created ${foodProducts.length} food products`);
 
+  // Add-on items
+  const addOnSeeds = [
+    { name: 'Extra Cheese', price: 40 },
+    { name: 'Extra Chicken', price: 60 },
+    { name: 'Extra Sauce', price: 20 },
+    { name: 'Extra Toppings', price: 50 },
+    { name: 'Jalapenos', price: 30 },
+    { name: 'Cold Drink (250ml)', price: 35 },
+  ];
+  const addOnItems = await Promise.all(
+    addOnSeeds.map(async (a) => {
+      const existing = await prisma.addOnItem.findFirst({ where: { name: a.name } });
+      if (existing) return existing;
+      return prisma.addOnItem.create({ data: a });
+    })
+  );
+  const addOnLinks = {
+    'margherita-pizza': ['Extra Cheese', 'Extra Toppings'],
+    'chicken-tikka-pizza': ['Extra Cheese', 'Extra Chicken'],
+    'classic-veg-burger': ['Extra Cheese', 'Extra Sauce'],
+    'chicken-biryani': ['Extra Chicken', 'Extra Sauce'],
+    'steamed-veg-momos': ['Extra Sauce'],
+    'french-fries': ['Extra Sauce', 'Cold Drink (250ml)'],
+    'cold-coffee': ['Cold Drink (250ml)'],
+  };
+  for (const [slug, names] of Object.entries(addOnLinks)) {
+    const product = await prisma.product.findUnique({ where: { slug } });
+    if (!product) continue;
+    for (const name of names) {
+      const addOn = addOnItems.find((a) => a.name === name);
+      if (!addOn) continue;
+      await prisma.productAddOn.upsert({
+        where: { productId_addOnId: { productId: product.id, addOnId: addOn.id } },
+        update: {},
+        create: { productId: product.id, addOnId: addOn.id },
+      });
+    }
+  }
+  console.log(`Seeded ${addOnItems.length} add-on items and linked them to food products`);
+
   // Natural products
   const naturalProducts = [
     { name: 'Cold Pressed Mustard Oil', slug: 'cold-pressed-mustard-oil', description: 'Traditional wood-pressed mustard oil from organic seeds', categoryId: natural.id, subCategoryId: oils.id, brandId: farmFresh.id, productType: 'natural', productCategory: 'oil_ghee', quantityType: 'ml', quantity: 1000, stockType: 'pack', stock: 120, purchasePrice: 192, salesPrice: 320, discountPercent: 5, rating: 4.7, reviewCount: 64, isFeatured: true, isBestSeller: true, isPopular: true },

@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { formatINR, discountedPrice } from '@/lib/format';
 import type { Product, ProductVariant } from '@/lib/types';
+import { AddonDialog, AddOnOption } from '@/components/store/addon-dialog';
 
 interface Props {
   product: Product;
@@ -27,10 +28,17 @@ export function ProductDetailClient({ product, reviews }: Props) {
   const [variantId, setVariantId] = useState<string>(product.product_variants?.[0]?.id ?? '');
   const [qty, setQty] = useState(1);
   const [wished, setWished] = useState(false);
+  const [addonOpen, setAddonOpen] = useState(false);
+  const [pendingBuyNow, setPendingBuyNow] = useState(false);
 
   const variant = product.product_variants?.find((v) => v.id === variantId);
   const salePrice = variant?.price ?? product.sales_price;
   const price = discountedPrice(salePrice, product.discount_percent);
+
+  const addOnOptions: AddOnOption[] = (product.add_on_links ?? []).flatMap((link) => {
+    const a = link.add_on;
+    return a ? [{ id: a.id, name: a.name, price: Number(a.price) }] : [];
+  });
 
   async function toggleWishlist() {
     if (!user) {
@@ -48,7 +56,7 @@ export function ProductDetailClient({ product, reviews }: Props) {
     }
   }
 
-  function handleAdd(buyNow = false) {
+  function commitAdd(buyNow: boolean, addOns: AddOnOption[], unitPrice: number) {
     addItem({
       type: 'product',
       productType: product.product_type,
@@ -56,15 +64,25 @@ export function ProductDetailClient({ product, reviews }: Props) {
       slug: product.slug,
       name: product.name,
       image: product.product_images?.[0]?.url,
-      price,
+      price: unitPrice,
       quantity: qty,
       variantName: variant?.name,
+      addOns,
     });
     if (buyNow) {
       router.push('/checkout');
     } else {
       toast.success(`${product.name} added to cart`);
     }
+  }
+
+  function handleAdd(buyNow = false) {
+    if (addOnOptions.length > 0) {
+      setPendingBuyNow(buyNow);
+      setAddonOpen(true);
+      return;
+    }
+    commitAdd(buyNow, [], price);
   }
 
   return (
@@ -108,6 +126,19 @@ export function ProductDetailClient({ product, reviews }: Props) {
           <Heart className={`h-4 w-4 ${wished ? 'fill-destructive text-destructive' : ''}`} />
         </Button>
       </div>
+
+      <AddonDialog
+        productName={product.name}
+        basePrice={price}
+        quantity={qty}
+        addOns={addOnOptions}
+        open={addonOpen}
+        onOpenChange={setAddonOpen}
+        onConfirm={(addOns, unitPrice) => {
+          setAddonOpen(false);
+          commitAdd(pendingBuyNow, addOns, unitPrice);
+        }}
+      />
 
       {/* Reviews tab */}
       <div className="mt-10">

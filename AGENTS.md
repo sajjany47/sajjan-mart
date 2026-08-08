@@ -1,5 +1,36 @@
 # AGENTS.md — Project Change Log
 
+## 2026-08-08: Add-On Menu for food products
+
+### Data model (Prisma)
+- New `AddOnItem` model (`add_on_items`): `name`, `price` (Decimal), `isActive`, timestamps. No image field.
+- New `ProductAddOn` join model (`product_add_ons`) — many-to-many between `Product` and `AddOnItem` (cascade delete).
+
+### API
+- New CRUD routes: `app/api/add-on-items/route.ts` (GET with `?active=`/`?q=`, POST) and `app/api/add-on-items/[id]/route.ts` (GET/PUT/DELETE).
+- `app/api/products/route.ts` + `[id]/route.ts`: product responses now include `addOnLinks: { include: { addOn: true } }` (serialized as `add_on_links`); `POST`/`PUT` accept `addOnIds` and sync `product_add_ons` rows (delete + recreate on update).
+
+### Maps / types
+- `lib/supabase/client.ts`: `TABLE_MAP` for `add_on_items` → `add-on-items`, `product_add_ons` → `product-add-ons`.
+- `lib/supabase/server.ts`: `modelMap` entries + `RELATION_INCLUDES.products.product_add_ons → addOnLinks` (nested `addOn`).
+- `lib/types.ts`: `AddOnItem`, `ProductAddOn`, `Product.add_on_links`, `CartItem.addOns {id,name,price}[]`.
+
+### Admin
+- New page `app/admin/addons/page.tsx` ("Add-Ons" in sidebar nav) — CRUD list of add-on items (name, price, isActive).
+- Food product form (`app/admin/products/page.tsx`) — section 6 renders checkboxes of all **active** add-ons; selection saved via `addOnIds`.
+
+### Storefront
+- New `components/store/addon-dialog.tsx` — dialog that opens when adding a food with add-ons to cart (both product detail + product cards). Shows checkboxes + live price; unit price = base + sum of selected add-ons.
+- `product-detail-client.tsx` / `product-card.tsx`: open the dialog when the product has `add_on_links`; addOns are passed into the cart item.
+- `cart-provider.tsx`: dedupe key now includes sorted add-on ids (different combos = separate cart lines).
+
+### Orders
+- Checkout writes `metadata.addOns` on each order item.
+- Add-ons shown in cart, checkout summary, customer order detail (`app/account/orders/[id]`), and admin orders (`app/admin/orders`).
+
+### Seed
+- `prisma/seed.ts` seeds 6 demo add-on items and links them to popular food products.
+
 ## 2026-08-04: Local PostgreSQL setup (no Docker) + one-command DB setup
 
 ### PostgreSQL (no Docker)

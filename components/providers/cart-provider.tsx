@@ -17,6 +17,10 @@ const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 const STORAGE_KEY = 'sajjan-mart-cart';
 
+function addonKey(addOns?: { id: string; name: string; price: number }[]): string {
+  return (addOns ?? []).map((a) => a.id).sort().join(',');
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
@@ -41,7 +45,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
           i.productId === item.productId &&
           i.pujaId === item.pujaId &&
           i.variantName === item.variantName &&
-          i.panditId === item.panditId
+          i.panditId === item.panditId &&
+          addonKey(i.addOns) === addonKey(item.addOns)
       );
       if (existing) {
         return prev.map((i) =>

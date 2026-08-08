@@ -5,6 +5,8 @@ const API_BASE = '/api';
 const TABLE_MAP: Record<string, string> = {
   product_images: 'product-images',
   product_variants: 'product-variants',
+  add_on_items: 'add-on-items',
+  product_add_ons: 'product-add-ons',
   puja_items: 'puja-items',
   puja_pandits: 'puja-pandits',
   support_tickets: 'support-tickets',

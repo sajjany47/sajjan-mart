@@ -14,6 +14,9 @@ const modelMap: Record<string, PrismaModel> = {
   pandits: prisma.pandit as any,
   puja_items: prisma.pujaItem as any,
   product_images: prisma.productImage as any,
+  product_variants: prisma.productVariant as any,
+  add_on_items: prisma.addOnItem as any,
+  product_add_ons: prisma.productAddOn as any,
   profiles: prisma.profile as any,
   orders: prisma.order as any,
   order_items: prisma.orderItem as any,
@@ -65,6 +68,10 @@ const RELATION_INCLUDES: Record<string, Record<string, string>> = {
     category: 'category',
     sub_category: 'subCategory',
     brand: 'brand',
+    product_add_ons: 'addOnLinks',
+  },
+  add_on_items: {
+    products: 'products',
   },
   reviews: {
     profiles: 'user',
@@ -99,6 +106,9 @@ function buildInclude(table: string, query?: string): Record<string, any> | unde
     const rel = m[1];
     const prismaField = map[rel];
     if (prismaField) include[prismaField] = true;
+  }
+  if (include.addOnLinks) {
+    include.addOnLinks = { include: { addOn: true } };
   }
   return Object.keys(include).length ? include : undefined;
 }

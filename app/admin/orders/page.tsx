@@ -349,6 +349,11 @@ function OrderCard({
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">{it.name}</p>
+                    {(it.metadata?.addOns ?? []).length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Adds: {(it.metadata?.addOns ?? []).map((a: any) => `${a.name} (+${formatINR(Number(a.price))})`).join(', ')}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       {formatINR(Number(it.unit_price))} x {it.quantity}
                     </p>

@@ -12,14 +12,21 @@ import { formatINR, discountedPrice } from '@/lib/format';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import type { Product } from '@/lib/types';
+import { AddonDialog, AddOnOption } from '@/components/store/addon-dialog';
 
 export function ProductCard({ product }: { product: Product }) {
   const { items, addItem, updateQty, removeItem } = useCart();
   const { user } = useAuth();
   const cartItem = items.find((i) => i.type === 'product' && i.productId === product.id);
   const [wished, setWished] = useState(false);
+  const [addonOpen, setAddonOpen] = useState(false);
   const image = product.product_images?.[0]?.url;
   const price = discountedPrice(product.sales_price, product.discount_percent);
+
+  const addOnOptions: AddOnOption[] = (product.add_on_links ?? []).flatMap((link) => {
+    const a = link.add_on;
+    return a ? [{ id: a.id, name: a.name, price: Number(a.price) }] : [];
+  });
 
   async function toggleWishlist() {
     if (!user) {
@@ -43,7 +50,11 @@ export function ProductCard({ product }: { product: Product }) {
     }
   }
 
-  function handleAdd() {
+function handleAdd() {
+    if (addOnOptions.length > 0) {
+      setAddonOpen(true);
+      return;
+    }
     addItem({
       type: 'product',
       productType: product.product_type,
@@ -53,6 +64,23 @@ export function ProductCard({ product }: { product: Product }) {
       image,
       price,
       quantity: 1,
+      addOns: [],
+    });
+    toast.success(`${product.name} added to cart`);
+  }
+
+  function commitAddWithAddOns(addOns: AddOnOption[], unitPrice: number) {
+    setAddonOpen(false);
+    addItem({
+      type: 'product',
+      productType: product.product_type,
+      productId: product.id,
+      slug: product.slug,
+      name: product.name,
+      image,
+      price: unitPrice,
+      quantity: 1,
+      addOns,
     });
     toast.success(`${product.name} added to cart`);
   }
@@ -176,6 +204,16 @@ export function ProductCard({ product }: { product: Product }) {
           )}
         </div>
       </div>
+
+      <AddonDialog
+        productName={product.name}
+        basePrice={price}
+        quantity={1}
+        addOns={addOnOptions}
+        open={addonOpen}
+        onOpenChange={setAddonOpen}
+        onConfirm={commitAddWithAddOns}
+      />
     </div>
   );
 }

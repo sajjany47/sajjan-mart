@@ -4,16 +4,9 @@ import { jsonResponse, parseBody } from '@/lib/api-utils';
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const item = await prisma.product.findUnique({
+    const item = await prisma.addOnItem.findUnique({
       where: { id: params.id },
-      include: {
-        productImages: true,
-        variants: true,
-        category: true,
-        subCategory: true,
-        brand: true,
-        addOnLinks: { include: { addOn: true } },
-      },
+      include: { products: true },
     });
     if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return jsonResponse(item);
@@ -25,27 +18,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await parseBody(request);
-    const { addOnIds, ...data } = body;
-    await prisma.product.update({ where: { id: params.id }, data });
-
-    await prisma.productAddOn.deleteMany({ where: { productId: params.id } });
-    if (Array.isArray(addOnIds) && addOnIds.length > 0) {
-      await prisma.productAddOn.createMany({
-        data: addOnIds.map((addOnId: string) => ({ productId: params.id, addOnId })),
-      });
-    }
-
-    const item = await prisma.product.findUnique({
-      where: { id: params.id },
-      include: {
-        productImages: true,
-        variants: true,
-        category: true,
-        subCategory: true,
-        brand: true,
-        addOnLinks: { include: { addOn: true } },
-      },
-    });
+    const item = await prisma.addOnItem.update({ where: { id: params.id }, data: body });
     return jsonResponse(item);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update' }, { status: 500 });
@@ -54,7 +27,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    await prisma.product.delete({ where: { id: params.id } });
+    await prisma.addOnItem.delete({ where: { id: params.id } });
     return jsonResponse({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });

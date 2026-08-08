@@ -70,6 +70,21 @@ export interface ProductVariant {
   sort_order: number;
 }
 
+export interface AddOnItem {
+  id: string;
+  name: string;
+  price: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProductAddOn {
+  product_id: string;
+  add_on_id: string;
+  add_on?: AddOnItem;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -104,6 +119,7 @@ export interface Product {
   brand?: Brand | null;
   product_images?: ProductImage[];
   product_variants?: ProductVariant[];
+  add_on_links?: ProductAddOn[];
 }
 
 export interface Puja {
@@ -257,4 +273,5 @@ export interface CartItem {
   panditId?: string;
   panditName?: string;
   selectedItems?: { name: string; qty: number; price: number }[];
+  addOns?: { id: string; name: string; price: number }[];
 }

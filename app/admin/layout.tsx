@@ -12,6 +12,7 @@ import {
   Users,
   ClipboardList,
   Settings,
+  PlusCircle,
   ArrowLeft,
 } from 'lucide-react';
 import { useAuth } from '@/components/providers/auth-provider';
@@ -25,6 +26,7 @@ const NAV = [
   { href: '/admin/categories', label: 'Categories', icon: FolderTree },
   { href: '/admin/pujas', label: 'Pujas', icon: Sparkles },
   { href: '/admin/pandits', label: 'Pandits', icon: Users },
+  { href: '/admin/addons', label: 'Add-Ons', icon: PlusCircle },
   { href: '/admin/essentials', label: 'Essentials', icon: ClipboardList },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
