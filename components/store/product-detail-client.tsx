@@ -125,7 +125,7 @@ export function ProductDetailClient({ product, reviews }: Props) {
                   <div key={r.id} className="rounded-xl border border-border bg-card p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold">{r.profiles?.full_name ?? 'Anonymous'}</p>
+                        <p className="text-sm font-semibold">{r.user?.full_name ?? r.profiles?.full_name ?? 'Anonymous'}</p>
                         <div className="flex items-center gap-1">
                           {Array.from({ length: r.rating }).map((_, i) => (
                             <Star key={i} className="h-3 w-3 fill-warning text-warning" />

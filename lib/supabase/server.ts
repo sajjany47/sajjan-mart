@@ -58,19 +58,70 @@ function toSnakeCaseKeys(obj: any): any {
   return out;
 }
 
-function makeQueryBuilder(model: PrismaModel) {
+const RELATION_INCLUDES: Record<string, Record<string, string>> = {
+  products: {
+    product_images: 'productImages',
+    product_variants: 'variants',
+    category: 'category',
+    sub_category: 'subCategory',
+    brand: 'brand',
+  },
+  reviews: {
+    profiles: 'user',
+    product: 'product',
+  },
+  orders: {
+    order_items: 'items',
+  },
+  pujas: {
+    items: 'items',
+  },
+  wishlist: {
+    products: 'product',
+  },
+  essentials: {
+    essential_images: 'essentialImages',
+  },
+  puja_items: {
+    product: 'product',
+  },
+};
+
+function buildInclude(table: string, query?: string): Record<string, any> | undefined {
+  if (!query) return undefined;
+  const map = RELATION_INCLUDES[table];
+  if (!map) return undefined;
+
+  const include: Record<string, any> = {};
+  const re = /([a-z_]+)\s*\(/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(query))) {
+    const rel = m[1];
+    const prismaField = map[rel];
+    if (prismaField) include[prismaField] = true;
+  }
+  return Object.keys(include).length ? include : undefined;
+}
+
+function makeQueryBuilder(model: PrismaModel, table: string) {
   const filters: Record<string, any> = {};
+  let selectQuery: string | null = null;
   let orderByField: string | null = null;
   let orderDir: 'asc' | 'desc' = 'asc';
   let takeVal: number | null = null;
   let skipVal: number | null = null;
 
   const builder: any = {
-    select(_query?: string) {
+    select(query?: string) {
+      selectQuery = query ?? '*';
       return builder;
     },
     eq(field: string, value: any) {
       filters[field] = value;
+      return builder;
+    },
+    neq(field: string, value: any) {
+      filters[field] = { ...filters[field], not: value };
       return builder;
     },
     in(field: string, values: any[]) {
@@ -108,12 +159,17 @@ function makeQueryBuilder(model: PrismaModel) {
     },
     async maybeSingle() {
       const where = convertKeys(filters);
-      const result = await model.findFirst({ where });
+      const include = buildInclude(table, selectQuery ?? undefined);
+      const args: any = { where };
+      if (include) args.include = include;
+      const result = await model.findFirst(args);
       return { data: result ? toSnakeCaseKeys(result) : null, error: null };
     },
     async then(resolve: any) {
       const where = convertKeys(filters);
+      const include = buildInclude(table, selectQuery ?? undefined);
       const args: any = { where };
+      if (include) args.include = include;
       if (orderByField) args.orderBy = { [orderByField]: orderDir };
       if (takeVal) args.take = takeVal;
       if (skipVal) args.skip = skipVal;
@@ -131,7 +187,7 @@ export function createServerSupabase() {
     from(table: string) {
       const model = modelMap[table];
       if (!model) throw new Error(`Unknown table: ${table}`);
-      return makeQueryBuilder(model);
+      return makeQueryBuilder(model, table);
     },
   };
 }
