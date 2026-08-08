@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { formatINR } from '@/lib/format';
+import { formatINR, orderStatusLabel } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -276,7 +276,7 @@ function OrderCard({
             <button onClick={onToggleExpand} className="text-sm font-semibold hover:text-primary">
               Order #{order.order_number}
             </button>
-            <Badge className={STATUS_COLORS[order.status] ?? 'bg-muted text-muted-foreground'}>{order.status}</Badge>
+            <Badge className={STATUS_COLORS[order.status] ?? 'bg-muted text-muted-foreground'}>{orderStatusLabel(order.status)}</Badge>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
             {new Date(order.created_at).toLocaleString()} · {items.length} item(s) ·{' '}

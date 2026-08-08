@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ShoppingBag, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/components/providers/auth-provider';
 import { supabase } from '@/lib/supabase/client';
-import { formatINR } from '@/lib/format';
+import { formatINR, orderStatusLabel } from '@/lib/format';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import type { Order } from '@/lib/types';
@@ -92,7 +92,7 @@ export default function OrdersPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge className={STATUS_COLORS[o.status] ?? 'bg-muted text-muted-foreground'}>{o.status}</Badge>
+                    <Badge className={STATUS_COLORS[o.status] ?? 'bg-muted text-muted-foreground'}>{orderStatusLabel(o.status)}</Badge>
                     <Badge variant="outline" className="uppercase">{o.payment_method}</Badge>
                   </div>
                 </div>

@@ -7,7 +7,7 @@ import { notFound, useParams, useRouter } from 'next/navigation';
 import { ShoppingBag, ArrowLeft, Package, XCircle, Clock } from 'lucide-react';
 import { useAuth } from '@/components/providers/auth-provider';
 import { supabase } from '@/lib/supabase/client';
-import { formatINR } from '@/lib/format';
+import { formatINR, orderStatusLabel } from '@/lib/format';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -129,7 +129,7 @@ export default function OrderDetailPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Badge className={STATUS_COLORS[order.status] ?? 'bg-muted text-muted-foreground'}>{order.status}</Badge>
+          <Badge className={STATUS_COLORS[order.status] ?? 'bg-muted text-muted-foreground'}>{orderStatusLabel(order.status)}</Badge>
           {cancellable && (
             <Button
               variant="destructive"

@@ -24,3 +24,20 @@ export function generateOrderNumber(): string {
   const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
   return `SM${ts}${rand}`;
 }
+
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  pending: 'Pending',
+  confirmed: 'Confirmed',
+  processing: 'Processing',
+  packed: 'Packed',
+  shipped: 'Shipped',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+  cancel_request: 'Cancel Request',
+  return: 'Return',
+  refunded: 'Refunded',
+};
+
+export function orderStatusLabel(status: string | undefined): string {
+  return (status && ORDER_STATUS_LABELS[status]) || status || 'Pending';
+}
