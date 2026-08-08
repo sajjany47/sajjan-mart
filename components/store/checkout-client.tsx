@@ -27,7 +27,7 @@ interface StoreConfigData {
 }
 
 export function CheckoutClient() {
-  const { items, subtotal, clearCart } = useCart();
+  const { items, subtotal, clearCart, appliedCoupon, couponDiscount, removeCoupon } = useCart();
   const { user } = useAuth();
   const router = useRouter();
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -53,7 +53,7 @@ export function CheckoutClient() {
     pincode: "",
   });
 
-  const { shipping, tax, total } = computeTotals(subtotal, 0, config ?? {});
+  const { shipping, tax, total } = computeTotals(subtotal, couponDiscount, config ?? {});
   const taxRate = getTaxRate(config ?? {});
 
   const hasFood = items.some((i) => i.productType === "food");
@@ -168,9 +168,11 @@ export function CheckoutClient() {
         order_number: orderNumber,
         status: "pending",
         subtotal,
+        discount: couponDiscount,
         shipping,
         tax,
         total,
+        coupon_code: appliedCoupon || null,
         payment_method: paymentMethod,
         payment_status: paymentMethod === "cod" ? "pending" : "paid",
         address: address as any,
@@ -556,11 +558,31 @@ export function CheckoutClient() {
                 </div>
               ))}
             </div>
+            {appliedCoupon && (
+              <div className="mt-4 flex items-center justify-between text-sm">
+                <span className="text-success">
+                  Coupon &quot;{appliedCoupon}&quot; applied −{formatINR(couponDiscount)}
+                </span>
+                <button
+                  onClick={removeCoupon}
+                  className="text-xs text-muted-foreground underline hover:text-destructive"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+
             <div className="mt-4 space-y-2 border-t border-border pt-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span>{formatINR(subtotal)}</span>
               </div>
+              {couponDiscount > 0 && (
+                <div className="flex justify-between text-success">
+                  <span>Discount</span>
+                  <span>-{formatINR(couponDiscount)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Shipping</span>
                 <span>{shipping === 0 ? "Free" : formatINR(shipping)}</span>

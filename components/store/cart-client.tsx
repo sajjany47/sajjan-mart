@@ -20,11 +20,9 @@ interface StoreConfigData {
 }
 
 export function CartClient() {
-  const { items, removeItem, updateQty, subtotal, clearCart } = useCart();
+  const { items, removeItem, updateQty, subtotal, clearCart, appliedCoupon, couponDiscount, applyCoupon, removeCoupon } = useCart();
   const { user } = useAuth();
   const [coupon, setCoupon] = useState('');
-  const [discount, setDiscount] = useState(0);
-  const [appliedCoupon, setAppliedCoupon] = useState('');
   const [config, setConfig] = useState<StoreConfigData | null>(null);
 
   useEffect(() => {
@@ -37,11 +35,11 @@ export function CartClient() {
       });
   }, []);
 
-  const { shipping, tax, total } = computeTotals(subtotal, discount, config ?? {});
+  const { shipping, tax, total } = computeTotals(subtotal, couponDiscount, config ?? {});
   const taxRate = getTaxRate(config ?? {});
   const freeShippingThreshold = getFreeShippingThreshold(config ?? {});
 
-  async function applyCoupon() {
+  async function applyCouponCode() {
     if (!coupon.trim()) return;
     const { data, error } = await supabase
       .from('coupons')
@@ -53,13 +51,16 @@ export function CartClient() {
       toast.error('Invalid or expired coupon code.');
       return;
     }
+    if (data.valid_until && new Date(data.valid_until).getTime() < Date.now()) {
+      toast.error('This coupon has expired.');
+      return;
+    }
     if (subtotal < data.min_order) {
       toast.error(`Minimum order of ${formatINR(data.min_order)} required.`);
       return;
     }
     const d = Math.min((subtotal * data.discount_percent) / 100, data.max_discount);
-    setDiscount(Math.round(d));
-    setAppliedCoupon(data.code);
+    applyCoupon(data.code, Math.round(d));
     toast.success(`Coupon applied - you saved ${formatINR(d)}`);
   }
 
@@ -157,12 +158,17 @@ export function CartClient() {
                 value={coupon}
                 onChange={(e) => setCoupon(e.target.value)}
               />
-              <Button variant="secondary" onClick={applyCoupon}>
+              <Button variant="secondary" onClick={applyCouponCode}>
                 <Tag className="mr-1 h-4 w-4" /> Apply
               </Button>
             </div>
             {appliedCoupon && (
-              <p className="mt-2 text-xs text-success">Coupon &quot;{appliedCoupon}&quot; applied</p>
+              <div className="mt-2 flex items-center justify-between text-xs text-success">
+                <span>Coupon &quot;{appliedCoupon}&quot; applied</span>
+                <button onClick={removeCoupon} className="text-muted-foreground underline hover:text-destructive">
+                  Remove
+                </button>
+              </div>
             )}
             {freeShippingThreshold > 0 && shipping > 0 && (
               <p className="mt-2 text-xs text-muted-foreground">
@@ -175,10 +181,10 @@ export function CartClient() {
                 <span className="text-muted-foreground">Subtotal</span>
                 <span>{formatINR(subtotal)}</span>
               </div>
-              {discount > 0 && (
+              {couponDiscount > 0 && (
                 <div className="flex justify-between text-success">
                   <span>Discount</span>
-                  <span>-{formatINR(discount)}</span>
+                  <span>-{formatINR(couponDiscount)}</span>
                 </div>
               )}
               <div className="flex justify-between">

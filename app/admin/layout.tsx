@@ -13,6 +13,7 @@ import {
   ClipboardList,
   Settings,
   PlusCircle,
+  Tag,
   ArrowLeft,
 } from 'lucide-react';
 import { useAuth } from '@/components/providers/auth-provider';
@@ -24,6 +25,7 @@ const NAV = [
   { href: '/admin/products', label: 'Products', icon: Package },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
   { href: '/admin/categories', label: 'Categories', icon: FolderTree },
+  { href: '/admin/coupons', label: 'Coupons', icon: Tag },
   { href: '/admin/pujas', label: 'Pujas', icon: Sparkles },
   { href: '/admin/pandits', label: 'Pandits', icon: Users },
   { href: '/admin/addons', label: 'Add-Ons', icon: PlusCircle },

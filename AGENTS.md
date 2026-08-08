@@ -1,5 +1,12 @@
 # AGENTS.md — Project Change Log
 
+## 2026-08-08: Admin Coupons page + coupon apply at checkout
+
+- New admin page `app/admin/coupons/page.tsx` ("Coupons" in sidebar nav) — data table with add/edit/delete for coupons (code, description, discount %, max discount, min order, valid until, active). Expired/inactive shown with badges.
+- `app/admin/layout.tsx` — added `Coupons` nav link (Tag icon).
+- `components/store/checkout-client.tsx` — users can now apply a coupon at checkout: validates code/active/expiry/min-order, shows discount in the order summary, and persists `discount` + `coupon_code` on the created order.
+- `lib/format.ts` — added `orderStatusLabel()` (maps `cancel_request` → "Cancel Request" etc.); applied in customer orders list/detail and admin orders.
+
 ## 2026-08-08: Add-On Menu for food products
 
 ### Data model (Prisma)

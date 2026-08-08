@@ -11,11 +11,16 @@ interface CartContextValue {
   clearCart: () => void;
   count: number;
   subtotal: number;
+  appliedCoupon: string | null;
+  couponDiscount: number;
+  applyCoupon: (code: string, discount: number) => void;
+  removeCoupon: () => void;
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 const STORAGE_KEY = 'sajjan-mart-cart';
+const COUPON_KEY = 'sajjan-mart-coupon';
 
 function addonKey(addOns?: { id: string; name: string; price: number }[]): string {
   return (addOns ?? []).map((a) => a.id).sort().join(',');
@@ -24,11 +29,23 @@ function addonKey(addOns?: { id: string; name: string; price: number }[]): strin
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) setItems(JSON.parse(raw));
+    } catch {}
+    try {
+      const couponRaw = localStorage.getItem(COUPON_KEY);
+      if (couponRaw) {
+        const parsed = JSON.parse(couponRaw);
+        if (parsed && typeof parsed.code === 'string' && typeof parsed.discount === 'number') {
+          setAppliedCoupon(parsed.code);
+          setCouponDiscount(parsed.discount);
+        }
+      }
     } catch {}
     setHydrated(true);
   }, []);
@@ -36,6 +53,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    if (appliedCoupon) {
+      localStorage.setItem(COUPON_KEY, JSON.stringify({ code: appliedCoupon, discount: couponDiscount }));
+    } else {
+      localStorage.removeItem(COUPON_KEY);
+    }
+  }, [appliedCoupon, couponDiscount, hydrated]);
 
   const addItem = useCallback((item: Omit<CartItem, 'id'>) => {
     setItems((prev) => {
@@ -67,14 +93,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  const clearCart = useCallback(() => setItems([]), []);
+  const clearCart = useCallback(() => {
+    setItems([]);
+    setAppliedCoupon(null);
+    setCouponDiscount(0);
+  }, []);
+
+  const applyCoupon = useCallback((code: string, discount: number) => {
+    setAppliedCoupon(code);
+    setCouponDiscount(discount);
+  }, []);
+
+  const removeCoupon = useCallback(() => {
+    setAppliedCoupon(null);
+    setCouponDiscount(0);
+  }, []);
 
   const count = items.reduce((sum, i) => sum + i.quantity, 0);
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQty, clearCart, count, subtotal }}
+      value={{ items, addItem, removeItem, updateQty, clearCart, count, subtotal, appliedCoupon, couponDiscount, applyCoupon, removeCoupon }}
     >
       {children}
     </CartContext.Provider>
