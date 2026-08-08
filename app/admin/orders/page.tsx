@@ -318,6 +318,11 @@ function OrderCard({
       <div className="flex flex-wrap items-center gap-4 border-t border-border px-4 py-2 text-xs text-muted-foreground">
         <span className="uppercase">Payment: {order.payment_method}</span>
         <span className="capitalize">Payment status: {order.payment_status}</span>
+        {order.coupon_code && Number(order.discount ?? 0) > 0 && (
+          <span className="text-success">
+            Coupon: {order.coupon_code} (−{formatINR(Number(order.discount))})
+          </span>
+        )}
         {order.refunded_amount != null && order.refunded_amount > 0 && (
           <span className="text-success">Refunded: {formatINR(Number(order.refunded_amount))}</span>
         )}
@@ -390,6 +395,31 @@ function OrderCard({
                 </div>
               );
             })}
+          </div>
+
+          <div className="mt-3 space-y-1 rounded-xl bg-muted/40 p-3 text-sm">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span>{formatINR(Number(order.subtotal))}</span>
+            </div>
+            {Number(order.discount ?? 0) > 0 && (
+              <div className="flex justify-between text-xs text-success">
+                <span>Coupon discount {order.coupon_code ? `(${order.coupon_code})` : ''}</span>
+                <span>−{formatINR(Number(order.discount))}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Shipping</span>
+              <span>{formatINR(Number(order.shipping))}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Tax</span>
+              <span>{formatINR(Number(order.tax))}</span>
+            </div>
+            <div className="flex justify-between border-t border-border pt-1 text-sm font-semibold">
+              <span>Total</span>
+              <span>{formatINR(Number(order.total))}</span>
+            </div>
           </div>
 
           {addr && (
