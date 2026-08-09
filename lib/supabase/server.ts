@@ -92,6 +92,10 @@ const RELATION_INCLUDES: Record<string, Record<string, string>> = {
   puja_items: {
     product: 'product',
   },
+  support_tickets: {
+    user: 'user',
+    order: 'order',
+  },
 };
 
 function buildInclude(table: string, query?: string): Record<string, any> | undefined {

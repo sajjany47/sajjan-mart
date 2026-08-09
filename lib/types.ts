@@ -249,6 +249,38 @@ export interface OrderItem {
   refunded: boolean;
 }
 
+export interface SupportRemark {
+  remark: string;
+  by: string;
+  createdAt: string;
+  status: string;
+}
+
+export interface SupportTicket {
+  id: string;
+  user_id: string;
+  order_id: string | null;
+  ticket_number: string;
+  subject: string;
+  message: string;
+  status: string;
+  remarks: SupportRemark[];
+  created_at: string;
+  updated_at: string;
+  user?: {
+    id: string;
+    email: string;
+    full_name: string | null;
+    phone: string | null;
+  };
+  order?: {
+    id: string;
+    order_number: string;
+    status: string;
+    total: number;
+  } | null;
+}
+
 export interface Banner {
   id: string;
   title: string;

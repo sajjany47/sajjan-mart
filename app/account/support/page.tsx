@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { LifeBuoy, Plus, MessageSquareText } from 'lucide-react';
 import { useAuth } from '@/components/providers/auth-provider';
 import { supabase } from '@/lib/supabase/client';
@@ -9,12 +10,29 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import type { SupportTicket } from '@/lib/types';
+
+const STATUS_COLORS: Record<string, string> = {
+  open: 'bg-warning/15 text-warning',
+  in_progress: 'bg-blue-100 text-blue-700',
+  resolved: 'bg-success/15 text-success',
+  closed: 'bg-muted text-muted-foreground',
+};
 
 export default function SupportPage() {
   const { user } = useAuth();
-  const [tickets, setTickets] = useState<any[]>([]);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [orderId, setOrderId] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,22 +40,45 @@ export default function SupportPage() {
 
   async function load() {
     if (!user) return;
-    const { data } = await supabase.from('support_tickets').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-    setTickets(data ?? []);
+    const { data } = await supabase
+      .from('support_tickets')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    setTickets((data ?? []) as SupportTicket[]);
     setInitialLoading(false);
   }
 
-  useEffect(() => { load(); }, [user]);
+  async function loadOrders() {
+    if (!user) return;
+    const { data } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    setOrders(data ?? []);
+  }
+
+  useEffect(() => {
+    load();
+  }, [user]);
+
+  useEffect(() => {
+    loadOrders();
+  }, [user]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) return;
+    if (!orderId) { toast.error('Please select an order for this ticket.'); return; }
     if (!subject || !message) { toast.error('Please fill all fields.'); return; }
     setLoading(true);
-    const { error } = await supabase.from('support_tickets').insert({ user_id: user.id, subject, message });
+    const { error } = await supabase
+      .from('support_tickets')
+      .insert({ user_id: user.id, order_id: orderId, subject, message });
     setLoading(false);
     if (error) { toast.error(error.message); return; }
-    setSubject(''); setMessage('');
+    setOrderId(''); setSubject(''); setMessage('');
     load();
     toast.success('Ticket submitted. We will get back to you soon.');
   }
@@ -52,16 +93,34 @@ export default function SupportPage() {
       <form onSubmit={submit} className="mt-6 max-w-lg rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="space-y-4">
           <div>
+            <Label htmlFor="order" className="text-xs">Order *</Label>
+            <Select value={orderId} onValueChange={setOrderId}>
+              <SelectTrigger className="mt-1 w-full">
+                <SelectValue placeholder="Select the order related to your issue" />
+              </SelectTrigger>
+              <SelectContent>
+                {orders.length === 0 && (
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">No orders yet</div>
+                )}
+                {orders.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>
+                    #{o.order_number} · {new Date(o.created_at).toLocaleDateString()} · {o.status}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
             <Label htmlFor="subject" className="text-xs">Subject</Label>
             <Input id="subject" value={subject} onChange={(e) => setSubject(e.target.value)} className="mt-1" placeholder="Briefly describe your issue" />
           </div>
           <div>
-            <Label htmlFor="message" className="text-xs">Message</Label>
+            <Label htmlFor="message" className="text-xs">Issue Description</Label>
             <Textarea id="message" rows={4} value={message} onChange={(e) => setMessage(e.target.value)} className="mt-1" placeholder="Share more details so we can help you faster" />
           </div>
         </div>
         <Button type="submit" disabled={loading} className="mt-5">
-          {loading ? 'Submitting...' : 'Submit ticket'}
+          {loading ? 'Submitting...' : 'Raise ticket'}
         </Button>
       </form>
 
@@ -82,23 +141,34 @@ export default function SupportPage() {
         ) : (
           <div className="mt-4 space-y-3">
             {tickets.map((t) => (
-              <div key={t.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <Link
+                key={t.id}
+                href={`/account/support/${t.id}`}
+                className="block rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:border-primary/50"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                       <LifeBuoy className="h-4 w-4" />
                     </div>
-                    <p className="text-sm font-semibold">{t.subject}</p>
+                    <div>
+                      <p className="text-sm font-semibold">{t.subject}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t.ticket_number}
+                        {t.order && ` · Order #${t.order.order_number}`}
+                      </p>
+                    </div>
                   </div>
-                  <Badge className={t.status === 'open' ? 'bg-warning/15 text-warning' : 'bg-success/15 text-success'}>{t.status}</Badge>
+                  <Badge className={STATUS_COLORS[t.status] ?? 'bg-muted text-muted-foreground'}>{t.status.replace('_', ' ')}</Badge>
                 </div>
                 <p className="mt-3 text-sm text-muted-foreground">{t.message}</p>
                 <p className="mt-2 text-xs text-muted-foreground/70">
                   {new Date(t.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                   {' · '}
                   {new Date(t.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                  {t.remarks && t.remarks.length > 0 && ` · ${t.remarks.length} update(s)`}
                 </p>
-              </div>
+              </Link>
             ))}
           </div>
         )}

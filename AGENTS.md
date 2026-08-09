@@ -1,5 +1,13 @@
 # AGENTS.md — Project Change Log
 
+## 2026-08-10: Support tickets (customer + admin)
+- `SupportTicket` model extended: `order_id` (link to Order), unique `ticket_number` (auto `TKT-...`), `remarks` JSON array (`{remark, by, createdAt, status}`), `updated_at`. Pushed to DB; one existing row backfilled via SQL (`psql`).
+- Type `SupportRemark` + `SupportTicket` added; `support_tickets` include map (`user`, `order`) for relation serialization.
+- API `app/api/support-tickets`: GET/list + detail now include order (`order_number`, `status`, `total`); POST auto-generates the ticket number.
+- Customer `app/account/support/page.tsx`: raising a ticket now requires choosing an **Order** (dropdown of the user's orders) plus subject/issue description; ticket list shows ticket number, linked order, status, and "N update(s)". New `app/account/support/[id]/page.tsx` shows the issue, linked order, and admin remark timeline.
+- Admin `app/admin/tickets/page.tsx` ("Tickets" in sidebar nav) — data table of all tickets with status filter tabs (open/in progress/resolved/closed + all), search, customer/order columns, View action.
+- Admin `app/admin/tickets/[id]/page.tsx` detail — shows customer, linked order, issue, remark history; form to change **status** and add a **remark for the latest stage** (appended to the `remarks` timeline, visible to the customer).
+
 ## 2026-08-09: Zero Charges Banner (No GST, No Tax, No Platform Fees)
 - New component `ZeroChargesBanner` (`components/store/zero-charges-banner.tsx`) renders the trust badge detailing "Zero GST, Zero Tax, Zero Platform Fees" with interactive glassmorphism cards.
 - Integrated into `app/category/[slug]/page.tsx` (Food, Natural Products, General Products, Puja Samagri), `app/puja/page.tsx` (Puja package bookings), and `app/shop/page.tsx` (general shop).

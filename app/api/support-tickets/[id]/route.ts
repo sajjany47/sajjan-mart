@@ -6,7 +6,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   try {
     const item = await prisma.supportTicket.findUnique({
       where: { id: params.id },
-      include: { user: true },
+      include: {
+        user: { select: { id: true, email: true, fullName: true, phone: true } },
+        order: { select: { id: true, orderNumber: true, status: true, total: true } },
+      },
     });
     if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return jsonResponse(item);

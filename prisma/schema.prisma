@@ -376,6 +376,7 @@ model Order {
 
   user  Profile     @relation(fields: [userId], references: [id], onDelete: Cascade)
   items OrderItem[]
+  tickets SupportTicket[]
 
   @@map("orders")
 }
@@ -434,14 +435,19 @@ model Wishlist {
 }
 
 model SupportTicket {
-  id        String   @id @default(dbgenerated("gen_random_uuid()"))
-  userId    String   @map("user_id")
-  subject   String
-  message   String
-  status    String   @default("open")
-  createdAt DateTime @default(now()) @map("created_at")
+  id           String   @id @default(dbgenerated("gen_random_uuid()"))
+  userId       String   @map("user_id")
+  orderId      String?  @map("order_id")
+  ticketNumber String   @unique @map("ticket_number")
+  subject      String
+  message      String
+  status       String   @default("open")
+  remarks      Json     @default("[]")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@map("support_tickets")
 }

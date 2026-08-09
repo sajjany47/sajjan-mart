@@ -15,6 +15,7 @@ import {
   PlusCircle,
   Tag,
   ArrowLeft,
+  LifeBuoy,
 } from 'lucide-react';
 import { useAuth } from '@/components/providers/auth-provider';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -24,6 +25,7 @@ const NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/products', label: 'Products', icon: Package },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
+  { href: '/admin/tickets', label: 'Tickets', icon: LifeBuoy },
   { href: '/admin/categories', label: 'Categories', icon: FolderTree },
   { href: '/admin/coupons', label: 'Coupons', icon: Tag },
   { href: '/admin/pujas', label: 'Pujas', icon: Sparkles },
