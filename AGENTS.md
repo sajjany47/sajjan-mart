@@ -1,5 +1,8 @@
 # AGENTS.md — Project Change Log
 
+## 2026-08-09: Coupon cleared when cart changes
+- `CartProvider` (`components/providers/cart-provider.tsx`): any `addItem`/`removeItem`/`updateQty`/`clearCart` now also clears the applied coupon, so a stale discount can't persist after the cart contents change (e.g. clear cart, re-add items). Users re-apply the coupon after editing the cart.
+
 ## 2026-08-09: Cart transparency notes (item type + food/puja notices)
 - Cart (`components/store/cart-client.tsx`) now shows a type badge per item (Food / Natural / Puja Samagri / General / Puja Booking) so users can see what they added.
 - Food items display: "Cancellation is not applicable for food items."

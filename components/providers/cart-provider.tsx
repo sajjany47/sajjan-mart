@@ -64,6 +64,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [appliedCoupon, couponDiscount, hydrated]);
 
   const addItem = useCallback((item: Omit<CartItem, 'id'>) => {
+    setAppliedCoupon(null);
+    setCouponDiscount(0);
     setItems((prev) => {
       const existing = prev.find(
         (i) =>
@@ -84,10 +86,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const removeItem = useCallback((id: string) => {
+    setAppliedCoupon(null);
+    setCouponDiscount(0);
     setItems((prev) => prev.filter((i) => i.id !== id));
   }, []);
 
   const updateQty = useCallback((id: string, qty: number) => {
+    setAppliedCoupon(null);
+    setCouponDiscount(0);
     setItems((prev) =>
       prev.map((i) => (i.id === id ? { ...i, quantity: Math.max(1, qty) } : i))
     );
