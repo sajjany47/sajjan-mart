@@ -20,7 +20,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function AdminTicketsPage() {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('open');
   const [q, setQ] = useState('');
 
   const load = useCallback(async () => {
@@ -38,7 +38,7 @@ export default function AdminTicketsPage() {
   }, [load]);
 
   const filtered = tickets.filter((t) => {
-    if (statusFilter !== 'all' && t.status !== statusFilter) return false;
+    if (t.status !== statusFilter) return false;
     if (!q) return true;
     const needle = q.toLowerCase();
     return (
@@ -49,12 +49,12 @@ export default function AdminTicketsPage() {
     );
   });
 
-  const counts: Record<string, number> = { all: tickets.length };
+  const counts: Record<string, number> = {};
   for (const t of tickets) counts[t.status] = (counts[t.status] ?? 0) + 1;
 
   if (loading) return <PageLoader text="Loading tickets..." />;
 
-  const tabs = ['all', 'open', 'in_progress', 'resolved', 'closed'];
+  const tabs = ['open', 'in_progress', 'resolved', 'closed'];
 
   return (
     <div>
