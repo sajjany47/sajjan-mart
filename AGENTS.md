@@ -1,5 +1,9 @@
 # AGENTS.md — Project Change Log
 
+## 2026-08-09: Zero Charges Banner (No GST, No Tax, No Platform Fees)
+- New component `ZeroChargesBanner` (`components/store/zero-charges-banner.tsx`) renders the trust badge detailing "Zero GST, Zero Tax, Zero Platform Fees" with interactive glassmorphism cards.
+- Integrated into `app/category/[slug]/page.tsx` (Food, Natural Products, General Products, Puja Samagri), `app/puja/page.tsx` (Puja package bookings), and `app/shop/page.tsx` (general shop).
+
 ## 2026-08-09: Coupon cleared when cart changes
 - `CartProvider` (`components/providers/cart-provider.tsx`): any `addItem`/`removeItem`/`updateQty`/`clearCart` now also clears the applied coupon, so a stale discount can't persist after the cart contents change (e.g. clear cart, re-add items). Users re-apply the coupon after editing the cart.
 

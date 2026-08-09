@@ -1,5 +1,6 @@
 import { StoreShell } from '@/components/store/store-shell';
 import { ShopClient } from '@/components/store/shop-client';
+import { ZeroChargesBanner } from '@/components/store/zero-charges-banner';
 import { createServerSupabase } from '@/lib/supabase/server';
 
 export const revalidate = 60;
@@ -24,6 +25,9 @@ export default async function ShopPage({
   const filters = await getFilters();
   return (
     <StoreShell>
+      <div className="container-px mx-auto max-w-7xl pt-6 -mb-6">
+        <ZeroChargesBanner />
+      </div>
       <ShopClient filters={filters} searchParams={searchParams} />
     </StoreShell>
   );

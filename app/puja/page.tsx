@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Clock, Star } from 'lucide-react';
 import { StoreShell } from '@/components/store/store-shell';
+import { ZeroChargesBanner } from '@/components/store/zero-charges-banner';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { formatINR } from '@/lib/format';
 import type { Puja, PujaItem } from '@/lib/types';
@@ -35,6 +36,7 @@ export default async function PujaPage({
   return (
     <StoreShell>
       <div className="container-px mx-auto max-w-7xl py-6">
+        <ZeroChargesBanner />
         <div className="rounded-2xl bg-gradient-to-r from-primary to-primary/70 p-8 text-primary-foreground">
           <h1 className="font-display text-3xl font-semibold md:text-4xl">Puja Samagri</h1>
           <p className="mt-2 text-primary-foreground/80">

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { StoreShell } from '@/components/store/store-shell';
 import { ShopClient } from '@/components/store/shop-client';
 import { FoodShopClient } from '@/components/store/food-shop-client';
+import { ZeroChargesBanner } from '@/components/store/zero-charges-banner';
 import { createServerSupabase } from '@/lib/supabase/server';
 
 export const revalidate = 60;
@@ -113,6 +114,7 @@ export default async function CategoryPage({
   return (
     <StoreShell>
       <div className="container-px mx-auto max-w-7xl py-6">
+        <ZeroChargesBanner />
         {isFoodCategory ? (
           <FoodShopClient filters={filters} searchParams={sp} />
         ) : (
