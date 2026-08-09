@@ -1,5 +1,11 @@
 # AGENTS.md — Project Change Log
 
+## 2026-08-09: Cart transparency notes (item type + food/puja notices)
+- Cart (`components/store/cart-client.tsx`) now shows a type badge per item (Food / Natural / Puja Samagri / General / Puja Booking) so users can see what they added.
+- Food items display: "Cancellation is not applicable for food items."
+- Puja items display: "Delivery date & time may not match your selected booking date & time." plus an extra note for same-day or next-day bookings.
+- `CartItem` gained `bookingDate`/`bookingTime`; puja add-to-cart (`puja-detail-client.tsx`) stores them; checkout persists them in order-item `metadata.pujaDate`/`pujaTime`.
+
 ## 2026-08-08: One-time coupon usage
 - `Coupon` model: new `isOneTime` field (`is_one_time`, default false) pushed to DB and added to `Coupon` type.
 - Admin coupon form: "One-Time Use (can be used only once per customer)" checkbox + a `Usage` column (One-Time vs Repeat badge).

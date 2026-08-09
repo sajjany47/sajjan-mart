@@ -78,6 +78,8 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
       panditId: pandit?.id,
       panditName: pandit?.name,
       selectedItems,
+      bookingDate: bookingDate || undefined,
+      bookingTime: bookingTime || undefined,
     });
     toast.success(`${puja.name} package added to cart`);
   }

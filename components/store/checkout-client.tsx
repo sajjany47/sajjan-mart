@@ -204,6 +204,8 @@ export function CheckoutClient() {
         selectedItems: i.selectedItems ?? [],
         panditName: i.panditName,
         addOns: i.addOns ?? [],
+        pujaDate: i.bookingDate ?? null,
+        pujaTime: i.bookingTime ?? null,
       } as any,
     }));
 

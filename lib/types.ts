@@ -276,4 +276,6 @@ export interface CartItem {
   panditName?: string;
   selectedItems?: { name: string; qty: number; price: number }[];
   addOns?: { id: string; name: string; price: number }[];
+  bookingDate?: string;
+  bookingTime?: string;
 }

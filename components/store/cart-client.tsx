@@ -12,11 +12,65 @@ import { supabase } from '@/lib/supabase/client';
 import { formatINR } from '@/lib/format';
 import { toast } from 'sonner';
 import { computeTotals, getTaxRate, getFreeShippingThreshold } from '@/lib/store-config-utils';
+import type { CartItem } from '@/lib/types';
 
 interface StoreConfigData {
   tax_rate: number;
   shipping_charge: number;
   free_shipping_threshold: number;
+}
+
+function typeLabel(item: CartItem): string {
+  if (item.type === 'puja') return 'Puja Booking';
+  switch (item.productType) {
+    case 'food':
+      return 'Food';
+    case 'natural':
+      return 'Natural';
+    case 'puja_samagri':
+      return 'Puja Samagri';
+    default:
+      return 'General';
+  }
+}
+
+function typeBadgeClass(item: CartItem): string {
+  if (item.type === 'puja') return 'bg-indigo-100 text-indigo-700 dark:text-indigo-300';
+  switch (item.productType) {
+    case 'food':
+      return 'bg-warning/15 text-warning';
+    case 'natural':
+      return 'bg-primary/15 text-primary';
+    case 'puja_samagri':
+      return 'bg-purple-100 text-purple-700 dark:text-purple-300';
+    default:
+      return 'bg-muted text-muted-foreground';
+  }
+}
+
+function dayDiffFromToday(dateStr?: string): number | null {
+  if (!dateStr) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const d = new Date(dateStr + 'T00:00:00');
+  if (isNaN(d.getTime())) return null;
+  return Math.round((d.getTime() - today.getTime()) / 86400000);
+}
+
+function PujaNote({ date }: { date?: string }) {
+  const diff = dayDiffFromToday(date);
+  let extra: string | null = null;
+  if (diff === 0) {
+    extra = 'Same-day puja — the exact time will be confirmed separately and may not match your selection.';
+  } else if (diff === 1) {
+    extra = 'Puja booked for tomorrow — the delivery/execution date & time may not match your selection.';
+  }
+  return (
+    <div className="mt-2 rounded-lg bg-indigo-50 px-2.5 py-1.5 text-xs text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
+      <p>Delivery date &amp; time may not match your selected booking date &amp; time.</p>
+      {extra && <p className="mt-0.5 font-medium">{extra}</p>}
+    </div>
+  );
 }
 
 export function CartClient() {
@@ -138,6 +192,25 @@ export function CartClient() {
                         Includes: {item.selectedItems.map((s) => `${s.name} x${s.qty}`).join(', ')}
                       </p>
                     )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${typeBadgeClass(item)}`}>
+                        {typeLabel(item)}
+                      </span>
+                      {item.bookingDate && (
+                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                          {item.bookingDate}
+                          {item.bookingTime ? ` · ${item.bookingTime}` : ''}
+                        </span>
+                      )}
+                    </div>
+                    {item.type === 'product' && item.productType === 'food' && (
+                      <p className="mt-2 rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                        Cancellation is not applicable for food items.
+                      </p>
+                    )}
+                    {item.type === 'puja' && <PujaNote date={item.bookingDate} />}
                   </div>
                   <button onClick={() => removeItem(item.id)} className="text-muted-foreground hover:text-destructive" aria-label="Remove">
                     <Trash2 className="h-4 w-4" />
