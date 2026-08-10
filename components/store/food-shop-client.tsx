@@ -71,8 +71,6 @@ const FOOD_CATEGORIES = [
   { value: 'beverages', label: 'Beverages & Shakes' },
 ];
 
-const PAGE_SIZE = 12;
-
 interface Props {
   filters: {
     categories: { id: string; name: string; slug: string }[];
@@ -92,7 +90,6 @@ export function FoodShopClient({ filters }: Props) {
   const [priceRange, setPriceRange] = useState<number[]>([0, 1000]);
   const [minRating, setMinRating] = useState<number>(0);
   const [sort, setSort] = useState('relevance');
-  const [page, setPage] = useState(1);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -149,8 +146,7 @@ export function FoodShopClient({ filters }: Props) {
           }
 
           setTotal(list.length);
-          const startIndex = (page - 1) * PAGE_SIZE;
-          setProducts(list.slice(startIndex, startIndex + PAGE_SIZE));
+          setProducts(list);
           setLoading(false);
         }
       } catch (err) {
@@ -167,13 +163,7 @@ export function FoodShopClient({ filters }: Props) {
     return () => {
       isCancelled = true;
     };
-  }, [q, selectedFoodCategory, selectedFoodTypes, priceRange, minRating, sort, page]);
-
-  useEffect(() => {
-    setPage(1);
   }, [q, selectedFoodCategory, selectedFoodTypes, priceRange, minRating, sort]);
-
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   function toggleFoodType(type: FoodType) {
     setSelectedFoodTypes((prev) =>
@@ -188,7 +178,6 @@ export function FoodShopClient({ filters }: Props) {
     setPriceRange([0, 1000]);
     setMinRating(0);
     setSort('relevance');
-    setPage(1);
   }
 
   const hasActiveFilters =
@@ -631,37 +620,11 @@ export function FoodShopClient({ filters }: Props) {
               </Button>
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                {products.map((p) => (
-                  <ProductCard key={p.id} product={p} />
-                ))}
-              </div>
-
-              {totalPages > 1 && (
-                <div className="mt-10 flex items-center justify-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page === 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-xs text-muted-foreground font-medium">
-                    Page {page} of {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page === totalPages}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  >
-                    Next
-                  </Button>
-                </div>
-              )}
-            </>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {products.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
           )}
         </div>
       </div>
