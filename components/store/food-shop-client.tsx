@@ -33,7 +33,6 @@ import {
   Sparkles,
   Clock,
   Star,
-  Pizza,
   Flame,
   CheckCircle2,
   X,
@@ -292,38 +291,6 @@ export function FoodShopClient({ filters }: Props) {
             </div>
             <span className="text-xs text-muted-foreground font-normal">🟡</span>
           </label>
-        </div>
-      </div>
-
-      {/* Food Category Filter */}
-      <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-        <div className="flex items-center justify-between pb-3 border-b border-border">
-          <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-            <Pizza className="h-4 w-4 text-primary" />
-            Food Category
-          </h3>
-          {selectedFoodCategory && (
-            <button
-              onClick={() => setSelectedFoodCategory('')}
-              className="text-xs text-primary hover:underline font-medium"
-            >
-              Reset
-            </button>
-          )}
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {FOOD_CATEGORIES.map((c) => (
-            <Button
-              key={c.value}
-              type="button"
-              variant={selectedFoodCategory === c.value ? 'default' : 'outline'}
-              size="sm"
-              className="text-xs justify-center h-8"
-              onClick={() => setSelectedFoodCategory(selectedFoodCategory === c.value ? '' : c.value)}
-            >
-              {c.label}
-            </Button>
-          ))}
         </div>
       </div>
 
