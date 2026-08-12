@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
     const minRating = searchParams.get('minRating') || searchParams.get('rating_min');
     const q = searchParams.get('q') || searchParams.get('name_like');
     const sort = searchParams.get('sort') || searchParams.get('order');
+    const distinctCategories = searchParams.get('distinctCategories') === 'true';
 
     const productInclude = {
       productImages: true,
@@ -115,6 +116,21 @@ export async function GET(request: NextRequest) {
       include: productInclude,
       orderBy,
     });
+
+    if (distinctCategories) {
+      const availableCategories = await prisma.product.findMany({
+        where: { ...where, isActive: true },
+        select: { productCategory: true },
+        distinct: ['productCategory'],
+      });
+      return jsonResponse({
+        products: items,
+        availableCategories: availableCategories
+          .map((c) => c.productCategory)
+          .filter(Boolean),
+      });
+    }
+
     return jsonResponse(items);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });

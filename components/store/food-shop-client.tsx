@@ -58,17 +58,9 @@ const SORTS = [
 
 const FOOD_CATEGORIES = [
   { value: 'pizza', label: 'Pizza' },
-  { value: 'burger', label: 'Burger' },
-  { value: 'biryani', label: 'Biryani' },
-  { value: 'rolls_wraps', label: 'Rolls & Wraps' },
   { value: 'momos', label: 'Momos' },
-  { value: 'chinese', label: 'Chinese' },
-  { value: 'north_indian', label: 'North Indian' },
-  { value: 'south_indian', label: 'South Indian' },
-  { value: 'fast_food', label: 'Fast Food' },
-  { value: 'snacks', label: 'Snacks & Starters' },
-  { value: 'desserts', label: 'Desserts & Ice Cream' },
-  { value: 'beverages', label: 'Beverages & Shakes' },
+  { value: 'breakfast', label: 'Breakfast' },
+  { value: 'snacks', label: 'Snacks' },
 ];
 
 interface Props {
@@ -93,6 +85,7 @@ export function FoodShopClient({ filters }: Props) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [storeConfig, setStoreConfig] = useState<StoreConfigData | null>(null);
 
   useEffect(() => {
@@ -130,11 +123,18 @@ export function FoodShopClient({ filters }: Props) {
         if (minRating > 0) queryParams.set('minRating', String(minRating));
         if (sort !== 'relevance') queryParams.set('sort', sort);
 
+        // Fetch available food categories from the backend (unfiltered)
+        const catRes = await fetch(`/api/products?productType=food&distinctCategories=true`);
+        if (!catRes.ok) throw new Error('Failed to fetch categories');
+        const catData = await catRes.json();
+        const allCategories: string[] = catData.available_categories || catData.availableCategories || [];
+
         const res = await fetch(`/api/products?${queryParams.toString()}`);
         if (!res.ok) throw new Error('Failed to fetch food items');
         const data: Product[] = await res.json();
 
         if (!isCancelled) {
+          setAvailableCategories(allCategories);
           let list = Array.isArray(data) ? data : [];
           
           // Additional safety check for client side foodType filtering
@@ -519,19 +519,21 @@ export function FoodShopClient({ filters }: Props) {
         >
           All Food
         </Button>
-        {FOOD_CATEGORIES.map((c) => (
-          <Button
-            key={c.value}
-            variant={selectedFoodCategory === c.value ? 'secondary' : 'ghost'}
-            size="sm"
-            className={`rounded-xl text-xs whitespace-nowrap font-medium transition-all ${
-              selectedFoodCategory === c.value ? 'bg-primary/15 text-primary font-semibold' : ''
-            }`}
-            onClick={() => setSelectedFoodCategory(selectedFoodCategory === c.value ? '' : c.value)}
-          >
-            {c.label}
-          </Button>
-        ))}
+        {FOOD_CATEGORIES
+          .filter((c) => availableCategories.includes(c.value))
+          .map((c) => (
+            <Button
+              key={c.value}
+              variant={selectedFoodCategory === c.value ? 'secondary' : 'ghost'}
+              size="sm"
+              className={`rounded-xl text-xs whitespace-nowrap font-medium transition-all ${
+                selectedFoodCategory === c.value ? 'bg-primary/15 text-primary font-semibold' : ''
+              }`}
+              onClick={() => setSelectedFoodCategory(selectedFoodCategory === c.value ? '' : c.value)}
+            >
+              {c.label}
+            </Button>
+          ))}
       </div>
 
       {/* Controls Bar: Search, Sort, Mobile Filter Trigger */}

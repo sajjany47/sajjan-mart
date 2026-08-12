@@ -4,6 +4,7 @@ import { ShopClient } from '@/components/store/shop-client';
 import { FoodShopClient } from '@/components/store/food-shop-client';
 import { ZeroChargesBanner } from '@/components/store/zero-charges-banner';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { prisma } from '@/lib/prisma/client';
 
 export const revalidate = 60;
 
@@ -86,6 +87,25 @@ async function getFilters() {
   };
 }
 
+async function getAvailableProductCategories(productType?: string) {
+  if (!productType) return new Set<string>();
+  const rows = await prisma.product.findMany({
+    where: { isActive: true, productType },
+    select: { productCategory: true },
+    distinct: ['productCategory'],
+  });
+  return new Set(rows.map((r) => r.productCategory).filter((c): c is string => !!c));
+}
+
+async function filterCategoriesByAvailability(
+  categories: { value: string; label: string }[],
+  productType?: string
+) {
+  if (!productType || categories.length === 0) return categories;
+  const available = await getAvailableProductCategories(productType);
+  return categories.filter((c) => available.has(c.value));
+}
+
 export default async function CategoryPage({
   params,
   searchParams,
@@ -111,6 +131,10 @@ export default async function CategoryPage({
   const isGeneralCategory = params.slug === 'general';
   const isPujaSamagriCategory = params.slug === 'puja-samagri';
 
+  const productType = isNaturalCategory ? 'natural' : isGeneralCategory ? 'general' : isPujaSamagriCategory ? 'puja_samagri' : undefined;
+  const allProductCategories = isNaturalCategory ? NATURAL_PRODUCT_CATEGORIES : isGeneralCategory ? GENERAL_PRODUCT_CATEGORIES : isPujaSamagriCategory ? PUJA_SAMAGRI_CATEGORIES : undefined;
+  const productCategories = allProductCategories ? await filterCategoriesByAvailability(allProductCategories, productType) : undefined;
+
   return (
     <StoreShell>
       <div className="container-px mx-auto max-w-7xl py-6">
@@ -126,8 +150,8 @@ export default async function CategoryPage({
             <ShopClient
               filters={filters}
               searchParams={sp}
-              productType={isNaturalCategory || isGeneralCategory || isPujaSamagriCategory ? (isNaturalCategory ? 'natural' : isGeneralCategory ? 'general' : 'puja_samagri') : undefined}
-              productCategories={isNaturalCategory ? NATURAL_PRODUCT_CATEGORIES : isGeneralCategory ? GENERAL_PRODUCT_CATEGORIES : isPujaSamagriCategory ? PUJA_SAMAGRI_CATEGORIES : undefined}
+              productType={productType}
+              productCategories={productCategories}
               genderOptions={isGeneralCategory ? GENERAL_GENDER_OPTIONS : undefined}
               showBrands={isGeneralCategory}
             />
