@@ -14,6 +14,7 @@ import { formatINR, generateOrderNumber } from "@/lib/format";
 import { toast } from "sonner";
 import type { Address } from "@/lib/types";
 import { isFoodOpenNow, isPaymentModeAllowed, PAYMENT_METHODS, computeTotals, getTaxRate } from "@/lib/store-config-utils";
+import { groupItemsBySection } from "@/lib/cart-sections";
 
 interface StoreConfigData {
   id: string;
@@ -544,19 +545,27 @@ export function CheckoutClient() {
               Order Summary
             </h2>
             <div className="mt-4 max-h-64 space-y-2 overflow-y-auto">
-              {items.map((i) => (
-                <div key={i.id} className="flex justify-between text-sm">
-                  <span className="pr-2">
-                    {i.name} x{i.quantity}
-                    {i.addOns && i.addOns.length > 0 && (
-                      <span className="block text-xs text-muted-foreground">
-                        {i.addOns.map((a) => a.name).join(', ')}
+              {groupItemsBySection(items).map((section) => (
+                <div key={section.key} className={`overflow-hidden rounded-lg border border-border ${section.card}`}>
+                  <div className={`flex items-center gap-1.5 border-b px-2 py-1.5 ${section.header}`}>
+                    <section.icon className={`h-3.5 w-3.5 ${section.badge.split(' ')[1]}`} />
+                    <span className="text-[11px] font-semibold">{section.label}</span>
+                  </div>
+                  {section.items.map((i) => (
+                    <div key={i.id} className="flex justify-between bg-background px-2 py-1 text-sm">
+                      <span className="pr-2">
+                        {i.name} x{i.quantity}
+                        {i.addOns && i.addOns.length > 0 && (
+                          <span className="block text-xs text-muted-foreground">
+                            {i.addOns.map((a) => a.name).join(', ')}
+                          </span>
+                        )}
                       </span>
-                    )}
-                  </span>
-                  <span className="whitespace-nowrap font-medium">
-                    {formatINR(i.price * i.quantity)}
-                  </span>
+                      <span className="whitespace-nowrap font-medium">
+                        {formatINR(i.price * i.quantity)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>

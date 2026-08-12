@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase/client';
 import { formatINR } from '@/lib/format';
 import { toast } from 'sonner';
 import { computeTotals, getTaxRate, getFreeShippingThreshold } from '@/lib/store-config-utils';
+import { groupItemsBySection } from '@/lib/cart-sections';
 import type { CartItem } from '@/lib/types';
 
 interface StoreConfigData {
@@ -155,9 +156,23 @@ export function CartClient() {
       <p className="mt-1 text-sm text-muted-foreground">{items.length} item(s) in your cart</p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
-        <div className="space-y-3">
-          {items.map((item) => (
-            <div key={item.id} className="flex gap-4 rounded-xl border border-border bg-card p-3">
+        <div className="space-y-6">
+          {groupItemsBySection(items).map((section) => (
+            <section key={section.key} className={`overflow-hidden rounded-2xl border border-border ${section.card}`}>
+              <div className={`flex items-center justify-between border-b px-4 py-2.5 ${section.header}`}>
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-background/80 shadow-sm">
+                    <section.icon className={`h-4 w-4 ${section.badge.split(' ')[1]}`} />
+                  </span>
+                  <span className="text-sm font-semibold">{section.label}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {section.items.length} item(s)
+                </span>
+              </div>
+              <div className="space-y-3 p-3">
+                {section.items.map((item) => (
+                <div key={item.id} className="flex gap-4 rounded-xl border border-border bg-background p-3">
               <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
                 {item.image ? (
                   <Image src={item.image} alt={item.name} fill sizes="80px" className="object-cover" />
@@ -230,6 +245,9 @@ export function CartClient() {
                 </div>
               </div>
             </div>
+          ))}
+              </div>
+            </section>
           ))}
 
           <div className="flex justify-between">
