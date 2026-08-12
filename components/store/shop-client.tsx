@@ -24,7 +24,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Loader2, Search, SlidersHorizontal } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import type { Product } from '@/lib/types';
 
@@ -371,7 +371,15 @@ export function ShopClient({ filters, searchParams, productType, productCategori
           </div>
         </aside>
 
-        <div>
+        <div className="relative">
+          {loading && (
+            <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background/50 backdrop-blur-[2px]">
+              <div className="flex flex-col items-center gap-2 rounded-xl bg-card/90 px-6 py-4 shadow-lg">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <span className="text-xs font-medium text-muted-foreground">Loading products...</span>
+              </div>
+            </div>
+          )}
           {loading ? (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (

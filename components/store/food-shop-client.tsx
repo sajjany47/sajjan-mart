@@ -36,6 +36,7 @@ import {
   Flame,
   CheckCircle2,
   X,
+  Loader2,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import type { Product, FoodType } from '@/lib/types';
@@ -596,7 +597,15 @@ export function FoodShopClient({ filters }: Props) {
           <div className="sticky top-24">{FilterPanel}</div>
         </aside>
 
-        <div>
+        <div className="relative">
+          {loading && (
+            <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background/50 backdrop-blur-[2px]">
+              <div className="flex flex-col items-center gap-2 rounded-xl bg-card/90 px-6 py-4 shadow-lg">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <span className="text-xs font-medium text-muted-foreground">Loading food items...</span>
+              </div>
+            </div>
+          )}
           {loading ? (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
