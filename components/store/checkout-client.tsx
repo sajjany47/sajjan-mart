@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2 } from "lucide-react";
+import { Loader2, Truck, PhoneCall } from "lucide-react";
 import { useCart } from "@/components/providers/cart-provider";
 import { useAuth } from "@/components/providers/auth-provider";
 import { supabase } from "@/lib/supabase/client";
@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import type { Address } from "@/lib/types";
 import { isFoodOpenNow, isPaymentModeAllowed, PAYMENT_METHODS, computeTotals, getTaxRate } from "@/lib/store-config-utils";
 import { groupItemsBySection } from "@/lib/cart-sections";
+import { getDeliveryEstimate, QUICK_SERVICE_CONTACT } from "@/lib/delivery-estimate";
 
 interface StoreConfigData {
   id: string;
@@ -551,6 +552,13 @@ export function CheckoutClient() {
                     <section.icon className={`h-3.5 w-3.5 ${section.badge.split(' ')[1]}`} />
                     <span className="text-[11px] font-semibold">{section.label}</span>
                   </div>
+                  <div className="flex items-center gap-1.5 border-b bg-background px-2 py-1 text-xs text-muted-foreground">
+                    <Truck className="h-3 w-3 shrink-0" />
+                    <span>
+                      <span className="font-medium text-foreground">{getDeliveryEstimate(section.key).title}:</span>{" "}
+                      {getDeliveryEstimate(section.key).detail}
+                    </span>
+                  </div>
                   {section.items.map((i) => (
                     <div key={i.id} className="flex justify-between bg-background px-2 py-1 text-sm">
                       <span className="pr-2">
@@ -607,7 +615,11 @@ export function CheckoutClient() {
                 <span>{formatINR(total)}</span>
               </div>
             </div>
-            <Button
+            <div className="mt-4 flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3">
+                <PhoneCall className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <p className="text-xs text-muted-foreground">{QUICK_SERVICE_CONTACT}</p>
+              </div>
+              <Button
               onClick={placeOrder}
               disabled={loading || foodClosed}
               className="mt-5 w-full"

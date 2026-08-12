@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Tag } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Tag, Truck, PhoneCall } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { formatINR } from '@/lib/format';
 import { toast } from 'sonner';
 import { computeTotals, getTaxRate, getFreeShippingThreshold } from '@/lib/store-config-utils';
 import { groupItemsBySection } from '@/lib/cart-sections';
+import { getDeliveryEstimate, QUICK_SERVICE_CONTACT } from '@/lib/delivery-estimate';
 import type { CartItem } from '@/lib/types';
 
 interface StoreConfigData {
@@ -170,6 +171,13 @@ export function CartClient() {
                   {section.items.length} item(s)
                 </span>
               </div>
+              <div className="flex items-center gap-2 border-b px-4 py-1.5 text-xs text-muted-foreground">
+                <Truck className="h-3.5 w-3.5 shrink-0" />
+                <span>
+                  <span className="font-semibold text-foreground">{getDeliveryEstimate(section.key).title}:</span>{' '}
+                  {getDeliveryEstimate(section.key).detail}
+                </span>
+              </div>
               <div className="space-y-3 p-3">
                 {section.items.map((item) => (
                 <div key={item.id} className="flex gap-4 rounded-xl border border-border bg-background p-3">
@@ -249,6 +257,13 @@ export function CartClient() {
               </div>
             </section>
           ))}
+
+          <div className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
+              <PhoneCall className="h-5 w-5 text-primary" />
+            </span>
+            <p className="text-sm text-muted-foreground">{QUICK_SERVICE_CONTACT}</p>
+          </div>
 
           <div className="flex justify-between">
             <Button variant="ghost" onClick={clearCart}>Clear cart</Button>
