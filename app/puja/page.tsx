@@ -1,8 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, Clock, Star } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { StoreShell } from '@/components/store/store-shell';
-import { ZeroChargesBanner } from '@/components/store/zero-charges-banner';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { formatINR } from '@/lib/format';
 import type { Puja, PujaItem } from '@/lib/types';
@@ -35,27 +34,34 @@ export default async function PujaPage({
 
   return (
     <StoreShell>
-      <div className="container-px mx-auto max-w-7xl py-6">
-        <ZeroChargesBanner />
-        <div className="rounded-2xl bg-gradient-to-r from-primary to-primary/70 p-8 text-primary-foreground">
-          <h1 className="font-display text-3xl font-semibold md:text-4xl">Puja Samagri</h1>
-          <p className="mt-2 text-primary-foreground/80">
-            Book a complete puja package - pandit + all required samagri, delivered to your door.
-          </p>
-          <form className="mt-4 max-w-md">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                name="q"
-                defaultValue={q}
-                placeholder="Search pujas - Satyanarayan, Durga, Lakshmi..."
-                className="w-full rounded-lg border-0 bg-background/95 pl-9 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground"
-              />
-            </div>
-          </form>
-        </div>
+      <div className="container-px mx-auto max-w-7xl py-5">
+        <h1 className="font-display text-xl font-semibold sm:text-2xl">Puja Samagri</h1>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <form className="relative mt-4 max-w-md" action="/puja">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            name="q"
+            defaultValue={q}
+            placeholder="Search pujas - Satyanarayan, Durga, Lakshmi..."
+            className="w-full rounded-lg border border-border bg-card pl-9 pr-9 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          {q && (
+            <Link
+              href="/puja"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+              aria-label="Clear search"
+            >
+              <X className="h-4 w-4" />
+            </Link>
+          )}
+        </form>
+
+        <p className="mt-3 text-xs text-muted-foreground">
+          Showing <span className="font-semibold text-foreground">{filtered.length}</span> of{' '}
+          <span className="font-semibold text-foreground">{pujas.length}</span> pujas
+        </p>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((p) => (
             <Link
               key={p.id}

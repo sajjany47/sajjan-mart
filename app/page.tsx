@@ -32,7 +32,7 @@ const HERO_SLIDES: Slide[] = [
     image_url:
       'https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=1600',
     cta_text: 'Explore Puja',
-    cta_link: '/category/puja-samagri',
+    cta_link: '/puja',
     sort_order: 2,
     is_active: true,
   },
@@ -81,7 +81,7 @@ const SERVICE_BENEFITS = [
 
 const SECTION_CONFIG = [
   { type: 'food', title: 'Food', subtitle: 'Freshly prepared food from our cloud kitchen', href: '/category/food' },
-  { type: 'puja_samagri', title: 'Puja Samagri', subtitle: 'Complete puja packages and essential samagri', href: '/category/puja-samagri' },
+  { type: 'puja_samagri', title: 'Puja Samagri', subtitle: 'Complete puja packages and essential samagri', href: '/puja' },
   { type: 'natural', title: 'Natural Products', subtitle: 'Pure and carefully selected natural products', href: '/category/natural-products' },
   { type: 'general', title: 'General Products', subtitle: 'Everyday essentials for your home', href: '/category/general' },
 ] as const;
@@ -117,7 +117,7 @@ export default async function HomePage() {
   const { categories, productsByType } = await getHomeData();
 
   const categoryHref = (slug: string) =>
-    slug === 'puja-samagri' ? '/category/puja-samagri' : `/category/${slug}`;
+    slug === 'puja-samagri' ? '/puja' : `/category/${slug}`;
 
   return (
     <StoreShell>
