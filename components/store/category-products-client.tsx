@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ProductCard } from '@/components/store/product-card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,8 @@ const SORTS = [
 ];
 
 const PAGE_SIZE = 12;
+
+const NO_BRANDS: { id: string; name: string; slug: string }[] = [];
 
 interface StoreConfigData {
   id: string;
@@ -83,7 +85,6 @@ export function CategoryProductsClient({
   const [minRating, setMinRating] = useState(0);
   const [deals, setDeals] = useState(false);
   const [sort, setSort] = useState('relevance');
-  const [page, setPage] = useState(1);
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -101,59 +102,57 @@ export function CategoryProductsClient({
   }, [isFood]);
 
   const foodOpen = storeConfig ? isFoodOpenNow(storeConfig) : true;
-  const brands = showBrands ? filters.brands : [];
+  const brands = showBrands ? filters.brands : NO_BRANDS;
   const chips = productCategories ?? [];
+
+  const buildParams = useCallback(
+    (start: number, end: number) => {
+      const queryParams = new URLSearchParams();
+      queryParams.set('paginate', 'true');
+      queryParams.set('start', String(start));
+      queryParams.set('end', String(end));
+      if (productType) queryParams.set('productType', productType);
+      if (q.trim()) queryParams.set('q', q.trim());
+      if (selectedCategory) queryParams.set('productCategory', selectedCategory);
+      if (selectedFoodTypes.length > 0) {
+        queryParams.set('foodType', selectedFoodTypes.join(','));
+      }
+      if (selectedBrands.length > 0) {
+        const ids = brands.filter((b) => selectedBrands.includes(b.slug)).map((b) => b.id);
+        if (ids.length > 0) queryParams.set('brandId', ids.join(','));
+      }
+      if (priceRange[0] > 0) queryParams.set('minPrice', String(priceRange[0]));
+      if (priceRange[1] < maxPrice) queryParams.set('maxPrice', String(priceRange[1]));
+      if (minRating > 0) queryParams.set('minRating', String(minRating));
+      if (deals) queryParams.set('todayDeal', 'true');
+      if (selectedGender) queryParams.set('gender', selectedGender);
+      if (sort !== 'relevance') queryParams.set('sort', sort);
+      return queryParams;
+    },
+    [q, selectedCategory, selectedFoodTypes, selectedBrands, brands, priceRange, maxPrice, minRating, deals, selectedGender, sort, productType]
+  );
+
+  const hasMore = products.length < total;
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const loadMoreRef = useRef<() => void>(() => {});
+  const loadingMoreRef = useRef(false);
+  const requestedOffsetRef = useRef(-1);
 
   useEffect(() => {
     let isCancelled = false;
     setLoading(true);
+    requestedOffsetRef.current = -1;
 
-    async function fetchProducts() {
+    async function fetchFirstPage() {
       try {
-        const queryParams = new URLSearchParams();
-        queryParams.set('paginate', 'true');
-        queryParams.set('start', String((page - 1) * PAGE_SIZE));
-        queryParams.set('end', String(page * PAGE_SIZE - 1));
-        if (productType) queryParams.set('productType', productType);
-        if (q.trim()) queryParams.set('q', q.trim());
-        if (selectedCategory) queryParams.set('productCategory', selectedCategory);
-        if (selectedFoodTypes.length > 0) {
-          queryParams.set('foodType', selectedFoodTypes.join(','));
-        }
-        if (selectedBrands.length > 0) {
-          const ids = brands.filter((b) => selectedBrands.includes(b.slug)).map((b) => b.id);
-          if (ids.length > 0) queryParams.set('brandId', ids.join(','));
-        }
-        if (priceRange[0] > 0) queryParams.set('minPrice', String(priceRange[0]));
-        if (priceRange[1] < maxPrice) queryParams.set('maxPrice', String(priceRange[1]));
-        if (minRating > 0) queryParams.set('minRating', String(minRating));
-        if (deals) queryParams.set('todayDeal', 'true');
-        if (selectedGender) queryParams.set('gender', selectedGender);
-        if (sort !== 'relevance') queryParams.set('sort', sort);
-
-        const res = await fetch(`/api/products?${queryParams.toString()}`);
+        const res = await fetch(`/api/products?${buildParams(0, PAGE_SIZE - 1).toString()}`);
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
         const list: Product[] = Array.isArray(data) ? data : data.products ?? [];
-
-        if (selectedFoodTypes.length > 0) {
-          const filtered = list.filter((p) => {
-            const ft = p.food_type || (p.metadata?.veg ? 'veg' : 'non_veg');
-            return selectedFoodTypes.includes(ft as FoodType);
-          });
-          if (!isCancelled) {
-            setProducts(filtered);
-            setTotal(filtered.length);
-            setLoading(false);
-          }
-          return;
-        }
-
-        if (!isCancelled) {
-          setProducts(list);
-          setTotal(typeof data.total === 'number' ? data.total : list.length);
-          setLoading(false);
-        }
+        if (isCancelled) return;
+        setProducts(list);
+        setTotal(typeof data.total === 'number' ? data.total : list.length);
+        setLoading(false);
       } catch (err) {
         if (!isCancelled) {
           setProducts([]);
@@ -163,16 +162,46 @@ export function CategoryProductsClient({
       }
     }
 
-    fetchProducts();
+    fetchFirstPage();
 
     return () => {
       isCancelled = true;
     };
-  }, [q, selectedCategory, selectedFoodTypes, priceRange, minRating, deals, selectedGender, sort, page, productType, maxPrice]);
+  }, [buildParams]);
+
+  loadMoreRef.current = async () => {
+    const offset = products.length;
+    if (loadingMoreRef.current || !hasMore || requestedOffsetRef.current === offset) return;
+    requestedOffsetRef.current = offset;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    try {
+      const res = await fetch(`/api/products?${buildParams(offset, offset + PAGE_SIZE - 1).toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch products');
+      const data = await res.json();
+      const list: Product[] = Array.isArray(data) ? data : data.products ?? [];
+      setProducts((prev) => [...prev, ...list]);
+    } catch {
+      /* noop */
+    } finally {
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
+    }
+  };
 
   useEffect(() => {
-    setPage(1);
-  }, [q, selectedCategory, selectedFoodTypes, priceRange, minRating, deals, selectedGender, sort]);
+    if (loading) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) loadMoreRef.current();
+      },
+      { rootMargin: '300px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [loading]);
 
   function toggleFoodType(type: FoodType) {
     setSelectedFoodTypes((prev) =>
@@ -208,53 +237,6 @@ export function CategoryProductsClient({
     priceRange[1] < maxPrice ||
     minRating > 0 ||
     deals;
-
-  const hasMore = products.length < total;
-
-  async function loadMore() {
-    setLoadingMore(true);
-    try {
-      const queryParams = new URLSearchParams();
-      queryParams.set('paginate', 'true');
-      queryParams.set('start', String(page * PAGE_SIZE));
-      queryParams.set('end', String((page + 1) * PAGE_SIZE - 1));
-      if (productType) queryParams.set('productType', productType);
-      if (q.trim()) queryParams.set('q', q.trim());
-      if (selectedCategory) queryParams.set('productCategory', selectedCategory);
-      if (selectedFoodTypes.length > 0) {
-        queryParams.set('foodType', selectedFoodTypes.join(','));
-      }
-      if (selectedBrands.length > 0) {
-        const ids = brands.filter((b) => selectedBrands.includes(b.slug)).map((b) => b.id);
-        if (ids.length > 0) queryParams.set('brandId', ids.join(','));
-      }
-      if (priceRange[0] > 0) queryParams.set('minPrice', String(priceRange[0]));
-      if (priceRange[1] < maxPrice) queryParams.set('maxPrice', String(priceRange[1]));
-      if (minRating > 0) queryParams.set('minRating', String(minRating));
-      if (deals) queryParams.set('todayDeal', 'true');
-      if (selectedGender) queryParams.set('gender', selectedGender);
-      if (sort !== 'relevance') queryParams.set('sort', sort);
-
-      const res = await fetch(`/api/products?${queryParams.toString()}`);
-      if (!res.ok) throw new Error('Failed to fetch products');
-      const data = await res.json();
-      const list: Product[] = Array.isArray(data) ? data : data.products ?? [];
-      if (selectedFoodTypes.length > 0) {
-        const filtered = list.filter((p) => {
-          const ft = p.food_type || (p.metadata?.veg ? 'veg' : 'non_veg');
-          return selectedFoodTypes.includes(ft as FoodType);
-        });
-        setProducts((prev) => [...prev, ...filtered]);
-      } else {
-        setProducts((prev) => [...prev, ...list]);
-      }
-      setPage((p) => p + 1);
-    } catch {
-      /* noop */
-    } finally {
-      setLoadingMore(false);
-    }
-  }
 
   const FilterPanel = (
     <div className="space-y-6">
@@ -563,22 +545,12 @@ export function CategoryProductsClient({
                 ))}
               </div>
 
-              {hasMore && (
-                <div className="mt-8 flex justify-center">
-                  <Button
-                    variant="outline"
-                    className="min-w-40"
-                    onClick={loadMore}
-                    disabled={loadingMore}
-                  >
-                    {loadingMore ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading...
-                      </>
-                    ) : (
-                      'Load More'
-                    )}
-                  </Button>
+              {hasMore && <div ref={sentinelRef} className="h-px w-full" aria-hidden />}
+
+              {loadingMore && (
+                <div className="mt-8 flex items-center justify-center gap-2 py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <span className="text-xs font-medium text-muted-foreground">Loading more...</span>
                 </div>
               )}
             </>
