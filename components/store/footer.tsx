@@ -36,10 +36,10 @@ const FOOTER_LINKS: { title: string; links: { href: string; label: string; categ
 
 export function Footer({ activeCategories }: { activeCategories: string[] }) {
   return (
-    <footer className="mt-16 border-t border-border bg-card">
-      <div className="container-px mx-auto max-w-7xl py-12">
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-          <div>
+    <footer className="mt-12 border-t border-border bg-card sm:mt-16">
+      <div className="container-px mx-auto max-w-7xl py-10 sm:py-12">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
+          <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-display text-lg font-bold">
                 S
@@ -74,7 +74,7 @@ export function Footer({ activeCategories }: { activeCategories: string[] }) {
           ))}
         </div>
 
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
+        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-center text-xs text-muted-foreground sm:flex-row sm:text-left">
           <p>&copy; {new Date().getFullYear()} Sajjan Mart. All rights reserved.</p>
           <p>Payments: COD · Razorpay · Cashfree</p>
         </div>
