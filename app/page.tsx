@@ -122,26 +122,26 @@ export default async function HomePage() {
   return (
     <StoreShell>
       {/* Hero */}
-      <section className="container-px mx-auto max-w-7xl pt-6">
+      <section className="container-px mx-auto max-w-7xl pt-4 sm:pt-6">
         <HeroSlider banners={HERO_SLIDES} />
       </section>
 
       {/* No GST / No Tax / No Fees highlight */}
-      <section className="container-px mx-auto max-w-7xl pt-6">
+      <section className="container-px mx-auto max-w-7xl pt-4 sm:pt-6">
         <ZeroChargesBanner />
       </section>
 
       {/* Service benefits */}
-      <section className="container-px mx-auto max-w-7xl py-8">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <section className="container-px mx-auto max-w-7xl py-6 sm:py-8">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
           {SERVICE_BENEFITS.map((b) => (
-            <div key={b.title} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <b.icon className="h-5 w-5" />
+            <div key={b.title} className="flex items-center gap-2.5 rounded-xl border border-border bg-card p-2.5 sm:gap-3 sm:p-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary sm:h-10 sm:w-10">
+                <b.icon className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <div>
-                <p className="text-sm font-semibold">{b.title}</p>
-                <p className="text-xs text-muted-foreground">{b.desc}</p>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">{b.title}</p>
+                <p className="text-[11px] leading-snug text-muted-foreground sm:text-xs">{b.desc}</p>
               </div>
             </div>
           ))}
@@ -149,9 +149,9 @@ export default async function HomePage() {
       </section>
 
       {/* Shop by category */}
-      <section className="container-px mx-auto max-w-7xl py-6">
+      <section className="container-px mx-auto max-w-7xl py-5 sm:py-6">
         <SectionHeader title="Shop by Category" subtitle="Everything you need, in one place" />
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           {categories.map((c) => (
             <Link
               key={c.id}
@@ -168,9 +168,11 @@ export default async function HomePage() {
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-              <div className="absolute bottom-3 left-3">
-                <h3 className="font-display text-lg font-semibold text-white">{c.name}</h3>
-                <p className="text-xs text-white/80 line-clamp-1">{c.description}</p>
+              <div className="absolute bottom-2 left-2.5 right-2.5 sm:bottom-3 sm:left-3">
+                <h3 className="truncate font-display text-base font-semibold text-white sm:text-lg">
+                  {c.name}
+                </h3>
+                <p className="truncate text-[11px] text-white/80 line-clamp-1 sm:text-xs">{c.description}</p>
               </div>
             </Link>
           ))}
