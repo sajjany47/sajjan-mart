@@ -77,15 +77,15 @@ export default function AccountOverview() {
   return (
     <div>
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-6 text-primary-foreground sm:p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-5 text-primary-foreground sm:p-8">
         <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-16 right-24 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
-        <div className="relative flex flex-wrap items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 text-2xl font-bold backdrop-blur">
+        <div className="relative flex flex-wrap items-center gap-3 sm:gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 text-xl font-bold backdrop-blur sm:h-16 sm:w-16 sm:text-2xl">
             {initials}
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-primary-foreground/80">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium text-primary-foreground/80 sm:text-sm">
               {new Date().toLocaleDateString(undefined, {
                 weekday: 'long',
                 day: 'numeric',
@@ -93,21 +93,21 @@ export default function AccountOverview() {
                 year: 'numeric',
               })}
             </p>
-            <h1 className="mt-1 truncate font-display text-2xl font-semibold sm:text-3xl">
+            <h1 className="mt-0.5 truncate font-display text-xl font-semibold sm:mt-1 sm:text-3xl">
               Welcome back, {profile?.full_name?.split(' ')[0] ?? 'there'}!
             </h1>
           </div>
         </div>
-        <div className="relative mt-6 flex flex-wrap gap-3">
+        <div className="relative mt-5 flex flex-wrap gap-2.5 sm:mt-6 sm:gap-3">
           <Link
             href="/shop"
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-primary shadow-sm transition hover:bg-white/90"
+            className="inline-flex items-center gap-2 rounded-lg bg-white px-3.5 py-2 text-sm font-semibold text-primary shadow-sm transition hover:bg-white/90 sm:px-4"
           >
             <ShoppingBag className="h-4 w-4" /> Continue Shopping
           </Link>
           <Link
             href="/puja"
-            className="inline-flex items-center gap-2 rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/25"
+            className="inline-flex items-center gap-2 rounded-lg bg-white/15 px-3.5 py-2 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/25 sm:px-4"
           >
             <Sparkles className="h-4 w-4" /> Book a Puja
           </Link>
@@ -115,33 +115,33 @@ export default function AccountOverview() {
       </div>
 
       {/* Stats */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
         {cards.map((s) => (
           <Link
             key={s.label}
             href={s.href}
-            className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:shadow-md"
+            className="group rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:shadow-md sm:p-5"
           >
             <div className="flex items-start justify-between">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${s.tint}`}>
-                <s.icon className="h-5 w-5" />
+              <div className={`flex h-9 w-9 items-center justify-center rounded-xl sm:h-10 sm:w-10 ${s.tint}`}>
+                <s.icon className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground/40 transition group-hover:translate-x-0.5 group-hover:text-primary" />
             </div>
-            <p className="mt-4 text-2xl font-bold tracking-tight">
-              {loading ? <Skeleton className="h-7 w-20" /> : s.value}
+            <p className="mt-3 text-lg font-bold tracking-tight sm:mt-4 sm:text-2xl">
+              {loading ? <Skeleton className="h-6 w-16 sm:h-7 sm:w-20" /> : s.value}
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">{s.label}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">{s.label}</p>
           </Link>
         ))}
       </div>
 
       {/* Recent orders + quick links */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_300px]">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg font-semibold">Recent Orders</h2>
-            <Link href="/account/orders" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+      <div className="mt-5 grid gap-5 sm:mt-6 sm:gap-6 lg:grid-cols-[1fr_300px]">
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-display text-base font-semibold sm:text-lg">Recent Orders</h2>
+            <Link href="/account/orders" className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-primary hover:underline">
               View all <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -149,7 +149,7 @@ export default function AccountOverview() {
           {loading ? (
             <div className="mt-4 space-y-3">
               {Array.from({ length: 2 }).map((_, i) => (
-                <Skeleton key={i} className="h-20 rounded-xl" />
+                <Skeleton key={i} className="h-16 rounded-xl sm:h-20" />
               ))}
             </div>
           ) : recentOrders.length === 0 ? (
@@ -161,21 +161,23 @@ export default function AccountOverview() {
               </Link>
             </div>
           ) : (
-            <div className="mt-4 divide-y divide-border">
+            <div className="mt-3 divide-y divide-border">
               {recentOrders.map((o) => (
-                <Link key={o.id} href={`/account/orders/${o.id}`} className="flex items-center justify-between gap-3 py-3 transition hover:bg-accent/50">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <Package className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">#{o.order_number}</p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {o.order_items?.length ?? 0} item(s) · {o.payment_method.toUpperCase()}
-                      </p>
-                    </div>
+                <Link
+                  key={o.id}
+                  href={`/account/orders/${o.id}`}
+                  className="flex items-center gap-3 px-2 py-3 transition hover:bg-accent/50 sm:px-1"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Package className="h-5 w-5" />
                   </div>
-                  <div className="flex shrink-0 items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">#{o.order_number}</p>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                      {o.order_items?.length ?? 0} item(s) · {o.payment_method.toUpperCase()}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
                     <Badge className={STATUS_COLORS[o.status] ?? 'bg-muted text-muted-foreground'}>{o.status}</Badge>
                     <span className="text-sm font-semibold">{formatINR(payableAmount(o))}</span>
                   </div>
@@ -186,9 +188,9 @@ export default function AccountOverview() {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <h2 className="font-display text-lg font-semibold">Quick Actions</h2>
-            <div className="mt-4 space-y-2">
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+            <h2 className="font-display text-base font-semibold sm:text-lg">Quick Actions</h2>
+            <div className="mt-3 space-y-2 sm:mt-4">
               {[
                 { href: '/shop', label: 'Browse Products' },
                 { href: '/puja', label: 'Book a Puja' },
