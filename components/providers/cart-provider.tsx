@@ -26,6 +26,17 @@ function addonKey(addOns?: { id: string; name: string; price: number }[]): strin
   return (addOns ?? []).map((a) => a.id).sort().join(',');
 }
 
+function generateId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
@@ -81,7 +92,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           i.id === existing.id ? { ...i, quantity: i.quantity + item.quantity } : i
         );
       }
-      return [...prev, { ...item, id: crypto.randomUUID() }];
+      return [...prev, { ...item, id: generateId() }];
     });
   }, []);
 
