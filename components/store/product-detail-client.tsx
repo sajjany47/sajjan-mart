@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ShoppingBag, Heart, Star, Minus, Plus } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { useAuth } from '@/components/providers/auth-provider';
+import { useLocation } from '@/components/providers/location-provider';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -24,7 +25,10 @@ interface Props {
 export function ProductDetailClient({ product, reviews }: Props) {
   const { addItem } = useCart();
   const { user } = useAuth();
+  const { isWithinRange, status } = useLocation();
   const router = useRouter();
+  const isFood = product.product_type === 'food';
+  const isAddDisabled = isFood && !isWithinRange;
   const [variantId, setVariantId] = useState<string>(product.product_variants?.[0]?.id ?? '');
   const [qty, setQty] = useState(1);
   const [wished, setWished] = useState(false);
@@ -116,16 +120,29 @@ export function ProductDetailClient({ product, reviews }: Props) {
             <Plus className="h-4 w-4" />
           </Button>
         </div>
-        <Button onClick={() => handleAdd(false)} className="flex-1">
+        <Button onClick={() => handleAdd(false)} className="flex-1" disabled={isAddDisabled}>
           <ShoppingBag className="mr-2 h-4 w-4" /> Add to Cart
         </Button>
-        <Button onClick={() => handleAdd(true)} variant="secondary">
+        <Button onClick={() => handleAdd(true)} variant="secondary" disabled={isAddDisabled}>
           Buy Now
         </Button>
         <Button variant="outline" size="icon" onClick={toggleWishlist} aria-label="Wishlist">
           <Heart className={`h-4 w-4 ${wished ? 'fill-destructive text-destructive' : ''}`} />
         </Button>
       </div>
+
+      {isFood && !isWithinRange && (
+        <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-3.5 text-xs text-destructive space-y-1">
+          <p className="font-semibold flex items-center gap-1.5">
+            <span className="text-base">🚫</span> Delivery Range Restriction
+          </p>
+          <p className="text-muted-foreground leading-relaxed">
+            {status === 'pending'
+              ? 'Please set your delivery location in the header to verify food delivery availability.'
+              : 'Range se bahar hai isliye order nahi kar sakte. We only deliver food within 6 km of our Kalighat kitchen.'}
+          </p>
+        </div>
+      )}
 
       <AddonDialog
         productName={product.name}

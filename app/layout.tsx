@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { AuthProvider } from '@/components/providers/auth-provider';
+import { LocationProvider } from '@/components/providers/location-provider';
 import { CartProvider } from '@/components/providers/cart-provider';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -26,10 +27,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
         <ThemeProvider>
           <AuthProvider>
-            <CartProvider>
-              {children}
-              <Toaster richColors position="top-right" />
-            </CartProvider>
+            <LocationProvider>
+              <CartProvider>
+                {children}
+                <Toaster richColors position="top-right" />
+              </CartProvider>
+            </LocationProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

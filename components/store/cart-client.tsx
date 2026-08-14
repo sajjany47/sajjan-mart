@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/components/providers/cart-provider';
 import { useAuth } from '@/components/providers/auth-provider';
+import { useLocation } from '@/components/providers/location-provider';
 import { supabase } from '@/lib/supabase/client';
 import { formatINR } from '@/lib/format';
 import { toast } from 'sonner';
@@ -78,8 +79,12 @@ function PujaNote({ date }: { date?: string }) {
 export function CartClient() {
   const { items, removeItem, updateQty, subtotal, clearCart, appliedCoupon, couponDiscount, applyCoupon, removeCoupon } = useCart();
   const { user } = useAuth();
+  const { isWithinRange } = useLocation();
   const [coupon, setCoupon] = useState('');
   const [config, setConfig] = useState<StoreConfigData | null>(null);
+
+  const hasFood = items.some((i) => i.productType === 'food');
+  const isCheckoutDisabled = hasFood && !isWithinRange;
 
   useEffect(() => {
     supabase
@@ -327,12 +332,25 @@ export function CartClient() {
               </div>
             </div>
 
+            {isCheckoutDisabled && (
+              <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-3.5 text-xs text-destructive">
+                <span className="font-semibold block">🚫 Delivery Blocked</span>
+                Your cart contains food items, but your delivery location is outside our 6 km kitchen range. Please remove food items or update your location in the header.
+              </div>
+            )}
+
             {user ? (
-              <Link href="/checkout" className="mt-5 block">
-                <Button className="w-full" size="lg">
-                  Checkout <ArrowRight className="ml-2 h-4 w-4" />
+              isCheckoutDisabled ? (
+                <Button className="mt-5 w-full cursor-not-allowed text-xs font-semibold" size="lg" disabled>
+                  Checkout (Out of Range)
                 </Button>
-              </Link>
+              ) : (
+                <Link href="/checkout" className="mt-5 block">
+                  <Button className="w-full" size="lg">
+                    Checkout <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              )
             ) : (
               <div className="mt-5 space-y-2">
                 <Link href="/login" className="block">

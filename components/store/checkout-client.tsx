@@ -14,6 +14,7 @@ import { formatINR, generateOrderNumber } from "@/lib/format";
 import { toast } from "sonner";
 import type { Address } from "@/lib/types";
 import { isFoodOpenNow, isPaymentModeAllowed, PAYMENT_METHODS, computeTotals, getTaxRate } from "@/lib/store-config-utils";
+import { geocodeAddress, getDistanceInKm, OUTLET_LAT, OUTLET_LNG } from "@/lib/location-utils";
 import { groupItemsBySection } from "@/lib/cart-sections";
 import { getDeliveryEstimate, QUICK_SERVICE_CONTACT } from "@/lib/delivery-estimate";
 
@@ -161,6 +162,37 @@ export function CheckoutClient() {
       toast.error("This payment method is not available.");
       return;
     }
+
+    if (hasFood) {
+      setLoading(true);
+      const addressString = `${address.line1}, ${address.city}, ${address.pincode}, India`;
+      try {
+        let geocodeResult = await geocodeAddress(addressString);
+        if (!geocodeResult) {
+          // Fallback to pincode only if full address search fails
+          const fallbackString = `${address.pincode}, ${address.city}, India`;
+          geocodeResult = await geocodeAddress(fallbackString);
+        }
+
+        if (!geocodeResult) {
+          setLoading(false);
+          toast.error("Could not verify delivery address location. Please check your address format or pincode.");
+          return;
+        }
+
+        const dist = getDistanceInKm(geocodeResult.lat, geocodeResult.lng, OUTLET_LAT, OUTLET_LNG);
+        if (dist > 6.0) {
+          setLoading(false);
+          toast.error(`Checkout failed: Delivery address is outside our 6 km food delivery range (Distance: ${dist.toFixed(2)} km).`);
+          return;
+        }
+      } catch (err) {
+        setLoading(false);
+        toast.error("Failed to verify delivery address range. Please check your internet connection.");
+        return;
+      }
+    }
+
     setLoading(true);
     const orderNumber = generateOrderNumber();
     const { data: order, error } = await supabase

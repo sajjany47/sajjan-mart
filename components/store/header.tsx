@@ -3,10 +3,11 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { ShoppingBag, Search, User, Menu, X, LayoutDashboard, LogOut, Heart, Sparkles } from 'lucide-react';
+import { ShoppingBag, Search, User, Menu, X, LayoutDashboard, LogOut, Heart, Sparkles, MapPin, AlertCircle, Compass, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,8 +17,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { useCart } from '@/components/providers/cart-provider';
 import { useAuth } from '@/components/providers/auth-provider';
+import { useLocation } from '@/components/providers/location-provider';
 import { supabase } from '@/lib/supabase/client';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { cn } from '@/lib/utils';
@@ -35,11 +44,27 @@ export function Header({ activeCategories }: { activeCategories: string[] }) {
   const { count } = useCart();
   const nav = NAV.filter((n) => !n.category || activeCategories.includes(n.category));
   const { user, profile, role, signOut } = useAuth();
+  const { coords, address, distance, status, loading, detectLocation, setLocationByAddress } = useLocation();
   const router = useRouter();
   const pathname = usePathname();
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState<number | null>(null);
+
+  const [locDialogOpen, setLocDialogOpen] = useState(false);
+  const [manualAddr, setManualAddr] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  async function handleAddressSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!manualAddr.trim()) return;
+    setSearchLoading(true);
+    const success = await setLocationByAddress(manualAddr);
+    setSearchLoading(false);
+    if (success) {
+      setLocDialogOpen(false);
+    }
+  }
 
   useEffect(() => {
     supabase
@@ -111,7 +136,140 @@ export function Header({ activeCategories }: { activeCategories: string[] }) {
           />
         </form>
 
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-1.5">
+          {/* Location Trigger (Desktop) */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLocDialogOpen(true)}
+            className={cn(
+              "hidden items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold md:flex transition-all",
+              status === 'granted' && "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/15",
+              status === 'out_of_range' && "bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/15"
+            )}
+          >
+            <MapPin className="h-3.5 w-3.5" />
+            <span className="max-w-[120px] truncate">
+              {status === 'granted'
+                ? address?.split(',')[0] || 'Within Range'
+                : status === 'out_of_range'
+                ? 'Out of Range'
+                : 'Set Location'}
+            </span>
+          </Button>
+
+          {/* Location Trigger (Mobile) */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setLocDialogOpen(true)}
+            className={cn(
+              "flex md:hidden",
+              status === 'granted' && "text-emerald-500",
+              status === 'out_of_range' && "text-rose-500"
+            )}
+            aria-label="Location"
+          >
+            <MapPin className="h-5 w-5" />
+          </Button>
+
+          {/* Location Dialog Content */}
+          <Dialog open={locDialogOpen} onOpenChange={setLocDialogOpen}>
+            <DialogContent className="sm:max-w-[400px]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 font-display text-lg">
+                  <MapPin className="h-5 w-5 text-primary" /> Delivery Location
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                  Food items are delivered within a 6 km radius of our Kalighat kitchen.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-3">
+                <Button
+                  onClick={async () => {
+                    const success = await detectLocation();
+                    if (success) setLocDialogOpen(false);
+                  }}
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-2 text-xs font-semibold"
+                >
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Compass className="h-4 w-4" />
+                  )}
+                  Detect My Location
+                </Button>
+
+                <div className="relative flex py-1 items-center">
+                  <div className="flex-grow border-t border-border"></div>
+                  <span className="flex-shrink mx-3 text-[10px] text-muted-foreground uppercase tracking-wider">or enter address</span>
+                  <div className="flex-grow border-t border-border"></div>
+                </div>
+
+                <form onSubmit={handleAddressSubmit} className="space-y-2">
+                  <Label htmlFor="address-search" className="text-xs font-semibold text-muted-foreground">Address / Pincode / Area</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="address-search"
+                      placeholder="e.g. 700026, Kalighat, Kolkata"
+                      value={manualAddr}
+                      onChange={(e) => setManualAddr(e.target.value)}
+                      disabled={searchLoading}
+                      className="text-xs"
+                    />
+                    <Button type="submit" size="sm" disabled={searchLoading || loading} className="text-xs">
+                      {searchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Check'}
+                    </Button>
+                  </div>
+                </form>
+
+                {status !== 'pending' && (
+                  <div className={cn(
+                    "rounded-xl border p-3.5 text-xs space-y-1.5 shadow-sm transition-all",
+                    status === 'granted' && "bg-emerald-500/5 border-emerald-500/20 text-emerald-900 dark:text-emerald-300",
+                    status === 'out_of_range' && "bg-rose-500/5 border-rose-500/20 text-rose-900 dark:text-rose-300",
+                    status === 'denied' && "bg-amber-500/5 border-amber-500/20 text-amber-900 dark:text-amber-300"
+                  )}>
+                    <div className="flex items-center gap-2 font-semibold">
+                      {status === 'granted' ? (
+                        <>
+                          <MapPin className="h-3.5 w-3.5 text-emerald-500" />
+                          <span>Within Food Delivery Range</span>
+                        </>
+                      ) : status === 'out_of_range' ? (
+                        <>
+                          <AlertCircle className="h-3.5 w-3.5 text-rose-500" />
+                          <span>Outside Food Delivery Range</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
+                          <span>Location Access Denied</span>
+                        </>
+                      )}
+                    </div>
+                    {address && (
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        <strong className="text-foreground font-medium">Address:</strong> {address}
+                      </p>
+                    )}
+                    {distance !== null && (
+                      <p className="text-[11px] font-medium">
+                        Distance: <span className="font-bold">{distance.toFixed(2)} km</span> (Limit: 6 km)
+                      </p>
+                    )}
+                    {status === 'out_of_range' && (
+                      <p className="text-[11px] text-rose-600/90 dark:text-rose-400/95 font-semibold mt-1">
+                        Range se bahar hai isliye order nahi kar sakte.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <ThemeToggle />
 
           <DropdownMenu>

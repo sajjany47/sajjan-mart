@@ -1,38 +1,50 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { ProductCard } from '@/components/store/product-card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Slider } from '@/components/ui/slider';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ProductCard } from "@/components/store/product-card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Clock, Loader2, Search, SlidersHorizontal, Utensils, X } from 'lucide-react';
-import { supabase } from '@/lib/supabase/client';
-import type { FoodType, Product } from '@/lib/types';
-import { isFoodOpenNow } from '@/lib/store-config-utils';
+} from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Clock,
+  Loader2,
+  Search,
+  SlidersHorizontal,
+  Utensils,
+  X,
+  MapPin,
+  Compass,
+  AlertCircle,
+} from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
+import type { FoodType, Product } from "@/lib/types";
+import { isFoodOpenNow } from "@/lib/store-config-utils";
+import { useLocation } from "@/components/providers/location-provider";
+import Link from "next/link";
 
 const SORTS = [
-  { value: 'relevance', label: 'Recommended' },
-  { value: 'rating', label: 'Top Rated' },
-  { value: 'price-asc', label: 'Price: Low to High' },
-  { value: 'price-desc', label: 'Price: High to Low' },
-  { value: 'newest', label: 'Newest' },
+  { value: "relevance", label: "Recommended" },
+  { value: "rating", label: "Top Rated" },
+  { value: "price-asc", label: "Price: Low to High" },
+  { value: "price-desc", label: "Price: High to Low" },
+  { value: "newest", label: "Newest" },
 ];
 
 const PAGE_SIZE = 12;
@@ -56,10 +68,54 @@ interface Props {
   showBrands?: boolean;
   filters: {
     categories: { id: string; name: string; slug: string }[];
-    subCategories?: { id: string; name: string; slug: string; categoryId?: string }[];
+    subCategories?: {
+      id: string;
+      name: string;
+      slug: string;
+      categoryId?: string;
+    }[];
     brands: { id: string; name: string; slug: string }[];
   };
   searchParams: { [k: string]: string | string[] | undefined };
+}
+
+function FoodManualAddressForm({
+  checkAddress,
+  loading,
+}: {
+  checkAddress: (addr: string) => Promise<boolean>;
+  loading: boolean;
+}) {
+  const [addr, setAddr] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!addr.trim()) return;
+    setSubmitting(true);
+    await checkAddress(addr);
+    setSubmitting(false);
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="flex gap-2">
+      <Input
+        placeholder="e.g. Kalighat, Kolkata or pincode"
+        value={addr}
+        onChange={(e) => setAddr(e.target.value)}
+        disabled={loading || submitting}
+        className="text-xs bg-background"
+      />
+      <Button
+        type="submit"
+        size="sm"
+        disabled={loading || submitting}
+        className="text-xs"
+      >
+        {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Check"}
+      </Button>
+    </form>
+  );
 }
 
 export function CategoryProductsClient({
@@ -73,18 +129,28 @@ export function CategoryProductsClient({
   filters,
   searchParams,
 }: Props) {
-  const initialQ = typeof searchParams.q === 'string' ? searchParams.q : '';
+  const {
+    coords,
+    address,
+    distance,
+    status,
+    isWithinRange,
+    detectLocation,
+    setLocationByAddress,
+    loading: locLoading,
+  } = useLocation();
+  const initialQ = typeof searchParams.q === "string" ? searchParams.q : "";
   const maxPrice = isFood ? 1000 : 6000;
 
   const [q, setQ] = useState(initialQ);
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedFoodTypes, setSelectedFoodTypes] = useState<FoodType[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [selectedGender, setSelectedGender] = useState('');
+  const [selectedGender, setSelectedGender] = useState("");
   const [priceRange, setPriceRange] = useState<number[]>([0, maxPrice]);
   const [minRating, setMinRating] = useState(0);
   const [deals, setDeals] = useState(false);
-  const [sort, setSort] = useState('relevance');
+  const [sort, setSort] = useState("relevance");
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -94,10 +160,12 @@ export function CategoryProductsClient({
   useEffect(() => {
     if (isFood) {
       supabase
-        .from('settings')
-        .select('*')
+        .from("settings")
+        .select("*")
         .single()
-        .then(({ data }: any) => setStoreConfig(data as StoreConfigData | null));
+        .then(({ data }: any) =>
+          setStoreConfig(data as StoreConfigData | null),
+        );
     }
   }, [isFood]);
 
@@ -108,28 +176,45 @@ export function CategoryProductsClient({
   const buildParams = useCallback(
     (start: number, end: number) => {
       const queryParams = new URLSearchParams();
-      queryParams.set('paginate', 'true');
-      queryParams.set('start', String(start));
-      queryParams.set('end', String(end));
-      if (productType) queryParams.set('productType', productType);
-      if (q.trim()) queryParams.set('q', q.trim());
-      if (selectedCategory) queryParams.set('productCategory', selectedCategory);
+      queryParams.set("paginate", "true");
+      queryParams.set("start", String(start));
+      queryParams.set("end", String(end));
+      if (productType) queryParams.set("productType", productType);
+      if (q.trim()) queryParams.set("q", q.trim());
+      if (selectedCategory)
+        queryParams.set("productCategory", selectedCategory);
       if (selectedFoodTypes.length > 0) {
-        queryParams.set('foodType', selectedFoodTypes.join(','));
+        queryParams.set("foodType", selectedFoodTypes.join(","));
       }
       if (selectedBrands.length > 0) {
-        const ids = brands.filter((b) => selectedBrands.includes(b.slug)).map((b) => b.id);
-        if (ids.length > 0) queryParams.set('brandId', ids.join(','));
+        const ids = brands
+          .filter((b) => selectedBrands.includes(b.slug))
+          .map((b) => b.id);
+        if (ids.length > 0) queryParams.set("brandId", ids.join(","));
       }
-      if (priceRange[0] > 0) queryParams.set('minPrice', String(priceRange[0]));
-      if (priceRange[1] < maxPrice) queryParams.set('maxPrice', String(priceRange[1]));
-      if (minRating > 0) queryParams.set('minRating', String(minRating));
-      if (deals) queryParams.set('todayDeal', 'true');
-      if (selectedGender) queryParams.set('gender', selectedGender);
-      if (sort !== 'relevance') queryParams.set('sort', sort);
+      if (priceRange[0] > 0) queryParams.set("minPrice", String(priceRange[0]));
+      if (priceRange[1] < maxPrice)
+        queryParams.set("maxPrice", String(priceRange[1]));
+      if (minRating > 0) queryParams.set("minRating", String(minRating));
+      if (deals) queryParams.set("todayDeal", "true");
+      if (selectedGender) queryParams.set("gender", selectedGender);
+      if (sort !== "relevance") queryParams.set("sort", sort);
       return queryParams;
     },
-    [q, selectedCategory, selectedFoodTypes, selectedBrands, brands, priceRange, maxPrice, minRating, deals, selectedGender, sort, productType]
+    [
+      q,
+      selectedCategory,
+      selectedFoodTypes,
+      selectedBrands,
+      brands,
+      priceRange,
+      maxPrice,
+      minRating,
+      deals,
+      selectedGender,
+      sort,
+      productType,
+    ],
   );
 
   const hasMore = products.length < total;
@@ -145,13 +230,17 @@ export function CategoryProductsClient({
 
     async function fetchFirstPage() {
       try {
-        const res = await fetch(`/api/products?${buildParams(0, PAGE_SIZE - 1).toString()}`);
-        if (!res.ok) throw new Error('Failed to fetch products');
+        const res = await fetch(
+          `/api/products?${buildParams(0, PAGE_SIZE - 1).toString()}`,
+        );
+        if (!res.ok) throw new Error("Failed to fetch products");
         const data = await res.json();
-        const list: Product[] = Array.isArray(data) ? data : data.products ?? [];
+        const list: Product[] = Array.isArray(data)
+          ? data
+          : (data.products ?? []);
         if (isCancelled) return;
         setProducts(list);
-        setTotal(typeof data.total === 'number' ? data.total : list.length);
+        setTotal(typeof data.total === "number" ? data.total : list.length);
         setLoading(false);
       } catch (err) {
         if (!isCancelled) {
@@ -171,15 +260,24 @@ export function CategoryProductsClient({
 
   loadMoreRef.current = async () => {
     const offset = products.length;
-    if (loadingMoreRef.current || !hasMore || requestedOffsetRef.current === offset) return;
+    if (
+      loadingMoreRef.current ||
+      !hasMore ||
+      requestedOffsetRef.current === offset
+    )
+      return;
     requestedOffsetRef.current = offset;
     loadingMoreRef.current = true;
     setLoadingMore(true);
     try {
-      const res = await fetch(`/api/products?${buildParams(offset, offset + PAGE_SIZE - 1).toString()}`);
-      if (!res.ok) throw new Error('Failed to fetch products');
+      const res = await fetch(
+        `/api/products?${buildParams(offset, offset + PAGE_SIZE - 1).toString()}`,
+      );
+      if (!res.ok) throw new Error("Failed to fetch products");
       const data = await res.json();
-      const list: Product[] = Array.isArray(data) ? data : data.products ?? [];
+      const list: Product[] = Array.isArray(data)
+        ? data
+        : (data.products ?? []);
       setProducts((prev) => [...prev, ...list]);
     } catch {
       /* noop */
@@ -197,7 +295,7 @@ export function CategoryProductsClient({
       (entries) => {
         if (entries[0].isIntersecting) loadMoreRef.current();
       },
-      { rootMargin: '300px' }
+      { rootMargin: "300px" },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -205,26 +303,26 @@ export function CategoryProductsClient({
 
   function toggleFoodType(type: FoodType) {
     setSelectedFoodTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
     );
   }
 
   function toggleBrand(slug: string) {
     setSelectedBrands((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug],
     );
   }
 
   function clearAllFilters() {
-    setQ('');
-    setSelectedCategory('');
+    setQ("");
+    setSelectedCategory("");
     setSelectedFoodTypes([]);
     setSelectedBrands([]);
-    setSelectedGender('');
+    setSelectedGender("");
     setPriceRange([0, maxPrice]);
     setMinRating(0);
     setDeals(false);
-    setSort('relevance');
+    setSort("relevance");
   }
 
   const hasActiveFilters =
@@ -248,16 +346,31 @@ export function CategoryProductsClient({
           </h3>
           <div className="mt-3 space-y-2.5">
             {[
-              { type: 'veg' as FoodType, label: 'Pure Veg', color: 'emerald', dot: '🟢' },
-              { type: 'non_veg' as FoodType, label: 'Non-Veg', color: 'rose', dot: '🔴' },
-              { type: 'egg' as FoodType, label: 'Contains Egg', color: 'amber', dot: '🟡' },
+              {
+                type: "veg" as FoodType,
+                label: "Pure Veg",
+                color: "emerald",
+                dot: "🟢",
+              },
+              {
+                type: "non_veg" as FoodType,
+                label: "Non-Veg",
+                color: "rose",
+                dot: "🔴",
+              },
+              {
+                type: "egg" as FoodType,
+                label: "Contains Egg",
+                color: "amber",
+                dot: "🟡",
+              },
             ].map(({ type, label, color, dot }) => (
               <label
                 key={type}
                 className={`flex cursor-pointer items-center justify-between rounded-lg border p-2.5 transition-all ${
                   selectedFoodTypes.includes(type)
                     ? `border-${color}-500 bg-${color}-500/10 font-medium`
-                    : 'border-border hover:bg-accent'
+                    : "border-border hover:bg-accent"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -280,20 +393,24 @@ export function CategoryProductsClient({
           <h3 className="mb-3 text-sm font-semibold">Product Category</h3>
           <div className="grid grid-cols-2 gap-2">
             <Button
-              variant={selectedCategory === '' ? 'default' : 'outline'}
+              variant={selectedCategory === "" ? "default" : "outline"}
               size="sm"
               className="text-xs justify-center"
-              onClick={() => setSelectedCategory('')}
+              onClick={() => setSelectedCategory("")}
             >
               All
             </Button>
             {chips.map((c) => (
               <Button
                 key={c.value}
-                variant={selectedCategory === c.value ? 'default' : 'outline'}
+                variant={selectedCategory === c.value ? "default" : "outline"}
                 size="sm"
                 className="text-xs justify-center"
-                onClick={() => setSelectedCategory(selectedCategory === c.value ? '' : c.value)}
+                onClick={() =>
+                  setSelectedCategory(
+                    selectedCategory === c.value ? "" : c.value,
+                  )
+                }
               >
                 {c.label}
               </Button>
@@ -313,7 +430,10 @@ export function CategoryProductsClient({
                   checked={selectedBrands.includes(b.slug)}
                   onCheckedChange={() => toggleBrand(b.slug)}
                 />
-                <Label htmlFor={`brand-${b.slug}`} className="cursor-pointer text-sm font-normal">
+                <Label
+                  htmlFor={`brand-${b.slug}`}
+                  className="cursor-pointer text-sm font-normal"
+                >
                   {b.name}
                 </Label>
               </div>
@@ -329,10 +449,12 @@ export function CategoryProductsClient({
             {genderOptions.map((g) => (
               <Button
                 key={g.value}
-                variant={selectedGender === g.value ? 'default' : 'outline'}
+                variant={selectedGender === g.value ? "default" : "outline"}
                 size="sm"
                 className="text-xs justify-center"
-                onClick={() => setSelectedGender(selectedGender === g.value ? '' : g.value)}
+                onClick={() =>
+                  setSelectedGender(selectedGender === g.value ? "" : g.value)
+                }
               >
                 {g.label}
               </Button>
@@ -369,12 +491,12 @@ export function CategoryProductsClient({
           {[0, 3, 4, 4.5].map((r) => (
             <Button
               key={r}
-              variant={minRating === r ? 'default' : 'outline'}
+              variant={minRating === r ? "default" : "outline"}
               size="sm"
               className="text-xs justify-center"
               onClick={() => setMinRating(r)}
             >
-              {r === 0 ? 'All' : `${r}★ & above`}
+              {r === 0 ? "All" : `${r}★ & above`}
             </Button>
           ))}
         </div>
@@ -382,23 +504,144 @@ export function CategoryProductsClient({
 
       <div className="flex items-center gap-2">
         <Checkbox checked={deals} onCheckedChange={(v) => setDeals(!!v)} />
-        <Label className="cursor-pointer text-sm font-normal">Today&apos;s Deals only</Label>
+        <Label className="cursor-pointer text-sm font-normal">
+          Today&apos;s Deals only
+        </Label>
       </div>
 
       {hasActiveFilters && (
-        <Button type="button" variant="secondary" className="w-full text-xs" onClick={clearAllFilters}>
+        <Button
+          type="button"
+          variant="secondary"
+          className="w-full text-xs"
+          onClick={clearAllFilters}
+        >
           <X className="mr-1.5 h-3.5 w-3.5" /> Clear All Filters
         </Button>
       )}
     </div>
   );
 
+  if (isFood && !isWithinRange) {
+    return (
+      <div className="space-y-4 pb-12">
+        <div>
+          <h1 className="font-display text-xl font-semibold sm:text-2xl">
+            {title}
+          </h1>
+          {description && (
+            <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+              {description}
+            </p>
+          )}
+        </div>
+
+        <div className="mx-auto max-w-lg mt-8 rounded-2xl border border-border bg-card/60 p-6 shadow-xl backdrop-blur-md text-center space-y-6">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+            <MapPin className="h-8 w-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-lg font-bold tracking-tight">
+              {status === "pending" || status === "checking"
+                ? "Check Delivery Availability"
+                : "Delivery Range Exceeded"}
+            </h2>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {status === "pending" || status === "checking"
+                ? "We only deliver fresh food within a 6 km radius of our Kalighat kitchen. Please set your location to check if we deliver to you."
+                : "Range se bahar hai isliye order nahi kar sakte. We only deliver fresh food within a 6 km radius of our outlet at 9, Satish Mukherjee Rd, Kalighat."}
+            </p>
+          </div>
+
+          {status !== "pending" && distance !== null && (
+            <div className="rounded-xl bg-destructive/5 border border-destructive/15 p-3 text-xs">
+              <span className="font-semibold text-destructive">
+                Your Location:{" "}
+              </span>
+              <span className="text-muted-foreground">
+                {distance.toFixed(2)} km away
+              </span>
+              <span className="block text-[10px] text-muted-foreground/80 mt-0.5 font-medium">
+                Maximum range: 6.00 km
+              </span>
+            </div>
+          )}
+
+          <div className="space-y-4 pt-2">
+            <Button
+              onClick={detectLocation}
+              disabled={locLoading}
+              className="w-full flex items-center justify-center gap-2 text-xs font-semibold"
+            >
+              {locLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Compass className="h-4 w-4" />
+              )}
+              Detect My Location
+            </Button>
+
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-border"></div>
+              <span className="flex-shrink mx-3 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                or enter address
+              </span>
+              <div className="flex-grow border-t border-border"></div>
+            </div>
+
+            <FoodManualAddressForm
+              checkAddress={setLocationByAddress}
+              loading={locLoading}
+            />
+          </div>
+
+          <div className="border-t border-border pt-4 text-left">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
+              Browse other categories
+            </h3>
+            <div className="grid grid-cols-3 gap-2">
+              <Link
+                href="/category/natural-products"
+                className="flex flex-col items-center justify-center p-2 rounded-lg border border-border bg-background hover:bg-accent text-center transition-all font-sans"
+              >
+                <span className="text-[10px] font-semibold text-foreground">
+                  Natural
+                </span>
+              </Link>
+              <Link
+                href="/category/general"
+                className="flex flex-col items-center justify-center p-2 rounded-lg border border-border bg-background hover:bg-accent text-center transition-all font-sans"
+              >
+                <span className="text-[10px] font-semibold text-foreground">
+                  General
+                </span>
+              </Link>
+              <Link
+                href="/puja"
+                className="flex flex-col items-center justify-center p-2 rounded-lg border border-border bg-background hover:bg-accent text-center transition-all font-sans"
+              >
+                <span className="text-[10px] font-semibold text-foreground">
+                  Puja Samagri
+                </span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 pb-12">
       <div>
-        <h1 className="font-display text-xl font-semibold sm:text-2xl">{title}</h1>
+        <h1 className="font-display text-xl font-semibold sm:text-2xl">
+          {title}
+        </h1>
         {description && (
-          <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">{description}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+            {description}
+          </p>
         )}
       </div>
 
@@ -406,10 +649,12 @@ export function CategoryProductsClient({
         <div className="flex items-center gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm">
           <Clock className="h-4 w-4 shrink-0 text-destructive" />
           <p className="text-xs">
-            <span className="font-semibold text-destructive">The kitchen is currently closed.</span>{' '}
+            <span className="font-semibold text-destructive">
+              The kitchen is currently closed.
+            </span>{" "}
             <span className="text-muted-foreground">
-              Orders reopen at {storeConfig.food_open_time}. Hours: {storeConfig.food_open_time} -{' '}
-              {storeConfig.food_close_time}.
+              Orders reopen at {storeConfig.food_open_time}. Hours:{" "}
+              {storeConfig.food_open_time} - {storeConfig.food_close_time}.
             </span>
           </p>
         </div>
@@ -418,22 +663,26 @@ export function CategoryProductsClient({
       {chips.length > 0 && (
         <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
           <Button
-            variant={selectedCategory === '' ? 'secondary' : 'ghost'}
+            variant={selectedCategory === "" ? "secondary" : "ghost"}
             size="sm"
             className="rounded-xl text-xs whitespace-nowrap font-medium"
-            onClick={() => setSelectedCategory('')}
+            onClick={() => setSelectedCategory("")}
           >
             All
           </Button>
           {chips.map((c) => (
             <Button
               key={c.value}
-              variant={selectedCategory === c.value ? 'secondary' : 'ghost'}
+              variant={selectedCategory === c.value ? "secondary" : "ghost"}
               size="sm"
               className={`rounded-xl text-xs whitespace-nowrap font-medium transition-all ${
-                selectedCategory === c.value ? 'bg-primary/15 text-primary font-semibold' : ''
+                selectedCategory === c.value
+                  ? "bg-primary/15 text-primary font-semibold"
+                  : ""
               }`}
-              onClick={() => setSelectedCategory(selectedCategory === c.value ? '' : c.value)}
+              onClick={() =>
+                setSelectedCategory(selectedCategory === c.value ? "" : c.value)
+              }
             >
               {c.label}
             </Button>
@@ -447,12 +696,16 @@ export function CategoryProductsClient({
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder={isFood ? 'Search pizza, burger, biryani, momos...' : 'Search products...'}
+            placeholder={
+              isFood
+                ? "Search pizza, burger, biryani, momos..."
+                : "Search products..."
+            }
             className="bg-card pl-9"
           />
           {q && (
             <button
-              onClick={() => setQ('')}
+              onClick={() => setQ("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
             >
               <X className="h-4 w-4" />
@@ -477,7 +730,9 @@ export function CategoryProductsClient({
           <SheetTrigger asChild>
             <Button variant="outline" className="lg:hidden relative">
               <SlidersHorizontal className="h-4 w-4" />
-              {hasActiveFilters && <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-primary" />}
+              {hasActiveFilters && (
+                <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-primary" />
+              )}
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-80 overflow-y-auto">
@@ -492,14 +747,17 @@ export function CategoryProductsClient({
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Showing <span className="font-semibold text-foreground">{products.length}</span> of{' '}
-        <span className="font-semibold text-foreground">{total}</span>{' '}
-        {isFood ? 'dishes' : 'products'}
+        Showing{" "}
+        <span className="font-semibold text-foreground">{products.length}</span>{" "}
+        of <span className="font-semibold text-foreground">{total}</span>{" "}
+        {isFood ? "dishes" : "products"}
       </p>
 
       <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
         <aside className="hidden lg:block">
-          <div className="sticky top-24 rounded-xl border border-border bg-card p-4">{FilterPanel}</div>
+          <div className="sticky top-24 rounded-xl border border-border bg-card p-4">
+            {FilterPanel}
+          </div>
         </aside>
 
         <div className="relative">
@@ -508,7 +766,7 @@ export function CategoryProductsClient({
               <div className="flex flex-col items-center gap-2 rounded-xl bg-card/90 px-6 py-4 shadow-lg">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 <span className="text-xs font-medium text-muted-foreground">
-                  {isFood ? 'Loading food items...' : 'Loading products...'}
+                  {isFood ? "Loading food items..." : "Loading products..."}
                 </span>
               </div>
             </div>
@@ -516,7 +774,10 @@ export function CategoryProductsClient({
           {loading ? (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="space-y-3 rounded-xl border border-border bg-card p-3">
+                <div
+                  key={i}
+                  className="space-y-3 rounded-xl border border-border bg-card p-3"
+                >
                   <Skeleton className="aspect-square w-full rounded-lg" />
                   <Skeleton className="h-4 w-3/4" />
                   <Skeleton className="h-3 w-1/2" />
@@ -529,11 +790,17 @@ export function CategoryProductsClient({
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary mb-3">
                 <Utensils className="h-7 w-7" />
               </div>
-              <h3 className="text-base font-semibold">No {isFood ? 'food items' : 'products'} found</h3>
+              <h3 className="text-base font-semibold">
+                No {isFood ? "food items" : "products"} found
+              </h3>
               <p className="mt-1 text-sm text-muted-foreground max-w-sm">
                 Try a different search or clear your filters to see more.
               </p>
-              <Button variant="outline" className="mt-4 text-xs" onClick={clearAllFilters}>
+              <Button
+                variant="outline"
+                className="mt-4 text-xs"
+                onClick={clearAllFilters}
+              >
                 Clear all filters
               </Button>
             </div>
@@ -545,12 +812,16 @@ export function CategoryProductsClient({
                 ))}
               </div>
 
-              {hasMore && <div ref={sentinelRef} className="h-px w-full" aria-hidden />}
+              {hasMore && (
+                <div ref={sentinelRef} className="h-px w-full" aria-hidden />
+              )}
 
               {loadingMore && (
                 <div className="mt-8 flex items-center justify-center gap-2 py-4">
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                  <span className="text-xs font-medium text-muted-foreground">Loading more...</span>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Loading more...
+                  </span>
                 </div>
               )}
             </>
