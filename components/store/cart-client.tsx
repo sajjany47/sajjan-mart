@@ -171,11 +171,11 @@ export function CartClient() {
                   {section.items.length} item(s)
                 </span>
               </div>
-              <div className="flex items-center gap-2 border-b px-4 py-1.5 text-xs text-muted-foreground">
-                <Truck className="h-3.5 w-3.5 shrink-0" />
+              <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-1.5 text-xs">
+                <Truck className="h-3.5 w-3.5 shrink-0 text-primary" />
                 <span>
-                  <span className="font-semibold text-foreground">{getDeliveryEstimate(section.key).title}:</span>{' '}
-                  {getDeliveryEstimate(section.key).detail}
+                  <span className="font-medium text-foreground">{getDeliveryEstimate(section.key).title}:</span>{' '}
+                  <span className="font-semibold text-primary">{getDeliveryEstimate(section.key).detail}</span>
                 </span>
               </div>
               <div className="space-y-3 p-3">

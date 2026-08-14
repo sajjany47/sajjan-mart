@@ -553,10 +553,10 @@ export function CheckoutClient() {
                     <span className="text-[11px] font-semibold">{section.label}</span>
                   </div>
                   <div className="flex items-center gap-1.5 border-b bg-background px-2 py-1 text-xs text-muted-foreground">
-                    <Truck className="h-3 w-3 shrink-0" />
+                    <Truck className="h-3 w-3 shrink-0 text-primary" />
                     <span>
                       <span className="font-medium text-foreground">{getDeliveryEstimate(section.key).title}:</span>{" "}
-                      {getDeliveryEstimate(section.key).detail}
+                      <span className="font-semibold text-primary">{getDeliveryEstimate(section.key).detail}</span>
                     </span>
                   </div>
                   {section.items.map((i) => (
