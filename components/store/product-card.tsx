@@ -20,6 +20,7 @@ export function ProductCard({ product }: { product: Product }) {
   const cartItem = items.find((i) => i.type === 'product' && i.productId === product.id);
   const [wished, setWished] = useState(false);
   const [addonOpen, setAddonOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const image = product.product_images?.[0]?.url;
   const price = discountedPrice(product.sales_price, product.discount_percent);
 
@@ -88,13 +89,14 @@ function handleAdd() {
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all hover:shadow-lg">
       <Link href={`/product/${product.slug}`} className="relative aspect-square overflow-hidden bg-muted">
-        {image ? (
+        {image && !imgError ? (
           <Image
             src={image}
             alt={product.name}
             fill
             sizes="(max-width: 768px) 50vw, 25vw"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground">

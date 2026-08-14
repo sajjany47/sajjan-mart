@@ -1,12 +1,17 @@
 import { notFound } from 'next/navigation';
 import { StoreShell } from '@/components/store/store-shell';
-import { ShopClient } from '@/components/store/shop-client';
-import { FoodShopClient } from '@/components/store/food-shop-client';
-import { ZeroChargesBanner } from '@/components/store/zero-charges-banner';
+import { CategoryProductsClient } from '@/components/store/category-products-client';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { prisma } from '@/lib/prisma/client';
 
 export const revalidate = 60;
+
+const FOOD_CATEGORIES = [
+  { value: 'pizza', label: 'Pizza' },
+  { value: 'momos', label: 'Momos' },
+  { value: 'breakfast', label: 'Breakfast' },
+  { value: 'snacks', label: 'Snacks' },
+];
 
 const NATURAL_PRODUCT_CATEGORIES = [
   { value: 'fruits_vegetables', label: 'Fruits & Veg' },
@@ -131,32 +136,24 @@ export default async function CategoryPage({
   const isGeneralCategory = params.slug === 'general';
   const isPujaSamagriCategory = params.slug === 'puja-samagri';
 
-  const productType = isNaturalCategory ? 'natural' : isGeneralCategory ? 'general' : isPujaSamagriCategory ? 'puja_samagri' : undefined;
-  const allProductCategories = isNaturalCategory ? NATURAL_PRODUCT_CATEGORIES : isGeneralCategory ? GENERAL_PRODUCT_CATEGORIES : isPujaSamagriCategory ? PUJA_SAMAGRI_CATEGORIES : undefined;
+  const productType = isNaturalCategory ? 'natural' : isGeneralCategory ? 'general' : isPujaSamagriCategory ? 'puja_samagri' : 'food';
+  const allProductCategories = isNaturalCategory ? NATURAL_PRODUCT_CATEGORIES : isGeneralCategory ? GENERAL_PRODUCT_CATEGORIES : isPujaSamagriCategory ? PUJA_SAMAGRI_CATEGORIES : FOOD_CATEGORIES;
   const productCategories = allProductCategories ? await filterCategoriesByAvailability(allProductCategories, productType) : undefined;
 
   return (
     <StoreShell>
-      <div className="container-px mx-auto max-w-7xl py-6">
-        <ZeroChargesBanner />
-        {isFoodCategory ? (
-          <FoodShopClient filters={filters} searchParams={sp} />
-        ) : (
-          <>
-            <div className="mb-6 rounded-2xl bg-gradient-to-r from-primary/10 to-accent p-6">
-              <h1 className="font-display text-3xl font-semibold">{category.name}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">{category.description}</p>
-            </div>
-            <ShopClient
-              filters={filters}
-              searchParams={sp}
-              productType={productType}
-              productCategories={productCategories}
-              genderOptions={isGeneralCategory ? GENERAL_GENDER_OPTIONS : undefined}
-              showBrands={isGeneralCategory}
-            />
-          </>
-        )}
+      <div className="container-px mx-auto max-w-7xl py-5">
+        <CategoryProductsClient
+          title={category.name}
+          description={category.description ?? undefined}
+          isFood={isFoodCategory}
+          productType={productType}
+          productCategories={productCategories}
+          genderOptions={isGeneralCategory ? GENERAL_GENDER_OPTIONS : undefined}
+          showBrands={isGeneralCategory}
+          filters={filters}
+          searchParams={sp}
+        />
       </div>
     </StoreShell>
   );

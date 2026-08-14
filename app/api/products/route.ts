@@ -24,7 +24,12 @@ export async function GET(request: NextRequest) {
     const minRating = searchParams.get('minRating') || searchParams.get('rating_min');
     const q = searchParams.get('q') || searchParams.get('name_like');
     const sort = searchParams.get('sort') || searchParams.get('order');
+    const gender = searchParams.get('gender');
     const distinctCategories = searchParams.get('distinctCategories') === 'true';
+    const paginate = searchParams.get('paginate') === 'true';
+    const start = parseInt(searchParams.get('start') || '0', 10) || 0;
+    const endRaw = searchParams.get('end');
+    const end = endRaw ? parseInt(endRaw, 10) : null;
 
     const productInclude = {
       productImages: true,
@@ -57,7 +62,14 @@ export async function GET(request: NextRequest) {
     if (popular === 'true') where.isPopular = true;
     if (todayDeal === 'true') where.isTodayDeal = true;
     if (categoryId) where.categoryId = categoryId;
-    if (brandId) where.brandId = brandId;
+    if (brandId) {
+      const ids = brandId.split(',').map((c) => c.trim()).filter(Boolean);
+      if (ids.length === 1) {
+        where.brandId = ids[0];
+      } else if (ids.length > 1) {
+        where.brandId = { in: ids };
+      }
+    }
 
     if (categorySlug) {
       where.category = { slug: categorySlug };
@@ -91,6 +103,16 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    if (gender) {
+      if (gender === 'all') {
+        where.gender = { in: ['all'] };
+      } else {
+        const genderList =
+          gender === 'men' || gender === 'women' ? [gender, 'all', 'men_women_both'] : [gender, 'all'];
+        where.gender = { in: genderList };
+      }
+    }
+
     if (minPrice || maxPrice) {
       where.salesPrice = {};
       if (minPrice) where.salesPrice.gte = parseFloat(minPrice);
@@ -110,6 +132,33 @@ export async function GET(request: NextRequest) {
     else if (sort === 'price-desc') orderBy = { salesPrice: 'desc' };
     else if (sort === 'rating') orderBy = { rating: 'desc' };
     else if (sort === 'newest') orderBy = { createdAt: 'desc' };
+
+    if (paginate) {
+      const total = await prisma.product.count({ where });
+      const take = end !== null && end >= start ? end - start + 1 : undefined;
+      const items = await prisma.product.findMany({
+        where,
+        include: productInclude,
+        orderBy,
+        skip: start,
+        ...(take !== undefined ? { take } : {}),
+      });
+      if (distinctCategories) {
+        const availableCategories = await prisma.product.findMany({
+          where: { ...where, isActive: true },
+          select: { productCategory: true },
+          distinct: ['productCategory'],
+        });
+        return jsonResponse({
+          products: items,
+          total,
+          availableCategories: availableCategories
+            .map((c) => c.productCategory)
+            .filter(Boolean),
+        });
+      }
+      return jsonResponse({ products: items, total });
+    }
 
     const items = await prisma.product.findMany({
       where,

@@ -1,5 +1,12 @@
 # AGENTS.md — Project Change Log
 
+## 2026-08-14: Compact product-first category pages + server-side product pagination
+
+- **New shared client `components/store/category-products-client.tsx`** — replaces `ShopClient` + `FoodShopClient` on all four category pages (`/category/food`, `/natural-products`, `/general`, `/puja-samagri`). Product-first layout: navbar → compact category name → horizontally scrollable subcategory chips → search + Filter (mobile drawer) + Sort → product count (“Showing X of Y”) → 2-col grid (mobile) / 4-col + sidebar (desktop) → “Load More”. No hero banner / marketing headers.
+- `app/api/products/route.ts`: added server-side pagination (`paginate=true`, `start`, `end` → `{ products, total }`) plus new filters `gender` (with men/women `all`/`men_women_both` expansion) and comma-separated `brandId`. Non-paginated shape unchanged.
+- `ProductCard`: broken-image fallback — `onError` switches to the ShoppingBag placeholder so broken images never render.
+- `app/category/[slug]/page.tsx`: renders the one shared compact client for all 4 category types; food category passes its `FOOD_CATEGORIES` chips for availability filtering like natural/general/puja. `ShopClient` remains only on `/shop`.
+
 ## 2026-08-10: Support tickets (customer + admin)
 - `SupportTicket` model extended: `order_id` (link to Order), unique `ticket_number` (auto `TKT-...`), `remarks` JSON array (`{remark, by, createdAt, status}`), `updated_at`. Pushed to DB; one existing row backfilled via SQL (`psql`).
 - Type `SupportRemark` + `SupportTicket` added; `support_tickets` include map (`user`, `order`) for relation serialization.
