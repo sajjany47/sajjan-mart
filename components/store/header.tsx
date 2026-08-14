@@ -260,9 +260,16 @@ export function Header({ activeCategories }: { activeCategories: string[] }) {
                       </p>
                     )}
                     {status === 'out_of_range' && (
-                      <p className="text-[11px] text-rose-600/90 dark:text-rose-400/95 font-semibold mt-1">
-                        Range se bahar hai isliye order nahi kar sakte.
-                      </p>
+                      <div className="space-y-1.5 mt-1">
+                        <p className="text-[11px] text-rose-600/90 dark:text-rose-400/95 font-semibold">
+                          🚫 Food order nahi kar sakte — range se bahar hai.
+                        </p>
+                        <div className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1.5">
+                          <p className="text-[11px] text-emerald-700 dark:text-emerald-400 leading-relaxed">
+                            ✅ <strong>Natural Products, General &amp; Puja Samagri</strong> are available — no range limit.
+                          </p>
+                        </div>
+                      </div>
                     )}
                   </div>
                 )}

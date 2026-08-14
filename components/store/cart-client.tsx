@@ -333,9 +333,25 @@ export function CartClient() {
             </div>
 
             {isCheckoutDisabled && (
-              <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-3.5 text-xs text-destructive">
-                <span className="font-semibold block">🚫 Delivery Blocked</span>
-                Your cart contains food items, but your delivery location is outside our 6 km kitchen range. Please remove food items or update your location in the header.
+              <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-xs space-y-2">
+                <div className="flex items-start gap-2">
+                  <span className="text-base">🚫</span>
+                  <div>
+                    <p className="font-bold text-destructive">Food Delivery Restricted</p>
+                    <p className="text-muted-foreground mt-0.5 leading-relaxed">
+                      Aapka location hamari <strong className="text-foreground">6 km food delivery range se bahar hai</strong>, isliye food items ka checkout block hai.
+                    </p>
+                  </div>
+                </div>
+                <div className="rounded-lg bg-emerald-500/5 border border-emerald-500/20 px-3 py-2 flex items-start gap-2">
+                  <span className="text-sm">✅</span>
+                  <p className="text-emerald-700 dark:text-emerald-400 leading-relaxed">
+                    <strong>Natural Products, General Products &amp; Puja Samagri</strong> are available without any range restriction — you can order them freely.
+                  </p>
+                </div>
+                <p className="text-muted-foreground">
+                  To order food, please remove food items from your cart or update your delivery location from the header.
+                </p>
               </div>
             )}
 

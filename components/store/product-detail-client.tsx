@@ -132,15 +132,24 @@ export function ProductDetailClient({ product, reviews }: Props) {
       </div>
 
       {isFood && !isWithinRange && (
-        <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-3.5 text-xs text-destructive space-y-1">
-          <p className="font-semibold flex items-center gap-1.5">
-            <span className="text-base">🚫</span> Delivery Range Restriction
-          </p>
-          <p className="text-muted-foreground leading-relaxed">
-            {status === 'pending'
-              ? 'Please set your delivery location in the header to verify food delivery availability.'
-              : 'Range se bahar hai isliye order nahi kar sakte. We only deliver food within 6 km of our Kalighat kitchen.'}
-          </p>
+        <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-xs space-y-2">
+          <div className="flex items-start gap-2">
+            <span className="text-base">🚫</span>
+            <div>
+              <p className="font-bold text-destructive">Food Delivery Not Available Here</p>
+              <p className="text-muted-foreground mt-0.5 leading-relaxed">
+                {status === 'pending'
+                  ? 'Please set your delivery location in the header (📍) to check food delivery availability.'
+                  : 'Aapka area hamari 6 km food delivery range se bahar hai, isliye food order nahi kar sakte.'}
+              </p>
+            </div>
+          </div>
+          <div className="rounded-lg bg-emerald-500/5 border border-emerald-500/20 px-3 py-2 flex items-center gap-2">
+            <span>✅</span>
+            <p className="text-emerald-700 dark:text-emerald-400">
+              <strong>Natural Products, General &amp; Puja</strong> are available — no delivery range limit.
+            </p>
+          </div>
         </div>
       )}
 

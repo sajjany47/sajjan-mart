@@ -536,39 +536,60 @@ export function CategoryProductsClient({
           )}
         </div>
 
-        <div className="mx-auto max-w-lg mt-8 rounded-2xl border border-border bg-card/60 p-6 shadow-xl backdrop-blur-md text-center space-y-6">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-            <MapPin className="h-8 w-8" />
+        {/* Restricted + Available notice strip */}
+        <div className="grid grid-cols-2 gap-3 mt-6">
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3.5 flex items-start gap-3">
+            <span className="text-xl mt-0.5">🚫</span>
+            <div>
+              <p className="text-xs font-bold text-destructive">Food Ordering</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                Not available outside 6 km of our Kalighat kitchen
+              </p>
+            </div>
+          </div>
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3.5 flex items-start gap-3">
+            <span className="text-xl mt-0.5">✅</span>
+            <div>
+              <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">All Other Categories</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                Natural, General &amp; Puja — available everywhere
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-lg mt-6 rounded-2xl border border-border bg-card/60 p-6 shadow-xl backdrop-blur-md text-center space-y-5">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+            <MapPin className="h-7 w-7" />
           </div>
 
-          <div className="space-y-2">
-            <h2 className="text-lg font-bold tracking-tight">
+          <div className="space-y-1.5">
+            <h2 className="text-base font-bold tracking-tight">
               {status === "pending" || status === "checking"
-                ? "Check Delivery Availability"
-                : "Delivery Range Exceeded"}
+                ? "Verify Your Location for Food Delivery"
+                : "Food Delivery Not Available at Your Location"}
             </h2>
             <p className="text-xs text-muted-foreground leading-relaxed">
               {status === "pending" || status === "checking"
-                ? "We only deliver fresh food within a 6 km radius of our Kalighat kitchen. Please set your location to check if we deliver to you."
-                : "Range se bahar hai isliye order nahi kar sakte. We only deliver fresh food within a 6 km radius of our outlet at 9, Satish Mukherjee Rd, Kalighat."}
+                ? "Food delivery is limited to a 6 km radius around our outlet. Set your location below to check availability."
+                : <>Aapka area hamari 6 km food delivery range se bahar hai, <strong className="text-foreground">isliye food order nahi kar sakte.</strong> Baaki sabhi categories mein aap freely order kar sakte hain.</>}
             </p>
           </div>
 
           {status !== "pending" && distance !== null && (
-            <div className="rounded-xl bg-destructive/5 border border-destructive/15 p-3 text-xs">
-              <span className="font-semibold text-destructive">
-                Your Location:{" "}
-              </span>
-              <span className="text-muted-foreground">
-                {distance.toFixed(2)} km away
-              </span>
-              <span className="block text-[10px] text-muted-foreground/80 mt-0.5 font-medium">
-                Maximum range: 6.00 km
-              </span>
+            <div className="rounded-xl bg-destructive/5 border border-destructive/15 p-3 text-xs flex items-center justify-between">
+              <div className="text-left">
+                <span className="font-semibold text-destructive block">Your Distance</span>
+                <span className="text-muted-foreground text-[11px]">from our Kalighat kitchen</span>
+              </div>
+              <div className="text-right">
+                <span className="text-lg font-bold text-destructive">{distance.toFixed(1)} km</span>
+                <span className="text-[10px] text-muted-foreground block">Limit: 6 km</span>
+              </div>
             </div>
           )}
 
-          <div className="space-y-4 pt-2">
+          <div className="space-y-3">
             <Button
               onClick={detectLocation}
               disabled={locLoading}
@@ -582,7 +603,7 @@ export function CategoryProductsClient({
               Detect My Location
             </Button>
 
-            <div className="relative flex py-1 items-center">
+            <div className="relative flex py-0.5 items-center">
               <div className="flex-grow border-t border-border"></div>
               <span className="flex-shrink mx-3 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
                 or enter address
@@ -595,37 +616,42 @@ export function CategoryProductsClient({
               loading={locLoading}
             />
           </div>
+        </div>
 
-          <div className="border-t border-border pt-4 text-left">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
-              Browse other categories
-            </h3>
-            <div className="grid grid-cols-3 gap-2">
-              <Link
-                href="/category/natural-products"
-                className="flex flex-col items-center justify-center p-2 rounded-lg border border-border bg-background hover:bg-accent text-center transition-all font-sans"
-              >
-                <span className="text-[10px] font-semibold text-foreground">
-                  Natural
-                </span>
-              </Link>
-              <Link
-                href="/category/general"
-                className="flex flex-col items-center justify-center p-2 rounded-lg border border-border bg-background hover:bg-accent text-center transition-all font-sans"
-              >
-                <span className="text-[10px] font-semibold text-foreground">
-                  General
-                </span>
-              </Link>
-              <Link
-                href="/puja"
-                className="flex flex-col items-center justify-center p-2 rounded-lg border border-border bg-background hover:bg-accent text-center transition-all font-sans"
-              >
-                <span className="text-[10px] font-semibold text-foreground">
-                  Puja Samagri
-                </span>
-              </Link>
-            </div>
+        {/* Browse available categories */}
+        <div className="mt-6">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">✅ Available for You — Order Freely</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Link
+              href="/category/natural-products"
+              className="group flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-all"
+            >
+              <span className="text-2xl">🌿</span>
+              <div className="text-left">
+                <p className="text-sm font-semibold group-hover:text-primary transition-colors">Natural Products</p>
+                <p className="text-[11px] text-muted-foreground">Organic groceries, oils &amp; more</p>
+              </div>
+            </Link>
+            <Link
+              href="/category/general"
+              className="group flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-all"
+            >
+              <span className="text-2xl">🛍️</span>
+              <div className="text-left">
+                <p className="text-sm font-semibold group-hover:text-primary transition-colors">General Products</p>
+                <p className="text-[11px] text-muted-foreground">Electronics, fashion &amp; more</p>
+              </div>
+            </Link>
+            <Link
+              href="/puja"
+              className="group flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-all"
+            >
+              <span className="text-2xl">🪔</span>
+              <div className="text-left">
+                <p className="text-sm font-semibold group-hover:text-primary transition-colors">Puja Samagri</p>
+                <p className="text-[11px] text-muted-foreground">Rituals, pandits &amp; packages</p>
+              </div>
+            </Link>
           </div>
         </div>
       </div>
