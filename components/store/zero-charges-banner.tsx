@@ -1,6 +1,8 @@
 'use client';
 
-import { ShieldCheck, Percent, Receipt, BadgePercent, XCircle } from 'lucide-react';
+import { ShieldCheck, Percent, Receipt, BadgePercent, XCircle, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export function ZeroChargesBanner() {
   return (
@@ -21,6 +23,11 @@ export function ZeroChargesBanner() {
           <p className="text-xs text-muted-foreground">
             No hidden charges, no surprise fees at checkout. What you see is exactly what you pay.
           </p>
+          <Link href="/shop" className="inline-block pt-1">
+            <Button size="sm" className="h-8">
+              Start Shopping <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+            </Button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:flex-1 max-w-2xl">

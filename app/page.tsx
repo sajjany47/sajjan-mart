@@ -1,108 +1,142 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, Quote, Clock, Leaf, Truck, ShieldCheck, Sparkles } from 'lucide-react';
+import { Truck, ShieldCheck, Leaf, BadgeCheck } from 'lucide-react';
 import { StoreShell } from '@/components/store/store-shell';
-import { HeroSlider } from '@/components/store/hero-slider';
-import { ProductCard } from '@/components/store/product-card';
+import { HeroSlider, type Slide } from '@/components/store/hero-slider';
+import { ZeroChargesBanner } from '@/components/store/zero-charges-banner';
+import { CategoryProductSection } from '@/components/store/category-product-section';
 import { SectionHeader } from '@/components/store/section-header';
-import { Button } from '@/components/ui/button';
 import { createServerSupabase } from '@/lib/supabase/server';
-import type { Banner, Category, Product, Puja } from '@/lib/types';
+import type { Category, Product } from '@/lib/types';
 
 export const revalidate = 60;
 
-async function getHomeData() {
-  const supabase = createServerSupabase();
-  const [banners, categories, todayDeals, featured, latest, bestSellers, popular, pujas] = await Promise.all([
-    supabase.from('banners').select('*').eq('is_active', true).order('sort_order'),
-    supabase.from('categories').select('*').eq('is_active', true).order('sort_order'),
-    supabase
-      .from('products')
-      .select('*, product_images(*)')
-      .eq('is_active', true)
-      .eq('is_today_deal', true)
-      .limit(4),
-    supabase
-      .from('products')
-      .select('*, product_images(*)')
-      .eq('is_active', true)
-      .eq('is_featured', true)
-      .limit(8),
-    supabase
-      .from('products')
-      .select('*, product_images(*)')
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-      .limit(8),
-    supabase
-      .from('products')
-      .select('*, product_images(*)')
-      .eq('is_active', true)
-      .eq('is_best_seller', true)
-      .limit(4),
-    supabase
-      .from('products')
-      .select('*, product_images(*)')
-      .eq('is_active', true)
-      .eq('is_popular', true)
-      .limit(8),
-    supabase.from('pujas').select('*').eq('is_active', true).limit(6),
-  ]);
-
-  return {
-    banners: (banners.data ?? []) as Banner[],
-    categories: (categories.data ?? []) as Category[],
-    todayDeals: (todayDeals.data ?? []) as Product[],
-    featured: (featured.data ?? []) as Product[],
-    latest: (latest.data ?? []) as Product[],
-    bestSellers: (bestSellers.data ?? []) as Product[],
-    popular: (popular.data ?? []) as Product[],
-    pujas: (pujas.data ?? []) as Puja[],
-  };
-}
-
-const REVIEWS = [
+const HERO_SLIDES: Slide[] = [
   {
-    name: 'Anjali Sharma',
-    location: 'Mumbai',
-    rating: 5,
-    text: 'The Satyanarayan Puja package was perfect. Pandit ji was on time and all samagri was included. Highly recommend!',
+    id: 'hero-food',
+    title: 'Fresh Food, Made With Love',
+    subtitle:
+      'Delicious food from our cloud kitchen, prepared fresh and delivered to your doorstep.',
+    image_url:
+      'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=1600',
+    cta_text: 'Order Food',
+    cta_link: '/category/food',
+    sort_order: 1,
+    is_active: true,
   },
   {
-    name: 'Rohit Verma',
-    location: 'Pune',
-    rating: 5,
-    text: 'Ordered chicken biryani from their cloud kitchen. Tasted just like home. Delivery was quick and food was hot.',
+    id: 'hero-puja',
+    title: 'Complete Puja Packages',
+    subtitle:
+      'Book complete puja samagri packages and get everything you need for your puja in one place.',
+    image_url:
+      'https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=1600',
+    cta_text: 'Explore Puja',
+    cta_link: '/category/puja-samagri',
+    sort_order: 2,
+    is_active: true,
   },
   {
-    name: 'Priya Nair',
-    location: 'Bengaluru',
-    rating: 4,
-    text: 'The organic turmeric and forest honey are amazing. You can really taste the difference from supermarket products.',
+    id: 'hero-natural',
+    title: 'Pure & Natural Products',
+    subtitle:
+      'Discover carefully selected natural products for a healthier lifestyle.',
+    image_url:
+      'https://images.pexels.com/photos/2255935/pexels-photo-2255935.jpeg?auto=compress&cs=tinysrgb&w=1600',
+    cta_text: 'Shop Natural',
+    cta_link: '/category/natural-products',
+    sort_order: 3,
+    is_active: true,
+  },
+  {
+    id: 'hero-general',
+    title: 'Everything You Need, In One Place',
+    subtitle: 'Shop everyday essentials and useful products at Sajjan Mart.',
+    image_url:
+      'https://images.pexels.com/photos/4498136/pexels-photo-4498136.jpeg?auto=compress&cs=tinysrgb&w=1600',
+    cta_text: 'Shop Now',
+    cta_link: '/category/general',
+    sort_order: 4,
+    is_active: true,
+  },
+  {
+    id: 'hero-charges',
+    title: 'NO GST • NO TAX • NO PLATFORM FEES',
+    subtitle: 'What you see is what you pay. Shop with complete price transparency.',
+    image_url: null,
+    cta_text: 'Start Shopping',
+    cta_link: '/shop',
+    sort_order: 5,
+    is_active: true,
+    variant: 'charges',
   },
 ];
 
+const SERVICE_BENEFITS = [
+  { icon: Truck, title: 'Fast Delivery', desc: 'Fresh products delivered quickly to your doorstep.' },
+  { icon: ShieldCheck, title: 'Secure Payments', desc: 'Safe and secure online payment experience.' },
+  { icon: Leaf, title: '100% Quality', desc: 'Quality products selected for our customers.' },
+  { icon: BadgeCheck, title: 'Quality Assured', desc: 'Trusted products with quality assurance.' },
+];
+
+const SECTION_CONFIG = [
+  { type: 'food', title: 'Food', subtitle: 'Freshly prepared food from our cloud kitchen', href: '/category/food' },
+  { type: 'puja_samagri', title: 'Puja Samagri', subtitle: 'Complete puja packages and essential samagri', href: '/category/puja-samagri' },
+  { type: 'natural', title: 'Natural Products', subtitle: 'Pure and carefully selected natural products', href: '/category/natural-products' },
+  { type: 'general', title: 'General Products', subtitle: 'Everyday essentials for your home', href: '/category/general' },
+] as const;
+
+async function getHomeData() {
+  const supabase = createServerSupabase();
+
+  const [categoriesResult, ...productResults] = await Promise.all([
+    supabase.from('categories').select('*').eq('is_active', true).order('sort_order'),
+    ...SECTION_CONFIG.map((s) =>
+      supabase
+        .from('products')
+        .select('*, product_images(*)')
+        .eq('is_active', true)
+        .eq('product_type', s.type)
+        .order('rating', { ascending: false })
+        .limit(6)
+    ),
+  ]);
+
+  const productsByType: Record<string, Product[]> = {};
+  SECTION_CONFIG.forEach((s, i) => {
+    productsByType[s.type] = (productResults[i].data ?? []) as Product[];
+  });
+
+  return {
+    categories: (categoriesResult.data ?? []) as Category[],
+    productsByType,
+  };
+}
+
 export default async function HomePage() {
-  const data = await getHomeData();
+  const { categories, productsByType } = await getHomeData();
+
+  const categoryHref = (slug: string) =>
+    slug === 'puja-samagri' ? '/category/puja-samagri' : `/category/${slug}`;
 
   return (
     <StoreShell>
       {/* Hero */}
-      <section className="container-px mx-auto max-w-7xl py-6">
-        <HeroSlider banners={data.banners} />
+      <section className="container-px mx-auto max-w-7xl pt-6">
+        <HeroSlider banners={HERO_SLIDES} />
       </section>
 
-      {/* Trust badges */}
-      <section className="container-px mx-auto max-w-7xl py-4">
+      {/* No GST / No Tax / No Fees highlight */}
+      <section className="container-px mx-auto max-w-7xl pt-6">
+        <ZeroChargesBanner />
+      </section>
+
+      {/* Service benefits */}
+      <section className="container-px mx-auto max-w-7xl py-8">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { icon: Truck, title: 'Fast Delivery', desc: 'Within 30-45 min' },
-            { icon: ShieldCheck, title: 'Secure Payments', desc: 'Razorpay & Cashfree' },
-            { icon: Leaf, title: '100% Organic', desc: 'Direct from farms' },
-            { icon: Sparkles, title: 'Quality Assured', desc: 'Handpicked items' },
-          ].map((b) => (
+          {SERVICE_BENEFITS.map((b) => (
             <div key={b.title} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <b.icon className="h-5 w-5" />
               </div>
               <div>
@@ -114,14 +148,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="container-px mx-auto max-w-7xl py-8">
+      {/* Shop by category */}
+      <section className="container-px mx-auto max-w-7xl py-6">
         <SectionHeader title="Shop by Category" subtitle="Everything you need, in one place" />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {data.categories.map((c) => (
+          {categories.map((c) => (
             <Link
               key={c.id}
-              href={c.slug === 'puja-samagri' ? '/puja' : `/category/${c.slug}`}
+              href={categoryHref(c.slug)}
               className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-card"
             >
               {c.image_url && (
@@ -143,144 +177,16 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Today's Deals */}
-      {data.todayDeals.length > 0 && (
-        <section className="container-px mx-auto max-w-7xl py-8">
-          <SectionHeader
-            title="Today's Deals"
-            subtitle="Limited time offers - grab them fast"
-            link={{ href: '/shop?deals=true', label: 'View all' }}
-          />
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {data.todayDeals.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Puja banner */}
-      <section className="container-px mx-auto max-w-7xl py-8">
-        <div className="overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
-          <div className="grid items-center gap-6 p-8 md:grid-cols-2 md:p-12">
-            <div>
-              <h2 className="font-display text-3xl font-semibold md:text-4xl">Complete Puja Packages</h2>
-              <p className="mt-3 text-primary-foreground/80">
-                Book a pandit and get all the samagri delivered. Choose from Satyanarayan, Durga, Lakshmi, Griha Pravesh and more.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-2">
-                {data.pujas.slice(0, 4).map((p) => (
-                  <Link key={p.id} href={`/puja/${p.slug}`}>
-                    <span className="rounded-full bg-white/15 px-4 py-1.5 text-sm backdrop-blur hover:bg-white/25">
-                      {p.name}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-              <Link href="/puja" className="mt-6 inline-block">
-                <Button variant="secondary">Book a Puja</Button>
-              </Link>
-            </div>
-            <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
-              <Image
-                src="https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=800"
-                alt="Puja"
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured */}
-      <section className="container-px mx-auto max-w-7xl py-8">
-        <SectionHeader title="Featured Products" subtitle="Handpicked for you" link={{ href: '/shop', label: 'View all' }} />
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {data.featured.slice(0, 4).map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section>
-
-      {/* Latest */}
-      <section className="container-px mx-auto max-w-7xl py-8">
-        <SectionHeader title="Latest Products" subtitle="New arrivals across all categories" link={{ href: '/shop', label: 'View all' }} />
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {data.latest.slice(0, 4).map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section>
-
-      {/* Best sellers */}
-      <section className="container-px mx-auto max-w-7xl py-8">
-        <SectionHeader title="Best Sellers" subtitle="What our customers love" link={{ href: '/shop', label: 'View all' }} />
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {data.bestSellers.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section>
-
-      {/* Popular */}
-      <section className="container-px mx-auto max-w-7xl py-8">
-        <SectionHeader title="Popular Right Now" subtitle="Trending in your area" link={{ href: '/shop', label: 'View all' }} />
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {data.popular.slice(0, 4).map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section>
-
-      {/* Offer banner */}
-      <section className="container-px mx-auto max-w-7xl py-8">
-        <div className="grid gap-4 sm:grid-cols-2">
-          {data.categories.some((c) => c.slug === 'food') && (
-            <div className="rounded-2xl bg-secondary p-8">
-              <p className="text-sm font-semibold uppercase tracking-wide text-primary">Food Delivery</p>
-              <h3 className="mt-2 font-display text-2xl font-semibold">Hot meals in 30 minutes</h3>
-              <p className="mt-2 text-sm text-muted-foreground">Pizzas, biryani, momos and more from our cloud kitchen.</p>
-              <Link href="/category/food" className="mt-4 inline-block">
-                <Button>Order Food</Button>
-              </Link>
-            </div>
-          )}
-          {data.categories.some((c) => c.slug === 'natural-products') && (
-            <div className="rounded-2xl bg-accent p-8">
-              <p className="text-sm font-semibold uppercase tracking-wide text-primary">Organic</p>
-              <h3 className="mt-2 font-display text-2xl font-semibold">Direct from farmers</h3>
-              <p className="mt-2 text-sm text-muted-foreground">No chemicals, no adulteration - just pure goodness.</p>
-              <Link href="/category/natural-products" className="mt-4 inline-block">
-                <Button>Shop Natural</Button>
-              </Link>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Reviews */}
-      <section className="container-px mx-auto max-w-7xl py-12">
-        <SectionHeader title="Customer Reviews" subtitle="What our customers say about us" />
-        <div className="grid gap-4 md:grid-cols-3">
-          {REVIEWS.map((r) => (
-            <div key={r.name} className="rounded-2xl border border-border bg-card p-6">
-              <Quote className="h-8 w-8 text-primary/40" />
-              <p className="mt-3 text-sm text-muted-foreground">{r.text}</p>
-              <div className="mt-4 flex items-center gap-1">
-                {Array.from({ length: r.rating }).map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-warning text-warning" />
-                ))}
-              </div>
-              <div className="mt-2">
-                <p className="text-sm font-semibold">{r.name}</p>
-                <p className="text-xs text-muted-foreground">{r.location}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* Category product sections */}
+      {SECTION_CONFIG.map((s) => (
+        <CategoryProductSection
+          key={s.type}
+          title={s.title}
+          subtitle={s.subtitle}
+          viewAllHref={s.href}
+          products={productsByType[s.type]}
+        />
+      ))}
     </StoreShell>
   );
 }
