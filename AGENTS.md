@@ -1,5 +1,13 @@
 # AGENTS.md — Project Change Log
 
+## 2026-08-15: Zomato restaurant menu imported into the food section
+
+- `resturantMenu.json` (Zomato menu dump, `menuResponse.categoryWrappers` + `catalogueWrappers`) now seeds **71 real dishes** into the `products` table as managed food products. These flow through the existing food category page (`/category/food`), cart, checkout, search and filters — no new storefront code needed.
+- New idempotent importer `prisma/import-zomato-menu.ts` (run via `npm run import:zomato`): parses the JSON, maps each dish to a `Product` (Zomato images/media → `product_images`, price → `sales_price`, `veg`/`non-veg`/`egg` catalogue tags → `food_type`, `servingSizeV2` → `quantity`/`quantity_type='gram'`, original data kept in `metadata` incl. `zomato_catalogue_id`, `dish_attributes`, `tags`, `serving_size`). Dishes are matched by `metadata.zomato_catalogue_id`, so re-runs update in place instead of duplicating.
+- Zomato categories mapped to `product_category` chips: Pizza → `pizza` (13), Momos → `momos` (15), Maggi → `maggi` (4), Sandwiches → `sandwiches` (6), Breakfast → `breakfast` (14), Snacks → `snacks` (10), Dinner Special Menu → `dinner_special_menu` (9). Cross-listed dishes (e.g. All Time Favourite) resolve by priority order. `app/category/[slug]/page.tsx` `FOOD_CATEGORIES` chip list extended with Maggi / Sandwiches / Dinner Special.
+- The topping catalogue entries (Cheese/Chicken/Paneer/Corn/Onion/Tomato/Capsicum/Boiled+Fried Egg/Maggi Masala/Haldi/Sugar/Badam) become **Add-On items** (`Extra X`, `add_on_items`), auto-linked to matching categories via `product_add_ons` (`ADDON_LINK_RULES`).
+- 15 junk entries (Candles, Cake Knife, party props, "On the cake" etc.) with no catalogueId/price are skipped.
+
 ## 2026-08-14: Compact product-first category pages + server-side product pagination
 
 - **New shared client `components/store/category-products-client.tsx`** — replaces `ShopClient` + `FoodShopClient` on all four category pages (`/category/food`, `/natural-products`, `/general`, `/puja-samagri`). Product-first layout: navbar → compact category name → horizontally scrollable subcategory chips → search + Filter (mobile drawer) + Sort → product count (“Showing X of Y”) → 2-col grid (mobile) / 4-col + sidebar (desktop) → infinite scroll (IntersectionObserver sentinel auto-loads the next server-side page, no “Load More” button). No hero banner / marketing headers.

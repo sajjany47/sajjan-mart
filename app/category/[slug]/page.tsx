@@ -9,8 +9,11 @@ export const revalidate = 60;
 const FOOD_CATEGORIES = [
   { value: 'pizza', label: 'Pizza' },
   { value: 'momos', label: 'Momos' },
+  { value: 'maggi', label: 'Maggi' },
+  { value: 'sandwiches', label: 'Sandwiches' },
   { value: 'breakfast', label: 'Breakfast' },
   { value: 'snacks', label: 'Snacks' },
+  { value: 'dinner_special_menu', label: 'Dinner Special' },
 ];
 
 const NATURAL_PRODUCT_CATEGORIES = [

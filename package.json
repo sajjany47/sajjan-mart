@@ -19,6 +19,7 @@
     "db:reset": "dotenv -e .env.development -- prisma db push --force-reset && npm run seed",
     "postinstall": "prisma generate",
     "seed": "dotenv -e .env.development -- npx tsx prisma/seed.ts",
+    "import:zomato": "dotenv -e .env.development -- npx tsx prisma/import-zomato-menu.ts",
     "prisma:seed": "dotenv -e .env.development -- npx tsx prisma/seed.ts"
   },
   "dependencies": {
