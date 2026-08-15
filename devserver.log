@@ -22,3 +22,15 @@ Browserslist: caniuse-lite is outdated. Please run:
 
  ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
  ✓ Compiled /api/pujas/route in 271ms (442 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/auth/me/route in 293ms (446 modules)
+ ✓ Compiled (529 modules)
+ ✓ Compiled /api/profiles/[id]/route in 180ms (531 modules)
+ ✓ Compiled /puja/page in 2.5s (983 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled in 643ms (421 modules)
+ ✓ Compiled /puja/[slug]/page in 1401ms (984 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
