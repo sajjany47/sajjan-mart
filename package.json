@@ -20,6 +20,7 @@
     "postinstall": "prisma generate",
     "seed": "dotenv -e .env.development -- npx tsx prisma/seed.ts",
     "import:zomato": "dotenv -e .env.development -- npx tsx prisma/import-zomato-menu.ts",
+    "import:festivals": "dotenv -e .env.development -- npx tsx prisma/import-festivals.ts",
     "import:natural": "dotenv -e .env.development -- npx tsx prisma/import-natural-products.ts",
     "prisma:seed": "dotenv -e .env.development -- npx tsx prisma/seed.ts"
   },

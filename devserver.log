@@ -19,3 +19,6 @@ Browserslist: caniuse-lite is outdated. Please run:
  ✓ Compiled /api/auth/me/route in 388ms (444 modules)
  ✓ Compiled (527 modules)
  ✓ Compiled /api/profiles/[id]/route in 195ms (529 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/pujas/route in 271ms (442 modules)
