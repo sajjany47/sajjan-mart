@@ -7,8 +7,8 @@ import { prisma } from '@/lib/prisma/client';
 export const revalidate = 60;
 
 const FOOD_CATEGORIES = [
-  { value: 'pizza', label: 'Pizza' },
   { value: 'momos', label: 'Momos' },
+  { value: 'pizza', label: 'Pizza' },
   { value: 'maggi', label: 'Maggi' },
   { value: 'sandwiches', label: 'Sandwiches' },
   { value: 'breakfast', label: 'Breakfast' },

@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
       where.name = { contains: q, mode: 'insensitive' };
     }
 
-    let orderBy: any = { createdAt: 'desc' };
+    let orderBy: any = [{ sortOrder: 'asc' }, { createdAt: 'desc' }];
     if (sort === 'price-asc') orderBy = { salesPrice: 'asc' };
     else if (sort === 'price-desc') orderBy = { salesPrice: 'desc' };
     else if (sort === 'rating') orderBy = { rating: 'desc' };

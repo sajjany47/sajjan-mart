@@ -67,6 +67,18 @@ const ADDON_LINK_RULES: { names: string[]; categories: string[] }[] = [
   { names: ['Extra Haldi', 'Extra Sugar', 'Extra Badam'], categories: ['dinner_special_menu', 'breakfast'] },
 ];
 
+const CATEGORY_SORT_ORDER: Record<string, number> = {
+  momos: 1,
+  pizza: 2,
+  maggi: 3,
+  sandwiches: 10,
+  breakfast: 11,
+  snacks: 12,
+  dinner_special_menu: 13,
+};
+
+const NON_ZOMATO_SORT_ORDER = 100;
+
 function foodTypeFromTags(tags: string[] | undefined): string {
   const t = tags ?? [];
   if (t.includes('non-veg')) return 'non_veg';
@@ -130,6 +142,15 @@ async function main() {
 
   const existingSlugs = new Set((await prisma.product.findMany({ select: { slug: true } })).map((p) => p.slug));
 
+  // Push any non-zomato food products (seed/misc) behind the menu so featured dishes lead
+  await prisma.product.updateMany({
+    where: {
+      productType: 'food',
+      NOT: { metadata: { path: ['source'], equals: 'zomato_menu' } },
+    },
+    data: { sortOrder: NON_ZOMATO_SORT_ORDER },
+  });
+
   function uniqueSlug(base: string): string {
     let slug = base;
     let i = 1;
@@ -182,6 +203,7 @@ async function main() {
         description: cat.description ?? null,
         productType: 'food',
         productCategory: categorySlug,
+        sortOrder: CATEGORY_SORT_ORDER[categorySlug] ?? NON_ZOMATO_SORT_ORDER,
         brandId: brand.id,
         categoryId: foodCategory.id,
         salesPrice,
@@ -208,6 +230,7 @@ async function main() {
         description: cat.description ?? null,
         productType: 'food',
         productCategory: categorySlug,
+        sortOrder: CATEGORY_SORT_ORDER[categorySlug] ?? NON_ZOMATO_SORT_ORDER,
         brandId: brand.id,
         categoryId: foodCategory.id,
         salesPrice,

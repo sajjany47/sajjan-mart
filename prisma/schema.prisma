@@ -133,6 +133,7 @@ model Product {
   foodType        String?       @map("food_type")
   gender          String?
   productCategory String?       @map("product_category")
+  sortOrder       Int           @default(0) @map("sort_order")
 
   rating          Decimal       @default(0)
   reviewCount     Int           @default(0) @map("review_count")
