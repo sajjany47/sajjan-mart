@@ -8,3 +8,14 @@
 
  ✓ Ready in 2.1s
  ✓ Compiled /api/products/route in 182ms (35 modules)
+ ○ compiling /category/[slug]/page ...
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ Compiled /category/[slug]/page in 7.8s (832 modules)
+ ✓ Compiled in 662ms (412 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/auth/me/route in 388ms (444 modules)
+ ✓ Compiled (527 modules)
+ ✓ Compiled /api/profiles/[id]/route in 195ms (529 modules)
