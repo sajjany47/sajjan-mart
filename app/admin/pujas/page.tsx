@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { Plus, Trash2, Pencil } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -134,21 +135,28 @@ export default function AdminPujasPage() {
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {pujas.map((p) => (
-          <div key={p.id} className="rounded-xl border border-border bg-card p-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="font-semibold">{p.name}</p>
-                <p className="text-xs text-muted-foreground">{formatINR(p.base_price)}</p>
-                <Badge className={`mt-2 ${p.is_active ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground'}`}>
-                  {p.is_active ? 'Active' : 'Inactive'}
-                </Badge>
-              </div>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="icon" onClick={() => openEdit(p)} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
-                <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(p)} aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-              </div>
+          <div key={p.id} className="overflow-hidden rounded-xl border border-border bg-card">
+            <div className="relative aspect-[16/9] bg-muted">
+              {p.image_url && (
+                <Image src={p.image_url} alt={p.name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
+              )}
             </div>
-            <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{p.description}</p>
+            <div className="p-4">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="font-semibold">{p.name}</p>
+                  <p className="text-xs text-muted-foreground">{formatINR(p.base_price)}</p>
+                  <Badge className={`mt-2 ${p.is_active ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground'}`}>
+                    {p.is_active ? 'Active' : 'Inactive'}
+                  </Badge>
+                </div>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="icon" onClick={() => openEdit(p)} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(p)} aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </div>
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{p.description}</p>
+            </div>
           </div>
         ))}
       </div>
