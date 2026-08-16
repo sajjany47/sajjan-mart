@@ -1,5 +1,13 @@
 # AGENTS.md — Project Change Log
 
+## 2026-08-16: Per-festival curated puja samagri from puja-item.ts
+
+- `puja-item.ts` (repo root) now exports all 14 festival consts (`BirthdayItems`, `newYearPartyItems`, ... `marriageAnniversaryItems`) plus a `FESTIVAL_ITEMS: Record<slug, PujaListItem[]>` map keyed to the festival slugs in the DB.
+- New idempotent importer `prisma/import-puja-items.ts` (run via `npm run import:puja-items`): deletes ALL old puja_samagri products + their old `puja_items` links, inserts **225 unique curated products** (deduped by item name across festivals — same items shared across festivals become ONE product, `puja-<slug>` slug), stores the local `/images/puja/*.webp` image only if the file actually exists (none do yet — ProductCard falls back to the placeholder), then links every festival to its curated items via `puja_items` (name, price, sortOrder) and recomputes `base_price` per festival (sum of item prices).
+- Verified: 14 festivals, 511 puja item links, 0 orphan/`productId: null` links, counts match each `FESTIVAL_ITEMS` entry (e.g. Durga Puja 41 items ₹6250, Chhath Puja 50 items ₹5360, Birthday 19 items ₹2615).
+- `prisma/import-festivals.ts` step 3 updated — it now rebuilds `puja_items` from `FESTIVAL_ITEMS` (not "link every product to every festival"), so running `import:festivals` after `import:puja-items` keeps the curated lists intact.
+- `prisma/seed.ts` puja section reworked: hardcoded 20-product `pujaSamagriProducts` array + 20 `imageMap` entries replaced with a deduped build from `FESTIVAL_ITEMS` and per-festival linking (fresh `npm run seed` matches the importers). No storefront changes — `/puja/[slug]`, `/category/puja-samagri`, cart, checkout and admin pick the curated rows up automatically.
+
 ## 2026-08-15: Zomato restaurant menu imported into the food section
 
 - `resturantMenu.json` (Zomato menu dump, `menuResponse.categoryWrappers` + `catalogueWrappers`) now seeds **71 real dishes** into the `products` table as managed food products. These flow through the existing food category page (`/category/food`), cart, checkout, search and filters — no new storefront code needed.

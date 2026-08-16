@@ -22,6 +22,7 @@
     "import:zomato": "dotenv -e .env.development -- npx tsx prisma/import-zomato-menu.ts",
     "import:festivals": "dotenv -e .env.development -- npx tsx prisma/import-festivals.ts",
     "import:natural": "dotenv -e .env.development -- npx tsx prisma/import-natural-products.ts",
+    "import:puja-items": "dotenv -e .env.development -- npx tsx prisma/import-puja-items.ts",
     "prisma:seed": "dotenv -e .env.development -- npx tsx prisma/seed.ts"
   },
   "dependencies": {

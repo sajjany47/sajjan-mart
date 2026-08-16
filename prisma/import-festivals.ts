@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { FESTIVAL_ITEMS } from '../puja-item';
 
 const prisma = new PrismaClient();
 
@@ -40,29 +41,34 @@ async function main() {
   }
   console.log(`Created ${created} festival pujas`);
 
-  // 3. Rebuild puja items from active puja_samagri products (same as seed)
+  // 3. Rebuild puja items from the curated per-festival lists (same as import:puja-items)
   const allPujas = await prisma.puja.findMany();
-  const pujaSamagriProductsInDb = await prisma.product.findMany({
+  const curatedProducts = await prisma.product.findMany({
     where: { productType: 'puja_samagri', isActive: true },
-    orderBy: { name: 'asc' },
   });
+  const productByLowerName = new Map(
+    curatedProducts.map((p) => [p.name.trim().toLowerCase(), p])
+  );
   let pujaItemCount = 0;
   for (const puja of allPujas) {
+    await prisma.pujaItem.deleteMany({ where: { pujaId: puja.id } });
+    const list = FESTIVAL_ITEMS[puja.slug] ?? [];
     let sort = 1;
     let itemTotal = 0;
-    for (const prod of pujaSamagriProductsInDb) {
+    for (const item of list) {
+      const prod = productByLowerName.get(item.itemName.trim().toLowerCase());
       await prisma.pujaItem.create({
         data: {
           pujaId: puja.id,
-          productId: prod.id,
-          name: prod.name,
-          unit: prod.quantityType ?? 'pc',
-          price: prod.salesPrice,
+          productId: prod?.id ?? null,
+          name: item.itemName,
+          unit: 'pc',
+          price: item.price,
           defaultQty: 1,
           sortOrder: sort++,
         },
       });
-      itemTotal += Number(prod.salesPrice);
+      itemTotal += item.price;
       pujaItemCount++;
     }
     await prisma.puja.update({ where: { id: puja.id }, data: { basePrice: itemTotal } });

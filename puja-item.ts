@@ -1,4 +1,4 @@
-const BirthdayItems = [
+export const BirthdayItems = [
   { itemName: "Birthday Cake", price: 800 },
   { itemName: "Birthday Banner", price: 150 },
   { itemName: "Balloons", price: 200 },
@@ -20,7 +20,7 @@ const BirthdayItems = [
   { itemName: "Party Poppers", price: 150 },
 ];
 
-const newYearPartyItems = [
+export const newYearPartyItems = [
   { itemName: "New Year Banner", price: 150 },
   { itemName: "Balloons", price: 200 },
   { itemName: "Metallic Balloons", price: 250 },
@@ -49,7 +49,7 @@ const newYearPartyItems = [
   { itemName: "Garbage Bags", price: 60 },
 ];
 
-const chhathPujaItems = [
+export const chhathPujaItems = [
   { itemName: "Thekua", price: 20, image: "/images/puja/thekua.webp" },
   { itemName: "Jaggery", price: 80, image: "/images/puja/jaggery.webp" },
   { itemName: "Rice", price: 70, image: "/images/puja/rice.webp" },
@@ -162,7 +162,7 @@ const chhathPujaItems = [
   { itemName: "Clay Stove", price: 150, image: "/images/puja/clay-stove.webp" },
 ];
 
-const christmasItems = [
+export const christmasItems = [
   { itemName: "Christmas Cake", price: 500 },
   { itemName: "Plum Cake", price: 450 },
   { itemName: "Chocolate Cake", price: 600 },
@@ -203,7 +203,7 @@ const christmasItems = [
   { itemName: "Garbage Bags", price: 60 },
 ];
 
-const diwaliItems = [
+export const diwaliItems = [
   { itemName: "Diyas", price: 100 },
   { itemName: "Clay Diyas", price: 80 },
   { itemName: "Decorative Diyas", price: 200 },
@@ -234,7 +234,7 @@ const diwaliItems = [
   { itemName: "Party Poppers", price: 150 },
 ];
 
-const durgaPujaItems = [
+export const durgaPujaItems = [
   {
     itemName: "Durga Idol",
     price: 1500,
@@ -326,7 +326,7 @@ const durgaPujaItems = [
   },
 ];
 
-const holiItems = [
+export const holiItems = [
   { itemName: "Gulal", price: 80, image: "/images/puja/gulal.webp" },
   {
     itemName: "Holi Colors",
@@ -372,7 +372,7 @@ const holiItems = [
   },
 ];
 
-const jagaddhatriPujaItems = [
+export const jagaddhatriPujaItems = [
   {
     itemName: "Jagaddhatri Idol",
     price: 1500,
@@ -469,7 +469,7 @@ const jagaddhatriPujaItems = [
   },
 ];
 
-const janmashtamiItems = [
+export const janmashtamiItems = [
   {
     itemName: "Krishna Idol",
     price: 500,
@@ -568,7 +568,7 @@ const janmashtamiItems = [
   { itemName: "Sweets", price: 400, image: "/images/puja/sweets.webp" },
 ];
 
-const lakshmiPujaItems = [
+export const lakshmiPujaItems = [
   {
     itemName: "Lakshmi Ganesh Idol",
     price: 300,
@@ -664,7 +664,7 @@ const lakshmiPujaItems = [
   },
 ];
 
-const saraswatiPujaItems = [
+export const saraswatiPujaItems = [
   {
     itemName: "Saraswati Idol",
     price: 500,
@@ -761,7 +761,7 @@ const saraswatiPujaItems = [
   },
 ];
 
-const kaliPujaItems = [
+export const kaliPujaItems = [
   { itemName: "Kali Idol", price: 1000, image: "/images/puja/kali-idol.webp" },
   {
     itemName: "Red Hibiscus Flowers",
@@ -849,7 +849,7 @@ const kaliPujaItems = [
   { itemName: "Dry Fruits", price: 300, image: "/images/puja/dry-fruits.webp" },
 ];
 
-const poilaBoishakhItems = [
+export const poilaBoishakhItems = [
   {
     itemName: "Bengali New Year Banner",
     price: 150,
@@ -940,7 +940,7 @@ const poilaBoishakhItems = [
   { itemName: "Gift Box", price: 200, image: "/images/puja/gift-box.webp" },
 ];
 
-const marriageAnniversaryItems = [
+export const marriageAnniversaryItems = [
   { itemName: "Anniversary Cake", price: 700 },
   { itemName: "Chocolate Cake", price: 600 },
   { itemName: "Flowers", price: 200 },
@@ -986,3 +986,27 @@ const marriageAnniversaryItems = [
   { itemName: "Forks", price: 50 },
   { itemName: "Tissue Paper", price: 50 },
 ];
+
+export interface PujaListItem {
+  itemName: string;
+  price: number;
+  image?: string;
+}
+
+// Festival slug -> curated item list (slug matches `pujas.slug` in the DB)
+export const FESTIVAL_ITEMS: Record<string, PujaListItem[]> = {
+  'birthday': BirthdayItems,
+  'december-31': newYearPartyItems,
+  'chhath-puja': chhathPujaItems,
+  'christmas': christmasItems,
+  'diwali': diwaliItems,
+  'durga-puja': durgaPujaItems,
+  'holi': holiItems,
+  'jagaddhatri-puja': jagaddhatriPujaItems,
+  'janmashtami': janmashtamiItems,
+  'lakshmi-puja': lakshmiPujaItems,
+  'saraswati-puja': saraswatiPujaItems,
+  'kali-puja': kaliPujaItems,
+  'poila-boishakh': poilaBoishakhItems,
+  'marriage-anniversary': marriageAnniversaryItems,
+};
