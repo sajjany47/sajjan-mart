@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Truck, ShieldCheck, Leaf, BadgeCheck } from 'lucide-react';
+import { Truck, ShieldCheck, UserCheck, BadgeCheck, Sparkles, Receipt, ArrowRight } from 'lucide-react';
 import { StoreShell } from '@/components/store/store-shell';
 import { HeroSlider, type Slide } from '@/components/store/hero-slider';
-import { ZeroChargesBanner } from '@/components/store/zero-charges-banner';
+import { CategoryQuickNav } from '@/components/store/category-quick-nav';
 import { CategoryProductSection } from '@/components/store/category-product-section';
 import { SectionHeader } from '@/components/store/section-header';
 import { createServerSupabase } from '@/lib/supabase/server';
@@ -14,75 +14,69 @@ export const revalidate = 60;
 const HERO_SLIDES: Slide[] = [
   {
     id: 'hero-food',
-    title: 'Fresh Food, Made With Love',
+    title: 'Hot & Delicious Cloud Kitchen Food',
     subtitle:
-      'Delicious food from our cloud kitchen, prepared fresh and delivered to your doorstep.',
-    image_url:
-      'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=1600',
-    cta_text: 'Order Food',
+      'Delicious momos, artisan pizzas, crispy sandwiches, maggi & breakfast prepared fresh and delivered hot.',
+    image_url: '/images/banners/food_banner.jpg',
+    cta_text: 'Order Hot Food',
     cta_link: '/category/food',
     sort_order: 1,
     is_active: true,
+    variant: 'standard',
+    badges: ['🍕 Hot & Fresh', '⚡ 6km Fast Delivery', '😋 Authentic Taste'],
   },
   {
-    id: 'hero-puja',
-    title: 'Complete Puja Packages',
+    id: 'hero-puja-pandit',
+    title: 'Puja Samagri Book Karen — Sath Me Pandit Ji Bhi Book Hotey Hain!',
     subtitle:
-      'Book complete puja samagri packages and get everything you need for your puja in one place.',
-    image_url:
-      'https://images.pexels.com/photos/8468368/pexels-photo-8468368.jpeg?auto=compress&cs=tinysrgb&w=1600',
-    cta_text: 'Explore Puja',
+      'Durga Puja, Chhath Puja, Diwali & 14+ Festivals ke liye complete curated Puja Samagri package + Verified Vedic Pandit Ji in 1-Click!',
+    image_url: '/images/banners/puja_pandit_banner.jpg',
+    cta_text: 'Book Puja & Pandit Ji',
     cta_link: '/puja',
     sort_order: 2,
     is_active: true,
+    variant: 'puja_pandit',
+    badges: ['🛕 PANDIT JI INCLUDED', '📦 COMPLETE PUJA SAMAGRI', '✨ 1-CLICK BOOKING'],
   },
   {
     id: 'hero-natural',
-    title: 'Pure & Natural Products',
+    title: 'Pure Mustard Oil & Farm-Fresh Spices',
     subtitle:
-      'Discover carefully selected natural products for a healthier lifestyle.',
-    image_url:
-      'https://images.pexels.com/photos/2255935/pexels-photo-2255935.jpeg?auto=compress&cs=tinysrgb&w=1600',
-    cta_text: 'Shop Natural',
+      '100% Pure Cold-Pressed Mustard Oil, Haldi Powder, Garam Masala & Spices delivered fresh to your kitchen.',
+    image_url: '/images/banners/natural_banner.jpg',
+    cta_text: 'Shop Spices & Oils',
     cta_link: '/category/natural-products',
     sort_order: 3,
     is_active: true,
+    variant: 'standard',
+    badges: ['🌿 100% Pure & Organic', '🌶️ Farm Fresh Spices', '🟡 Pure Kacchi Ghani Oil'],
   },
   {
-    id: 'hero-general',
-    title: 'Everything You Need, In One Place',
-    subtitle: 'Shop everyday essentials and useful products at Sajjan Mart.',
-    image_url:
-      'https://images.pexels.com/photos/4498136/pexels-photo-4498136.jpeg?auto=compress&cs=tinysrgb&w=1600',
-    cta_text: 'Shop Now',
-    cta_link: '/category/general',
+    id: 'hero-zero-charges',
+    title: '₹0 GST • ₹0 PLATFORM FEES • ₹0 TAX • ZERO HIDDEN CHARGES',
+    subtitle:
+      'What you see is what you pay! Checkout par 1 rupee bhi extra nahi lagega. 100% Honest & Transparent Price.',
+    image_url: '/images/banners/zero_charges_banner.jpg',
+    cta_text: 'Shop With Zero Fees',
+    cta_link: '/shop',
     sort_order: 4,
     is_active: true,
-  },
-  {
-    id: 'hero-charges',
-    title: 'NO GST • NO TAX • NO PLATFORM FEES',
-    subtitle: 'What you see is what you pay. Shop with complete price transparency.',
-    image_url: null,
-    cta_text: 'Start Shopping',
-    cta_link: '/shop',
-    sort_order: 5,
-    is_active: true,
     variant: 'charges',
+    badges: ['🚫 ZERO GST', '🚫 ZERO PLATFORM FEE', '🚫 ZERO TAX', '💰 100% PRICE TRANSPARENCY'],
   },
 ];
 
 const SERVICE_BENEFITS = [
-  { icon: Truck, title: 'Fast Delivery', desc: 'Fresh products delivered quickly to your doorstep.' },
-  { icon: ShieldCheck, title: 'Secure Payments', desc: 'Safe and secure online payment experience.' },
-  { icon: Leaf, title: '100% Quality', desc: 'Quality products selected for our customers.' },
-  { icon: BadgeCheck, title: 'Quality Assured', desc: 'Trusted products with quality assurance.' },
+  { icon: ShieldCheck, title: 'Zero Extra Fees', desc: 'No GST, No Tax, No Platform Fees at Checkout.' },
+  { icon: UserCheck, title: 'Pandit Ji Included', desc: 'Verified Vedic Pandit Ji paired with Puja Samagri.' },
+  { icon: Truck, title: 'Fast Doorstep Delivery', desc: 'Fresh food & products delivered to your location.' },
+  { icon: BadgeCheck, title: '100% Quality Assured', desc: 'Curated products with 100% quality guarantee.' },
 ];
 
 const SECTION_CONFIG = [
   { type: 'food', title: 'Food', subtitle: 'Freshly prepared food from our cloud kitchen', href: '/category/food' },
-  { type: 'puja_samagri', title: 'Puja Samagri', subtitle: 'Complete puja packages and essential samagri', href: '/puja' },
-  { type: 'natural', title: 'Natural Products', subtitle: 'Pure and carefully selected natural products', href: '/category/natural-products' },
+  { type: 'puja_samagri', title: 'Puja Samagri', subtitle: 'Complete puja packages & Pandit Ji booking', href: '/puja' },
+  { type: 'natural', title: 'Natural Products', subtitle: 'Pure mustard oils & authentic kitchen spices', href: '/category/natural-products' },
   { type: 'general', title: 'General Products', subtitle: 'Everyday essentials for your home', href: '/category/general' },
 ] as const;
 
@@ -121,42 +115,42 @@ export default async function HomePage() {
 
   return (
     <StoreShell>
-      {/* Hero */}
-      <section className="container-px mx-auto max-w-7xl pt-4 sm:pt-6">
+      {/* Hero Slider */}
+      <section className="container-px mx-auto max-w-7xl pt-3 sm:pt-6">
         <HeroSlider banners={HERO_SLIDES} />
       </section>
 
-      {/* No GST / No Tax / No Fees highlight */}
-      <section className="container-px mx-auto max-w-7xl pt-4 sm:pt-6">
-        <ZeroChargesBanner />
+      {/* Mobile-First Category Quick Nav Bar */}
+      <section className="container-px mx-auto max-w-7xl pt-4">
+        <CategoryQuickNav />
       </section>
 
-      {/* Service benefits */}
-      <section className="container-px mx-auto max-w-7xl py-6 sm:py-8">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+      {/* Service Benefits Grid */}
+      <section className="container-px mx-auto max-w-7xl py-5 sm:py-6">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
           {SERVICE_BENEFITS.map((b) => (
-            <div key={b.title} className="flex items-center gap-2.5 rounded-xl border border-border bg-card p-2.5 sm:gap-3 sm:p-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary sm:h-10 sm:w-10">
+            <div key={b.title} className="flex items-center gap-2.5 rounded-2xl border border-border/80 bg-card p-3 sm:gap-3 sm:p-3.5 shadow-sm transition-all hover:shadow-md hover:border-primary/30">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary sm:h-10 sm:w-10 font-bold">
                 <b.icon className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">{b.title}</p>
-                <p className="text-[11px] leading-snug text-muted-foreground sm:text-xs">{b.desc}</p>
+                <p className="truncate text-xs sm:text-sm font-bold text-foreground">{b.title}</p>
+                <p className="text-[11px] leading-snug text-muted-foreground sm:text-xs line-clamp-1">{b.desc}</p>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Shop by category */}
-      <section className="container-px mx-auto max-w-7xl py-5 sm:py-6">
-        <SectionHeader title="Shop by Category" subtitle="Everything you need, in one place" />
+      {/* Shop by Category Grid */}
+      <section className="container-px mx-auto max-w-7xl py-4 sm:py-6">
+        <SectionHeader title="Shop by Category" subtitle="Everything you need with Zero Hidden Charges" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           {categories.map((c) => (
             <Link
               key={c.id}
               href={categoryHref(c.slug)}
-              className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-card"
+              className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition-all duration-300 hover:shadow-lg hover:border-primary/40 hover:-translate-y-0.5"
             >
               {c.image_url && (
                 <Image
@@ -167,9 +161,20 @@ export default async function HomePage() {
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-              <div className="absolute bottom-2 left-2.5 right-2.5 sm:bottom-3 sm:left-3">
-                <h3 className="truncate font-display text-base font-semibold text-white sm:text-lg">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+              <div className="absolute bottom-2.5 left-3 right-3 sm:bottom-3">
+                <div className="flex items-center gap-1 mb-1">
+                  {c.slug === 'puja-samagri' ? (
+                    <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[9px] font-extrabold uppercase text-slate-950 shadow-sm">
+                      🛕 +Pandit Ji Included
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[9px] font-extrabold uppercase text-slate-950 shadow-sm">
+                      ₹0 Hidden Fees
+                    </span>
+                  )}
+                </div>
+                <h3 className="truncate font-display text-base font-bold text-white sm:text-lg">
                   {c.name}
                 </h3>
                 <p className="truncate text-[11px] text-white/80 line-clamp-1 sm:text-xs">{c.description}</p>

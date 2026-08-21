@@ -47,6 +47,7 @@ export function Header({ activeCategories }: { activeCategories: string[] }) {
   const { coords, address, distance, status, loading, detectLocation, setLocationByAddress } = useLocation();
   const router = useRouter();
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState<number | null>(null);
@@ -54,6 +55,10 @@ export function Header({ activeCategories }: { activeCategories: string[] }) {
   const [locDialogOpen, setLocDialogOpen] = useState(false);
   const [manualAddr, setManualAddr] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   async function handleAddressSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -84,12 +89,11 @@ export function Header({ activeCategories }: { activeCategories: string[] }) {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="bg-primary text-primary-foreground">
-        <div className="container-px mx-auto flex max-w-7xl items-center justify-center py-1.5 text-xs">
-          <Sparkles className="mr-1.5 h-3 w-3" />
-          {freeShippingThreshold !== null && freeShippingThreshold > 0
-            ? `Free delivery on orders above ${formatINR(freeShippingThreshold)}`
-            : 'Free delivery on orders above Rs 499'}{' '}
-          · Use code <span className="font-semibold">WELCOME10</span> for 10% off
+        <div className="container-px mx-auto flex max-w-7xl items-center justify-center py-1.5 text-xs text-center font-medium overflow-hidden">
+          <Sparkles className="mr-1.5 h-3.5 w-3.5 shrink-0 text-amber-300 animate-pulse" />
+          <span className="font-bold text-amber-300">0% GST • 0 PLATFORM FEES • 0 HIDDEN CHARGES</span>
+          <span className="mx-2 text-primary-foreground/40 font-light">|</span>
+          <span className="truncate">🛕 Puja Samagri Ke Sath Pandit Ji Booking Included!</span>
         </div>
       </div>
 
@@ -335,16 +339,18 @@ export function Header({ activeCategories }: { activeCategories: string[] }) {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button asChild variant="ghost" size="icon" className="relative" aria-label="Cart">
-            <Link href="/cart">
-              <ShoppingBag className="h-5 w-5" />
-              {count > 0 && (
-                <Badge className="absolute -right-1 -top-1 h-5 min-w-5 justify-center rounded-full bg-primary px-1 text-xs text-primary-foreground">
-                  {count}
-                </Badge>
-              )}
-            </Link>
-          </Button>
+          <Link
+            href="/cart"
+            className="relative flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+            aria-label="Cart"
+          >
+            <ShoppingBag className="h-5 w-5" />
+            {mounted && count > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-extrabold text-primary-foreground shadow-sm">
+                {count}
+              </span>
+            )}
+          </Link>
         </div>
       </div>
 
