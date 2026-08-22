@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma/client';
 import { requireAdmin } from '@/lib/admin-auth';
 import { jsonResponse } from '@/lib/api-utils';
+import { sendCancelRejectedMail } from '@/lib/mailer';
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   const { payload, response } = await requireAdmin(request);
@@ -51,6 +52,15 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
 
     const updated = await prisma.order.update({ where: { id: order.id }, data: data as any });
+
+    // Notify the customer that the request was declined (never blocks the response)
+    if (remainingRequested.length === 0) {
+      prisma.order
+        .findUnique({ where: { id: order.id }, include: { items: true, user: true } })
+        .then((full) => full && sendCancelRejectedMail(full))
+        .catch((e) => console.error('[orders] cancel-rejected-mail failed:', e));
+    }
+
     return jsonResponse(updated);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to reject cancellation' }, { status: 500 });

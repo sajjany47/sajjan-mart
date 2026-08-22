@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma/client';
 import { verifyToken } from '@/lib/jwt';
 import { jsonResponse } from '@/lib/api-utils';
+import { sendCancelRequestMail } from '@/lib/mailer';
 
 const CANCELLABLE_STATUSES = ['pending', 'confirmed', 'processing', 'packed'];
 
@@ -60,6 +61,16 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         previousStatus: order.status,
       },
     });
+
+    // Notify admin about the cancellation request (never blocks the response)
+    const requestedNames = order.items
+      .filter((i) => itemIdsToCancel.includes(i.id))
+      .map((i) => `${i.name}${i.variantName ? ` (${i.variantName})` : ''}`);
+    prisma.order
+      .findUnique({ where: { id: order.id }, include: { items: true, user: true } })
+      .then((full) => full && sendCancelRequestMail(full, requestedNames))
+      .catch((e) => console.error('[orders] cancel-request-mail failed:', e));
+
     return jsonResponse(updated);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to cancel order' }, { status: 500 });

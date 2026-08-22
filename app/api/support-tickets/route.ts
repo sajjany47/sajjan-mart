@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma/client';
 import { jsonResponse, parseBody } from '@/lib/api-utils';
+import { sendTicketCreatedMail } from '@/lib/mailer';
 
 function generateTicketNumber(): string {
   return `TKT-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
@@ -36,6 +37,19 @@ export async function POST(request: NextRequest) {
     const item = await prisma.supportTicket.create({
       data: { ...body, ticketNumber: generateTicketNumber() },
     });
+
+    // Notify admin with only this ticket's details (never blocks the response)
+    prisma.supportTicket
+      .findUnique({
+        where: { id: item.id },
+        include: {
+          user: { select: { email: true, fullName: true, phone: true } },
+          order: { select: { orderNumber: true, status: true, total: true } },
+        },
+      })
+      .then((full) => full && sendTicketCreatedMail(full))
+      .catch((e) => console.error('[tickets] ticket-mail failed:', e));
+
     return jsonResponse(item, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to create' }, { status: 500 });

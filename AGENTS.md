@@ -1,5 +1,17 @@
 # AGENTS.md — Project Change Log
 
+## 2026-08-16: Order & ticket email notifications (Nodemailer)
+
+- New `lib/mailer.ts`: lazy nodemailer transporter from `SMTP_*` env vars, `ADMIN_EMAIL` (default `sajjany47@gmail.com`), and fire-and-forget `sendMailSafe` (failures are logged, never thrown — order/ticket APIs can't break because of mail).
+- Mails wired into the API layer:
+  - `POST /api/orders` → order-placed HTML mail to **customer + admin** (items, totals, payment, delivery address).
+  - `PUT /api/orders/[id]` (admin) → status-change mail to customer for every transition (confirmed/processing/packed/shipped/delivered/cancelled/refunded; admin cancelling directly sends "order cancelled").
+  - `POST /api/orders/[id]/cancel` (user cancel request) → **admin** gets a CANCEL REQUEST alert with requested item names.
+  - `.../cancel/approve` → customer gets "cancellation approved" (cancelled items, refund amount, full vs partial note).
+  - `.../cancel/reject` → customer gets "request declined" and order continues.
+  - `POST /api/support-tickets` → **admin** gets only that ticket's details (ticket no, subject, issue text, linked order).
+- Env: `.env.development` + `.env.production` SMTP fixed from Ethereal to `smtp.gmail.com:465 secure`, added `ADMIN_EMAIL`. **Gmail login currently fails (`535 BadCredentials`)** — `SMTP_PASSWORD` must be a real 16-char Gmail App Password (Google Account → Security → 2-Step Verification → App passwords). Until then all mails just log errors.
+
 ## 2026-08-16: Per-festival curated puja samagri from puja-item.ts
 
 - `puja-item.ts` (repo root) now exports all 14 festival consts (`BirthdayItems`, `newYearPartyItems`, ... `marriageAnniversaryItems`) plus a `FESTIVAL_ITEMS: Record<slug, PujaListItem[]>` map keyed to the festival slugs in the DB.

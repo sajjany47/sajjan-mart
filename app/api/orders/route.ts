@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma/client';
 import { jsonResponse, parseBody } from '@/lib/api-utils';
 import { getStoreConfig, isFoodOpenNow } from '@/lib/store-config';
+import { sendOrderPlacedMails } from '@/lib/mailer';
 
 export async function GET(request: NextRequest) {
   try {
@@ -71,6 +72,13 @@ export async function POST(request: NextRequest) {
     }
 
     const item = await prisma.order.create({ data: orderData });
+
+    // Notify customer + admin (never blocks the response)
+    prisma.order
+      .findUnique({ where: { id: item.id }, include: { items: true, user: true } })
+      .then((full) => full && sendOrderPlacedMails(full))
+      .catch((e) => console.error('[orders] placed-mail failed:', e));
+
     return jsonResponse(item, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to create' }, { status: 500 });

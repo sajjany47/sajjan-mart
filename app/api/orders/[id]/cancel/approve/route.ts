@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma/client';
 import { requireAdmin } from '@/lib/admin-auth';
 import { jsonResponse } from '@/lib/api-utils';
+import { sendCancelApprovedMail } from '@/lib/mailer';
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   const { payload, response } = await requireAdmin(request);
@@ -81,8 +82,19 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
     const updated = await prisma.order.findUnique({
       where: { id: order.id },
-      include: { items: true },
+      include: { items: true, user: true },
     });
+
+    // Notify the customer that the cancellation was accepted (never blocks the response)
+    if (updated) {
+      const cancelledNames = updated.items
+        .filter((i) => cancelledIds.includes(i.id))
+        .map((i) => `${i.name}${i.variantName ? ` (${i.variantName})` : ''}`);
+      sendCancelApprovedMail(updated, cancelledNames, allItemsHandled).catch((e) =>
+        console.error('[orders] cancel-approved-mail failed:', e)
+      );
+    }
+
     return jsonResponse(updated);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to approve cancellation' }, { status: 500 });
