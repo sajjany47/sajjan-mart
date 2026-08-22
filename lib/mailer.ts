@@ -116,20 +116,34 @@ function money(v: unknown): string {
 function addressLines(address: unknown): string {
   if (!address || typeof address !== 'object') return '-';
   const a = address as Record<string, any>;
-  const parts = [a.full_name, a.phone, a.line1, a.line2, a.landmark, a.city, a.state, a.pincode].filter(Boolean);
+  const parts = [a.line1, a.line2, a.landmark, a.city, a.state, a.pincode, a.country].filter(Boolean);
   return parts.join(', ') || '-';
+}
+
+function customerBlock(order: OrderWithDetails): string {
+  const a = (order.address && typeof order.address === 'object' ? order.address : {}) as Record<string, any>;
+  const name = order.user?.fullName || a.full_name || '-';
+  const phone = order.user?.phone || a.phone || '-';
+  return `
+    <p style="margin:0"><strong>Customer:</strong> ${name}</p>
+    <p style="margin:0"><strong>Mobile:</strong> ${phone}</p>
+    ${order.user?.email ? `<p style="margin:0"><strong>Email:</strong> ${order.user.email}</p>` : ''}
+    <p style="margin:8px 0 0"><strong>Delivery address:</strong> ${addressLines(order.address)}</p>
+  `;
 }
 
 function itemRows(order: OrderWithDetails): string {
   const items = order.items ?? [];
   if (items.length === 0) return '<li>(no items)</li>';
   return items
-    .map(
-      (i) =>
-        `<li>${i.name}${i.variantName ? ` (${i.variantName})` : ''} &times; ${i.quantity} &mdash; ${money(i.total)}${
-          i.cancelled ? ' <strong>[CANCELLED]</strong>' : ''
-        }</li>`
-    )
+    .map((i) => {
+      const price = Number(i.unitPrice);
+      const qty = Number(i.quantity);
+      const pricePart = price > 0 ? `${money(price)} &times; ${qty}` : `${qty}`;
+      return `<li>${i.name}${i.variantName ? ` (${i.variantName})` : ''} &mdash; ${pricePart} = <strong>${money(i.total)}</strong>${
+        i.cancelled ? ' <span style="color:#dc2626">[CANCELLED]</span>' : ''
+      }</li>`;
+    })
     .join('');
 }
 
@@ -166,10 +180,11 @@ export async function sendOrderPlacedMails(order: OrderWithDetails) {
 
   const detailTable = `
     <p><strong>Order:</strong> #${order.orderNumber}</p>
+    ${customerBlock(order)}
+    <p style="margin-bottom:4px"><strong>Items:</strong></p>
     <ul>${itemRows(order)}</ul>
     <table style="width:100%;border-collapse:collapse">${summaryRows(order)}</table>
     <p><strong>Payment:</strong> ${order.paymentMethod.toUpperCase()} (${order.paymentStatus})</p>
-    <p><strong>Delivery address:</strong> ${addressLines(order.address)}</p>
     ${order.notes ? `<p><strong>Notes:</strong> ${order.notes}</p>` : ''}
   `;
 
@@ -190,7 +205,6 @@ export async function sendOrderPlacedMails(order: OrderWithDetails) {
       html: wrap(
         'New order received',
         `<p>A new order has been placed on the store.</p>
-         <p><strong>Customer:</strong> ${order.user?.fullName || '-'} (${to}${order.user?.phone ? `, ${order.user.phone}` : ''})</p>
          ${detailTable}
          <p>Open the admin panel &rarr; Orders to process it.</p>`
       ),

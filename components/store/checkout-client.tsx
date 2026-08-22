@@ -195,35 +195,7 @@ export function CheckoutClient() {
 
     setLoading(true);
     const orderNumber = generateOrderNumber();
-    const { data: order, error } = await supabase
-      .from("orders")
-      .insert({
-        user_id: user.id,
-        order_number: orderNumber,
-        status: "pending",
-        subtotal,
-        discount: couponDiscount,
-        shipping,
-        tax,
-        total,
-        coupon_code: appliedCoupon || null,
-        payment_method: paymentMethod,
-        payment_status: paymentMethod === "cod" ? "pending" : "paid",
-        address: address as any,
-        notes,
-        has_food: hasFood,
-      })
-      .select("*")
-      .single();
-
-    if (error) {
-      setLoading(false);
-      toast.error(error.message);
-      return;
-    }
-
     const orderItems = items.map((i) => ({
-      order_id: order.id,
       product_id: i.productId ?? null,
       puja_id: i.pujaId ?? null,
       pandit_id: i.panditId ?? null,
@@ -243,12 +215,32 @@ export function CheckoutClient() {
       } as any,
     }));
 
-    const { error: itemsError } = await supabase
-      .from("order_items")
-      .insert(orderItems);
-    if (itemsError) {
+    // Order + items are created together so the confirmation mail includes every item
+    const { data: order, error } = await supabase
+      .from("orders")
+      .insert({
+        user_id: user.id,
+        order_number: orderNumber,
+        status: "pending",
+        subtotal,
+        discount: couponDiscount,
+        shipping,
+        tax,
+        total,
+        coupon_code: appliedCoupon || null,
+        payment_method: paymentMethod,
+        payment_status: paymentMethod === "cod" ? "pending" : "paid",
+        address: address as any,
+        notes,
+        has_food: hasFood,
+        items: orderItems,
+      })
+      .select("*")
+      .single();
+
+    if (error) {
       setLoading(false);
-      toast.error(itemsError.message);
+      toast.error(error.message);
       return;
     }
 

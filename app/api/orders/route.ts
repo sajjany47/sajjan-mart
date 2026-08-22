@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { hasFood, ...orderData } = await parseBody(request);
+    const { hasFood, items: rawItems, ...orderData } = await parseBody(request);
 
     if (hasFood) {
       const config = await getStoreConfig();
@@ -71,7 +71,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const item = await prisma.order.create({ data: orderData });
+    // Accept order items inline so order + items are created atomically
+    const itemData = Array.isArray(rawItems)
+      ? rawItems.map((it: Record<string, unknown>) => ({
+          productId: (it.productId as string) ?? null,
+          pujaId: (it.pujaId as string) ?? null,
+          panditId: (it.panditId as string) ?? null,
+          name: String(it.name ?? 'Item'),
+          variantName: (it.variantName as string) ?? null,
+          imageUrl: (it.imageUrl as string) ?? null,
+          unitPrice: Number(it.unitPrice ?? 0),
+          quantity: Number(it.quantity ?? 1),
+          total: Number(it.total ?? 0),
+          itemType: (it.itemType as string) ?? 'product',
+          metadata: (it.metadata as object) ?? {},
+        }))
+      : [];
+
+    const item = await prisma.order.create({
+      data: {
+        ...orderData,
+        ...(itemData.length > 0 ? { items: { create: itemData } } : {}),
+      } as any,
+    });
 
     // Notify customer + admin (never blocks the response)
     prisma.order
@@ -81,6 +103,7 @@ export async function POST(request: NextRequest) {
 
     return jsonResponse(item, { status: 201 });
   } catch (error) {
+    console.error('[orders] create failed:', error);
     return NextResponse.json({ error: 'Failed to create' }, { status: 500 });
   }
 }
