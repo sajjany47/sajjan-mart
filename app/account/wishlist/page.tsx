@@ -20,7 +20,7 @@ export default function WishlistPage() {
       .from('wishlist')
       .select('product_id, products(*, product_images(*))')
       .eq('user_id', user.id);
-    setProducts((data ?? []).map((r: any) => r.products as Product));
+    setProducts((data ?? []).map((r: any) => r.product as Product).filter(Boolean));
     setLoading(false);
   }
 
