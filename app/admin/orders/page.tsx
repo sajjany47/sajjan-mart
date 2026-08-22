@@ -51,6 +51,7 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [busyAction, setBusyAction] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [cancelSelection, setCancelSelection] = useState<Record<string, string[]>>({});
   const [activeTab, setActiveTab] = useState<TabValue>('new');
@@ -77,17 +78,20 @@ export default function AdminOrdersPage() {
 
   useEffect(() => { load(); }, []);
 
-  async function updateStatus(id: string, status: OrderStatus) {
+  async function updateStatus(id: string, status: OrderStatus, actionKey: string) {
     setBusyId(id);
+    setBusyAction(actionKey);
     const { error } = await supabase.from('orders').update({ status }).eq('id', id);
     setBusyId(null);
+    setBusyAction(null);
     if (error) { toast.error(error.message); return; }
     toast.success(`Order marked as ${status}`);
     load();
   }
 
-  async function approveCancel(id: string, selectedIds: string[]) {
+  async function approveCancel(id: string, selectedIds: string[], actionKey = 'cancel-approve') {
     setBusyId(id);
+    setBusyAction(actionKey);
     try {
       const res = await fetch(`/api/orders/${id}/cancel/approve`, {
         method: 'POST',
@@ -103,11 +107,13 @@ export default function AdminOrdersPage() {
       toast.error('Failed to approve cancellation');
     } finally {
       setBusyId(null);
+      setBusyAction(null);
     }
   }
 
   async function rejectCancel(id: string, itemIds?: string[]) {
     setBusyId(id);
+    setBusyAction(itemIds && itemIds.length > 0 ? `item-${itemIds[0]}-reject` : 'cancel-reject');
     try {
       const res = await fetch(`/api/orders/${id}/cancel/reject`, {
         method: 'POST',
@@ -123,11 +129,13 @@ export default function AdminOrdersPage() {
       toast.error('Failed to reject cancellation');
     } finally {
       setBusyId(null);
+      setBusyAction(null);
     }
   }
 
   async function processItem(id: string, itemId: string, action: 'ready' | 'cancel') {
     setBusyId(id);
+    setBusyAction(`item-${itemId}-${action}`);
     try {
       const res = await fetch(`/api/orders/${id}/process-item`, {
         method: 'POST',
@@ -149,6 +157,7 @@ export default function AdminOrdersPage() {
       toast.error('Failed to process item');
     } finally {
       setBusyId(null);
+      setBusyAction(null);
     }
   }
 
@@ -205,17 +214,18 @@ export default function AdminOrdersPage() {
                     order={o}
                     tab={tab.value}
                     busy={busyId === o.id}
+                    busyAction={busyId === o.id ? busyAction : null}
                     expanded={tab.value === 'cancel' || expandedId === o.id}
                     onToggleExpand={() => setExpandedId(expandedId === o.id ? null : o.id)}
-                    onAccept={() => updateStatus(o.id, 'confirmed')}
-                    onReject={() => updateStatus(o.id, 'cancelled')}
-                    onMarkDispatch={() => updateStatus(o.id, 'shipped')}
-                    onMarkDelivered={() => updateStatus(o.id, 'delivered')}
+                    onAccept={() => updateStatus(o.id, 'confirmed', 'accept')}
+                    onReject={() => updateStatus(o.id, 'cancelled', 'reject')}
+                    onMarkDispatch={() => updateStatus(o.id, 'shipped', 'dispatch')}
+                    onMarkDelivered={() => updateStatus(o.id, 'delivered', 'delivered')}
                     cancelSelected={cancelSelection[o.id] ?? []}
                     onToggleCancelItem={(itemId) => toggleCancelItem(o.id, itemId)}
                     onApproveCancel={() => approveCancel(o.id, cancelSelection[o.id] ?? [])}
                     onRejectCancel={() => rejectCancel(o.id)}
-                    onApproveItem={(itemId) => approveCancel(o.id, [itemId])}
+                    onApproveItem={(itemId) => approveCancel(o.id, [itemId], `item-${itemId}-approve`)}
                     onRejectItem={(itemId) => rejectCancel(o.id, [itemId])}
                     onProcessItem={(itemId, action) => processItem(o.id, itemId, action)}
                   />
@@ -233,6 +243,7 @@ function OrderCard({
   order,
   tab,
   busy,
+  busyAction,
   expanded,
   onToggleExpand,
   onAccept,
@@ -250,6 +261,7 @@ function OrderCard({
   order: Order;
   tab: TabValue;
   busy: boolean;
+  busyAction: string | null;
   expanded: boolean;
   onToggleExpand: () => void;
   onAccept: () => void;
@@ -291,24 +303,24 @@ function OrderCard({
           {tab === 'new' && (
             <>
               <Button size="sm" variant="default" onClick={onAccept} disabled={busy}>
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-1 h-4 w-4" />}
+                {busyAction === 'accept' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-1 h-4 w-4" />}
                 Accept
               </Button>
               <Button size="sm" variant="destructive" onClick={onReject} disabled={busy}>
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="mr-1 h-4 w-4" />}
+                {busyAction === 'reject' ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="mr-1 h-4 w-4" />}
                 Reject
               </Button>
             </>
           )}
           {tab === 'processing' && (
             <Button size="sm" onClick={onMarkDispatch} disabled={busy}>
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Truck className="mr-1 h-4 w-4" />}
+              {busyAction === 'dispatch' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Truck className="mr-1 h-4 w-4" />}
               Mark Dispatched
             </Button>
           )}
           {tab === 'dispatch' && (
             <Button size="sm" onClick={onMarkDelivered} disabled={busy}>
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Package className="mr-1 h-4 w-4" />}
+              {busyAction === 'delivered' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Package className="mr-1 h-4 w-4" />}
               Mark Delivered
             </Button>
           )}
@@ -374,20 +386,20 @@ function OrderCard({
                     {tab === 'cancel' && !cancelled && (
                       <>
                         <Button size="sm" variant="default" className="h-7 px-2 text-xs" onClick={() => onApproveItem(it.id)} disabled={busy}>
-                          <CheckCircle2 className="mr-1 h-3 w-3" /> Approve
+                          {busyAction === `item-${it.id}-approve` ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="mr-1 h-3 w-3" />} Approve
                         </Button>
                         <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => onRejectItem(it.id)} disabled={busy}>
-                          <XCircle className="mr-1 h-3 w-3" /> Reject
+                          {busyAction === `item-${it.id}-reject` ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="mr-1 h-3 w-3" />} Reject
                         </Button>
                       </>
                     )}
                     {tab === 'processing' && !cancelled && !ready && (
                       <>
                         <Button size="sm" variant="default" className="h-7 px-2 text-xs" onClick={() => onProcessItem(it.id, 'ready')} disabled={busy}>
-                          <CheckCircle2 className="mr-1 h-3 w-3" /> Ready
+                          {busyAction === `item-${it.id}-ready` ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="mr-1 h-3 w-3" />} Ready
                         </Button>
                         <Button size="sm" variant="destructive" className="h-7 px-2 text-xs" onClick={() => onProcessItem(it.id, 'cancel')} disabled={busy}>
-                          <XCircle className="mr-1 h-3 w-3" /> Cancel
+                          {busyAction === `item-${it.id}-cancel` ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="mr-1 h-3 w-3" />} Cancel
                         </Button>
                       </>
                     )}
@@ -435,11 +447,11 @@ function OrderCard({
           {tab === 'cancel' && (
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Button size="sm" variant="default" onClick={onApproveCancel} disabled={busy || cancelSelected.length === 0}>
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-1 h-4 w-4" />}
+                {busyAction === 'cancel-approve' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-1 h-4 w-4" />}
                 Approve selected
               </Button>
               <Button size="sm" variant="outline" onClick={onRejectCancel} disabled={busy}>
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="mr-1 h-4 w-4" />}
+                {busyAction === 'cancel-reject' ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="mr-1 h-4 w-4" />}
                 Reject all
               </Button>
               {cancelSelected.length > 0 && (
