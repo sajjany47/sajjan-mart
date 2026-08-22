@@ -372,6 +372,7 @@ model Order {
   cancelRequestItems Json? @map("cancel_request_items")
   previousStatus String?  @map("previous_status")
   refundedAmount Decimal? @map("refunded_amount")
+  refundId      String?   @map("refund_id")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @default(now()) @map("updated_at")
 

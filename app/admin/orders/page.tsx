@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Package, Inbox, XCircle, CheckCircle2, RefreshCcw, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Order, OrderStatus } from '@/lib/types';
+import { computeOrderAmounts, type OrderAmounts } from '@/lib/order-refunds';
 import { PageLoader } from '@/components/ui/page-loader';
 
 type TabValue = 'new' | 'processing' | 'dispatch' | 'cancel' | 'completed';
@@ -42,9 +43,25 @@ const STATUS_COLORS: Record<string, string> = {
   refunded: 'bg-muted text-muted-foreground',
 };
 
-function payableAmount(order: Order): number {
-  const refunded = Number(order.refunded_amount ?? 0);
-  return Math.max(0, Number(order.total) - refunded);
+/** Central settlement amounts — prefers the server-computed value, falls back
+ * to the exact same shared calculation locally. */
+function amountsOf(order: Order): OrderAmounts {
+  const serverAmounts = (order as any).amounts as OrderAmounts | undefined;
+  if (serverAmounts && typeof serverAmounts.updated_total === 'number') return serverAmounts;
+  return computeOrderAmounts({
+    subtotal: order.subtotal,
+    discount: order.discount,
+    shipping: order.shipping,
+    tax: order.tax,
+    total: order.total,
+    refundedAmount: order.refunded_amount ?? 0,
+    paymentStatus: order.payment_status,
+    items: (order.order_items ?? []).map((i) => ({
+      id: i.id,
+      total: i.total,
+      cancelled: i.cancelled,
+    })),
+  } as any);
 }
 
 export default function AdminOrdersPage() {
@@ -276,6 +293,7 @@ function OrderCard({
   onRejectItem: (itemId: string) => void;
   onProcessItem: (itemId: string, action: 'ready' | 'cancel') => void;
 }) {
+  const amt = amountsOf(order);
   const addr = order.address as any;
   const items = order.order_items ?? [];
   const allItemsHandled = items.length > 0 && items.every((it) => it.ready || it.cancelled);
@@ -296,9 +314,25 @@ function OrderCard({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-base font-bold">{formatINR(payableAmount(order))}</span>
-          {Number(order.refunded_amount ?? 0) > 0 && (
-            <span className="text-xs text-success">({formatINR(Number(order.total))} - refund)</span>
+          <div className="text-right">
+            {amt.has_cancellation && (
+              <p className="text-[10px] uppercase leading-tight text-muted-foreground">
+                {amt.fully_cancelled ? 'Order value' : 'New order amount'}
+              </p>
+            )}
+            <span className={`text-base font-bold ${amt.has_cancellation ? 'text-primary' : ''}`}>
+              {formatINR(amt.fully_cancelled ? 0 : amt.updated_total)}
+            </span>
+          </div>
+          {amt.has_cancellation && !amt.fully_cancelled && (
+            <span className="text-xs text-success">
+              was {formatINR(amt.original_total)}
+            </span>
+          )}
+          {amt.refunded_so_far > 0 && (
+            <span className="text-xs text-success">
+              Refunded {formatINR(amt.refunded_so_far)}
+            </span>
           )}
           {tab === 'new' && (
             <>
@@ -335,8 +369,13 @@ function OrderCard({
             Coupon: {order.coupon_code} (−{formatINR(Number(order.discount))})
           </span>
         )}
-        {order.refunded_amount != null && order.refunded_amount > 0 && (
-          <span className="text-success">Refunded: {formatINR(Number(order.refunded_amount))}</span>
+        {!amt.is_prepaid_paid && !amt.fully_cancelled && amt.has_cancellation && (
+          <span className="font-semibold text-warning">
+            Collect from customer: {formatINR(amt.cod_collect)}
+          </span>
+        )}
+        {amt.refunded_so_far > 0 && (
+          <span className="text-success">Refunded: {formatINR(amt.refunded_so_far)}</span>
         )}
         {order.status === 'cancel_request' && (
           <span className="text-warning">Requested {order.cancel_requested_at ? new Date(order.cancel_requested_at).toLocaleString() : ''}</span>
@@ -347,6 +386,39 @@ function OrderCard({
           </span>
         )}
       </div>
+
+      {/* Delivery handoff — the delivery boy must see the UPDATED collection amount */}
+      {(tab === 'dispatch' || order.status === 'shipped') && (
+        <div
+          className={`flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3 ${
+            amt.is_prepaid_paid ? 'bg-success/10' : 'bg-warning/10'
+          }`}
+        >
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              {amt.is_prepaid_paid ? 'Prepaid — nothing to collect' : 'Amount to collect'}
+            </p>
+            <p className={`text-xl font-extrabold ${amt.is_prepaid_paid ? 'text-success' : ''}`}>
+              {formatINR(amt.cod_collect)}
+            </p>
+          </div>
+          <div className="text-right text-xs text-muted-foreground">
+            <p className="uppercase font-medium text-foreground">
+              {order.payment_method} · {order.payment_status}
+            </p>
+            {amt.has_cancellation && (
+              <p>
+                Updated from {formatINR(amt.original_total)} ·{' '}
+                {items.filter((i) => i.cancelled).length} item(s) cancelled
+                {amt.refund_due_total > 0 && amt.is_prepaid_paid
+                  ? ` · refund ${formatINR(amt.refund_due_total)}`
+                  : ''}
+              </p>
+            )}
+            {!amt.is_prepaid_paid && <p>Collect cash at delivery</p>}
+          </div>
+        </div>
+      )}
 
       {expanded && (
         <div className="border-t border-border p-4">
@@ -429,9 +501,78 @@ function OrderCard({
               <span>{formatINR(Number(order.tax))}</span>
             </div>
             <div className="flex justify-between border-t border-border pt-1 text-sm font-semibold">
-              <span>Total</span>
-              <span>{formatINR(Number(order.total))}</span>
+              <span>Original total</span>
+              <span>{formatINR(amt.original_total)}</span>
             </div>
+
+            {amt.has_cancellation && (
+              <div className="mt-2 space-y-1 rounded-lg border border-border bg-background/60 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Remaining order</p>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Active items ({items.filter((i) => !i.cancelled).length})</span>
+                  <span>{formatINR(amt.active_subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Shipping</span>
+                  <span>{formatINR(amt.updated_shipping)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Tax (recalculated ~{amt.tax_rate_pct}%)</span>
+                  <span>{formatINR(amt.updated_tax)}</span>
+                </div>
+                {amt.discount_active > 0 && amt.discount_active !== Number(order.discount ?? 0) && (
+                  <div className="flex justify-between text-xs text-success">
+                    <span>Coupon (applied share)</span>
+                    <span>−{formatINR(amt.discount_active)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t border-border pt-1 text-sm font-bold text-primary">
+                  <span>New order total</span>
+                  <span>{formatINR(amt.fully_cancelled ? 0 : amt.updated_total)}</span>
+                </div>
+
+                <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Cancellation / refund</p>
+                {items.filter((i) => i.cancelled).map((i) => (
+                  <div key={i.id} className="flex justify-between text-xs text-destructive">
+                    <span>Cancelled · {i.name}</span>
+                    <span>−{formatINR(Number(i.total))}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Original order value</span>
+                  <span>{formatINR(amt.original_total)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Updated order value</span>
+                  <span>{formatINR(amt.fully_cancelled ? 0 : amt.updated_total)}</span>
+                </div>
+                {amt.is_prepaid_paid ? (
+                  <>
+                    <div className="flex justify-between text-sm font-semibold text-success">
+                      <span>Refund amount</span>
+                      <span>{formatINR(amt.refund_due_total)}</span>
+                    </div>
+                    {amt.refunded_so_far > 0 && (
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Already refunded</span>
+                        <span>{formatINR(amt.refunded_so_far)}</span>
+                      </div>
+                    )}
+                    {amt.refund_pending > 0 && !amt.fully_cancelled && (
+                      <div className="flex justify-between text-xs font-medium text-warning">
+                        <span>Refund pending initiation</span>
+                        <span>{formatINR(amt.refund_pending)}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex justify-between rounded-md bg-warning/10 px-2 py-1.5 text-sm font-bold text-warning">
+                    <span>Collect from customer</span>
+                    <span>{formatINR(amt.fully_cancelled ? 0 : amt.cod_collect)}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {addr && (

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma/client';
 import { jsonResponse, parseBody } from '@/lib/api-utils';
 import { getStoreConfig, isFoodOpenNow } from '@/lib/store-config';
+import { computeOrderAmounts } from '@/lib/order-refunds';
 import { sendOrderPlacedMails } from '@/lib/mailer';
 
 export async function GET(request: NextRequest) {
@@ -27,6 +28,7 @@ export async function GET(request: NextRequest) {
     const orders = items.map(({ items: orderItems, ...order }) => ({
       ...order,
       order_items: orderItems,
+      amounts: computeOrderAmounts({ ...order, items: orderItems }),
     }));
     return jsonResponse(orders);
   } catch (error) {

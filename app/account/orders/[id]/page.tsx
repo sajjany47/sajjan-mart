@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from 'sonner';
 import type { Order } from '@/lib/types';
+import { computeOrderAmounts, type OrderAmounts } from '@/lib/order-refunds';
 
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-warning/15 text-warning',
@@ -100,8 +101,21 @@ export default function OrderDetailPage() {
   if (!order) return notFound();
 
   const addr = order.address as any;
-  const refundedAmount = Number(order.refunded_amount ?? 0);
-  const payableAmount = Number(order.total) - refundedAmount;
+  const amt: OrderAmounts = computeOrderAmounts({
+    subtotal: order.subtotal,
+    discount: order.discount,
+    shipping: order.shipping,
+    tax: order.tax,
+    total: order.total,
+    refundedAmount: order.refunded_amount ?? 0,
+    paymentStatus: order.payment_status,
+    items: (order.order_items ?? []).map((i) => ({
+      id: i.id,
+      total: i.total,
+      cancelled: i.cancelled,
+    })),
+  } as any);
+  const cancelledItems = (order.order_items ?? []).filter((i) => i.cancelled);
   const cancellable = CANCELLABLE_STATUSES.includes(order.status);
   const selectableItems = cancellable
     ? (order.order_items ?? []).filter((it) => !it.cancelled)
@@ -218,15 +232,47 @@ export default function OrderDetailPage() {
               <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatINR(Number(order.subtotal))}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span>{shippingLabel(Number(order.shipping))}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Tax</span><span>{formatINR(Number(order.tax))}</span></div>
-              <div className="flex justify-between border-t border-border pt-2 text-base font-semibold"><span>Total</span><span>{formatINR(Number(order.total))}</span></div>
-              {refundedAmount > 0 && (
-                <div className="flex justify-between text-destructive">
-                  <span>Refunded</span><span>- {formatINR(refundedAmount)}</span>
+              <div className="flex justify-between border-t border-border pt-2 text-base font-semibold"><span>Original total</span><span>{formatINR(amt.original_total)}</span></div>
+
+              {amt.has_cancellation ? (
+                <>
+                  {cancelledItems.map((i) => (
+                    <div key={i.id} className="flex justify-between text-xs text-destructive">
+                      <span>Cancelled · {i.name}</span>
+                      <span>−{formatINR(Number(i.total))}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between border-t border-border pt-2 text-base font-bold text-primary">
+                    <span>New order value</span>
+                    <span>{formatINR(amt.fully_cancelled ? 0 : amt.updated_total)}</span>
+                  </div>
+                  {amt.is_prepaid_paid ? (
+                    <>
+                      {amt.refund_due_total > 0 && (
+                        <div className="flex justify-between font-medium text-success">
+                          <span>{amt.fully_cancelled ? 'Full refund' : 'Refund to your payment method'}</span>
+                          <span>{formatINR(amt.refund_due_total)}</span>
+                        </div>
+                      )}
+                      {amt.refunded_so_far > 0 && (
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>Refunded so far</span>
+                          <span>{formatINR(amt.refunded_so_far)}</span>
+                        </div>
+                      )}
+                    </>
+                  ) : !amt.fully_cancelled && (
+                    <div className="mt-1 rounded-lg bg-warning/10 px-3 py-2 text-sm font-semibold text-warning">
+                      Please pay {formatINR(amt.cod_collect)} at delivery
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex justify-between border-t border-border pt-2 text-base font-bold text-success">
+                  <span>Amount to pay</span>
+                  <span>{formatINR(amt.updated_total)}</span>
                 </div>
               )}
-              <div className="flex justify-between border-t border-border pt-2 text-base font-bold text-success">
-                <span>Amount to pay</span><span>{formatINR(Math.max(0, payableAmount))}</span>
-              </div>
             </div>
           </div>
 

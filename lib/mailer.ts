@@ -289,6 +289,58 @@ export async function sendCancelRejectedMail(order: OrderWithDetails) {
   });
 }
 
+/** Mail to the customer when the admin directly cancels an item of their order. */
+export async function sendAdminItemCancelledMail(
+  order: OrderWithDetails,
+  cancelledItemNames: string[],
+  amounts: {
+    fully_cancelled: boolean;
+    is_prepaid_paid: boolean;
+    original_total: number;
+    updated_total: number;
+    refund_pending: number;
+    cod_collect: number;
+  }
+) {
+  const to = order.user?.email;
+  if (!to) return;
+
+  const itemsLine = `<p>Your item "${cancelledItemNames.join(', ')}" has been cancelled.</p>`;
+
+  let detailHtml: string;
+  if (amounts.fully_cancelled) {
+    // The only item(s) were cancelled — whole order is gone.
+    detailHtml = amounts.is_prepaid_paid
+      ? `<p>Your order has been cancelled because ${cancelledItemNames.length > 1 ? 'all items were' : 'the only item was'} cancelled.</p>
+         <p>A full refund of <strong>${money(amounts.original_total)}</strong> has been initiated.</p>`
+      : `<p>Your order has been cancelled because ${cancelledItemNames.length > 1 ? 'all items were' : 'the only item in your order'} cancelled.</p>
+         <p>Original order value: <strong>${money(amounts.original_total)}</strong> &mdash; nothing is due since this was a cash-on-delivery order${amounts.cod_collect > 0 ? ` and only <strong>${money(amounts.cod_collect)}</strong> would have been collected` : ''}.</p>`;
+  } else if (amounts.is_prepaid_paid) {
+    detailHtml = `${itemsLine}
+      <p>Your order value has been updated from <strong>${money(amounts.original_total)}</strong> to <strong>${money(amounts.updated_total)}</strong>.</p>
+      <p><strong>${money(amounts.refund_pending)}</strong> will be refunded to your original payment method.</p>`;
+  } else {
+    detailHtml = `${itemsLine}
+      <p>Your order value has been updated from <strong>${money(amounts.original_total)}</strong> to <strong>${money(amounts.updated_total)}</strong>.</p>
+      <p>Please pay <strong>${money(amounts.cod_collect)}</strong> at delivery.</p>`;
+  }
+
+  await sendMailSafe({
+    to,
+    subject: `[Sajjan Mart] Item cancelled — Order #${order.orderNumber}`,
+    html: wrap(
+      amounts.fully_cancelled ? 'Your order has been cancelled' : 'An item in your order was cancelled',
+      `${customerGreeting(order)}
+      ${detailHtml}
+      ${
+        amounts.fully_cancelled
+          ? ''
+          : `<p>The rest of your order <strong>#${order.orderNumber}</strong> remains unchanged and will be delivered as planned.</p>`
+      }`
+    ),
+  });
+}
+
 /** Mail to admin with only the raised ticket's details. */
 export async function sendTicketCreatedMail(ticket: {
   ticketNumber: string;

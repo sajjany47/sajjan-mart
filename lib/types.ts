@@ -225,6 +225,7 @@ export interface Order {
   cancel_request_items: string[] | null;
   previous_status: string | null;
   refunded_amount: number | null;
+  refund_id: string | null;
   created_at: string;
   updated_at: string;
   order_items?: OrderItem[];
