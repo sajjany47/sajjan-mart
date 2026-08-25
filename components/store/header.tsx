@@ -170,11 +170,11 @@ export function Header({ activeCategories }: { activeCategories: string[] }) {
           </SheetContent>
         </Sheet>
 
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-display text-lg font-bold">
+        <Link href="/" className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-display text-sm font-bold sm:h-9 sm:w-9 sm:text-lg">
             S
           </div>
-          <span className="font-display text-xl font-semibold tracking-tight">
+          <span className="font-display text-base font-semibold tracking-tight sm:text-xl">
             Sajjan Mart
           </span>
         </Link>
