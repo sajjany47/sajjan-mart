@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import type { Profile, UserRole } from '@/lib/types';
+import { apiFetch, installAuthInterceptor } from '@/lib/auth-fetch';
 
 interface AuthUser {
   id: string;
@@ -31,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadProfile = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me');
+      const res = await apiFetch('/api/auth/me');
       if (!res.ok) {
         setUser(null);
         setProfile(null);
@@ -40,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await res.json();
       if (data.user) {
         setUser(data.user);
-        const profileRes = await fetch(`/api/profiles/${data.user.id}`);
+        const profileRes = await apiFetch(`/api/profiles/${data.user.id}`);
         if (profileRes.ok) {
           setProfile(await profileRes.json());
         }
@@ -52,12 +53,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    installAuthInterceptor();
     loadProfile().finally(() => setLoading(false));
   }, [loadProfile]);
 
   async function signIn(email: string, password: string) {
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -74,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signUp(email: string, password: string, fullName: string) {
     try {
-      const res = await fetch('/api/auth/signup', {
+      const res = await apiFetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, fullName }),
@@ -90,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await apiFetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
     setProfile(null);
   }

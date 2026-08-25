@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma/client';
-import { signToken } from '@/lib/jwt';
+import { setAuthCookieValues } from '@/lib/auth-cookies';
+import { signTokenPair } from '@/lib/jwt';
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,10 +21,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    const token = signToken({ id: user.id, email: user.email, role: user.role });
-
+    const tokenPayload = { id: user.id, email: user.email, role: user.role };
+    const tokens = signTokenPair(tokenPayload);
     const response = NextResponse.json({
-      token,
+      ...tokens,
       user: {
         id: user.id,
         email: user.email,
@@ -32,14 +33,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    response.cookies.set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60,
-      path: '/',
-    });
-
+    setAuthCookieValues(response, tokens.accessToken, tokens.refreshToken);
     return response;
   } catch {
     return NextResponse.json({ error: 'Login failed' }, { status: 500 });

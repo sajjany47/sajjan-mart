@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/jwt';
 import { prisma } from '@/lib/prisma/client';
+import { getAccessPayload } from '@/lib/auth-cookies';
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('token')?.value;
-    if (!token) {
-      return NextResponse.json({ user: null }, { status: 401 });
-    }
-
-    const payload = verifyToken(token);
+    const payload = getAccessPayload(request);
     if (!payload) {
       return NextResponse.json({ user: null }, { status: 401 });
     }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { verifyToken } from '@/lib/jwt';
 import { prisma } from '@/lib/prisma/client';
+import { getAccessPayload } from '@/lib/auth-cookies';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,12 +10,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
     }
 
-    const token = request.cookies.get('token')?.value;
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const payload = verifyToken(token);
+    const payload = getAccessPayload(request);
     if (!payload) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
