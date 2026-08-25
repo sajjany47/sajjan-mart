@@ -3,9 +3,10 @@ import Image from 'next/image';
 import { StoreShell } from '@/components/store/store-shell';
 import { HeroSlider, type Slide } from '@/components/store/hero-slider';
 import { CategoryProductSection } from '@/components/store/category-product-section';
+import { PujaSection } from '@/components/store/puja-section';
 import { SectionHeader } from '@/components/store/section-header';
 import { createServerSupabase } from '@/lib/supabase/server';
-import type { Category, Product } from '@/lib/types';
+import type { Category, Product, Puja } from '@/lib/types';
 
 export const revalidate = 60;
 
@@ -62,7 +63,6 @@ const HERO_SLIDES: Slide[] = [
 
 const SECTION_CONFIG = [
   { type: 'food', title: 'Food', subtitle: 'Freshly prepared food from our cloud kitchen', href: '/category/food' },
-  { type: 'puja_samagri', title: 'Puja Samagri', subtitle: 'Complete puja packages & Pandit Ji booking', href: '/puja' },
   { type: 'natural', title: 'Natural Products', subtitle: 'Pure mustard oils & authentic kitchen spices', href: '/category/natural-products' },
   { type: 'general', title: 'General Products', subtitle: 'Everyday essentials for your home', href: '/category/general' },
 ] as const;
@@ -88,14 +88,22 @@ async function getHomeData() {
     productsByType[s.type] = (productResults[i].data ?? []) as Product[];
   });
 
+  const { data: pujasData } = await supabase
+    .from('pujas')
+    .select('*')
+    .eq('is_active', true)
+    .order('name')
+    .limit(6);
+
   return {
     categories: (categoriesResult.data ?? []) as Category[],
     productsByType,
+    pujas: (pujasData ?? []) as Puja[],
   };
 }
 
 export default async function HomePage() {
-  const { categories, productsByType } = await getHomeData();
+  const { categories, productsByType, pujas } = await getHomeData();
 
   const categoryHref = (slug: string) =>
     slug === 'puja-samagri' ? '/puja' : `/category/${slug}`;
@@ -135,6 +143,13 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      <PujaSection
+        title="Puja Samagri"
+        subtitle="Complete puja packages & Pandit Ji booking"
+        viewAllHref="/puja"
+        pujas={pujas}
+      />
 
       {SECTION_CONFIG.map((s) => (
         <CategoryProductSection
