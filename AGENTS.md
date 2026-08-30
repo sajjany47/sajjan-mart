@@ -1,5 +1,17 @@
 # AGENTS.md — Project Change Log
 
+## 2026-08-30: Admin Users module + active/inactive account gating
+
+- `Profile` gained `isActive Boolean @default(true) @map("is_active")` (pushed via `prisma db push --skip-generate --accept-data-loss`, which also dropped unused legacy `profiles.refresh_token` column + `device_tokens` table).
+- **Deactivated accounts are locked out**: `/api/auth/login` returns 403 ("This account has been deactivated..."), `/api/auth/me` returns `user: null` / 401, and `POST /api/orders` rejects with 403. Admins can't be deactivated (server-side guard) so the panel can't be locked out.
+- New admin-only API:
+  - `GET /api/admin/users` — searchable (`q` name/email/phone, `role` filter), returns every profile + `_count` of orders/support tickets, newest first.
+  - `PUT /api/admin/users` — toggles `is_active` (body `{ id, is_active }`; `parseBody` snake→camel so camelCase works too; flags `null` for fields the requester must not see — actually returns the sanitized profile, password always stripped).
+  - `GET /api/admin/users/[id]` — profile + up to 100 orders (with `amounts` from `computeOrderAmounts`) + support tickets (with linked order) for the per-user drilldown.
+- Admin routes use `requireAdmin` (JWT `access_token` cookie, role check) — non-admin tokens get 403.
+- New admin pages: `app/admin/users/page.tsx` ("Users" in sidebar nav, `UserRound` icon) — searchable datatable with role badge, order/ticket counts, Active/Inactive badge + Activate/Deactivate buttons (hidden for admins); `app/admin/users/[id]/page.tsx` — profile header, stat cards, inactive-warning banner, orders panel (shows updated total + "X cancelled" when the order has cancellations) and tickets panel.
+- Verified 19/19 e2e assertions via a throwaway HTTP script (`prisma/_test-users.ts`, deleted): admin list/401/403 guards, admin self-deactivate blocked, login blocked while inactive and restored after reactivation, order placement blocked while inactive, detail payload shape (order amounts + tickets).
+
 ## 2026-08-16: Order & ticket email notifications (Nodemailer)
 
 - New `lib/mailer.ts`: lazy nodemailer transporter from `SMTP_*` env vars, `ADMIN_EMAIL` (default `sajjany47@gmail.com`), and fire-and-forget `sendMailSafe` (failures are logged, never thrown — order/ticket APIs can't break because of mail).

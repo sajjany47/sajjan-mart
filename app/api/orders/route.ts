@@ -50,6 +50,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Deactivated accounts cannot place orders.
+    if (orderData.userId) {
+      const buyer = await prisma.profile.findUnique({
+        where: { id: orderData.userId },
+        select: { isActive: true },
+      });
+      if (buyer && buyer.isActive === false) {
+        return NextResponse.json(
+          { error: 'This account has been deactivated and cannot place orders.' },
+          { status: 403 }
+        );
+      }
+    }
+
     if (orderData.couponCode) {
       const coupon = await prisma.coupon.findUnique({ where: { code: orderData.couponCode } });
       if (!coupon || !coupon.isActive) {

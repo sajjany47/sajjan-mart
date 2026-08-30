@@ -16,6 +16,7 @@ model Profile {
   avatarUrl     String?   @map("avatar_url")
   password      String?
   emailVerified DateTime? @map("email_verified")
+  isActive      Boolean   @default(true) @map("is_active")
   createdAt     DateTime  @default(now()) @map("created_at")
 
   accounts       Account[]

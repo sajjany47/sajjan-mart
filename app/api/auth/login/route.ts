@@ -21,6 +21,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
+    if (user.isActive === false) {
+      return NextResponse.json(
+        { error: 'This account has been deactivated. Please contact support.' },
+        { status: 403 }
+      );
+    }
+
     const tokenPayload = { id: user.id, email: user.email, role: user.role };
     const tokens = signTokenPair(tokenPayload);
     const response = NextResponse.json({

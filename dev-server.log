@@ -1,0 +1,70 @@
+  ▲ Next.js 13.5.1
+  - Local:        http://localhost:3000
+  - Environments: .env.development
+
+ ✓ Ready in 2s
+ ✓ Compiled /api/admin/users/route in 414ms (117 modules)
+ ✓ Compiled /api/auth/login/route in 122ms (120 modules)
+ ✓ Compiled /api/orders/route in 406ms (175 modules)
+[orders] create failed: PrismaClientValidationError: 
+Invalid `prisma.order.create()` invocation:
+
+{
+  data: {
+    userId: "4f70ec40-ef97-46c9-8a24-bc7f3c418de8",
++   orderNumber: String
+  }
+}
+
+Argument `orderNumber` is missing.
+    at wn (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async POST (webpack-internal:///(rsc)/./app/api/orders/route.ts:150:22)
+    at async E:\FestivalMart\sajjan-mart\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:66877 {
+  clientVersion: '5.22.0'
+}
+ ✓ Compiled /api/admin/users/[id]/route in 37ms (177 modules)
+[orders] create failed: PrismaClientValidationError: 
+Invalid `prisma.order.create()` invocation:
+
+{
+  data: {
+    userId: "4f70ec40-ef97-46c9-8a24-bc7f3c418de8",
++   orderNumber: String
+  }
+}
+
+Argument `orderNumber` is missing.
+    at wn (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async POST (webpack-internal:///(rsc)/./app/api/orders/route.ts:150:22)
+    at async E:\FestivalMart\sajjan-mart\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:66877 {
+  clientVersion: '5.22.0'
+}
+ ✓ Compiled in 78ms (177 modules)
+[orders] create failed: PrismaClientValidationError: 
+Invalid `prisma.order.create()` invocation:
+
+{
+  data: {
+    userId: "4f70ec40-ef97-46c9-8a24-bc7f3c418de8",
++   orderNumber: String
+  }
+}
+
+Argument `orderNumber` is missing.
+    at wn (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async POST (webpack-internal:///(rsc)/./app/api/orders/route.ts:150:22)
+    at async E:\FestivalMart\sajjan-mart\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:66877 {
+  clientVersion: '5.22.0'
+}
