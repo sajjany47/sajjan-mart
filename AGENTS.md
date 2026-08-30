@@ -6,6 +6,12 @@
 - "Export Excel" button in `app/admin/products/page.tsx` toolbar (per active tab) downloads `puja-samagri.xlsx` etc.; guards: 401 no token, 403 non-admin.
 - Verified 12/12 e2e assertions (auth guards, xlsx magic bytes, worksheet/28 columns, header, row count matches DB).
 
+## 2026-08-30: Admin products sorting (image-missing first + name sorts)
+
+- `GET /api/products` supports new `sort` values: `image-missing` (products with no `product_images` first, then name A–Z), `name-asc` / `name-desc` / `name` (case-insensitive alphabetical), `oldest`. Name + image sorts use a case-insensitive JS sort after fetch (Prisma 5.22 has no `mode` in orderBy). Existing `price-asc/desc`, `rating`, `newest` unchanged.
+- `app/admin/products/page.tsx`: sort dropdown in the toolbar — "Image missing first" (default), Name A–Z / Z–A, Newest / Oldest — passed to the API via `.eq('sort', …)`; load effect re-runs on change.
+- Verified 6/6 e2e (zero-image-first monotonic counts, case-insensitive A–Z, Z–A reverse, newest/oldest).
+
 ## 2026-08-30: Food orders highlighted on admin Orders screen
 
 - `app/api/orders/route.ts` GET now includes each item's `product.product_type`; POST auto-tags food order items `item_type='food'` (one product-type lookup by id) so the flag survives later product deletion.
