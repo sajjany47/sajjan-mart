@@ -124,3 +124,62 @@ Browserslist: caniuse-lite is outdated. Please run:
  ✓ Compiled in 179ms (448 modules)
  ✓ Compiled in 184ms (448 modules)
  ✓ Compiled in 184ms (448 modules)
+ ✓ Compiled /api/auth/logout/route in 449ms (576 modules)
+ ○ compiling /(auth)/register/page ...
+ ✓ Compiled /(auth)/register/page in 26.4s (1311 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/settings/route in 2.8s (733 modules)
+ ✓ Compiled /api/auth/signup/route in 1386ms (724 modules)
+ ✓ Compiled /api/auth/me/route in 1342ms (724 modules)
+ ✓ Compiled /api/profiles/[id]/route in 1335ms (726 modules)
+ ○ compiling /account/page ...
+ ✓ Compiled /account/page in 7.5s (1329 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/orders/route in 1375ms (740 modules)
+ ✓ Compiled (794 modules)
+ ✓ Compiled /api/auth/logout/route in 1616ms (791 modules)
+ ○ compiling /(auth)/login/page ...
+ ✓ Compiled /(auth)/login/page in 4.6s (1387 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ○ compiling /(auth)/forgot-password/page ...
+ ✓ Compiled /(auth)/forgot-password/page in 3.8s (1382 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/auth/login/route in 1086ms (766 modules)
+ ✓ Compiled /api/auth/me/route in 1309ms (766 modules)
+ ✓ Compiled /api/profiles/[id]/route in 1391ms (768 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ○ compiling /admin/page ...
+ ✓ Compiled /admin/page in 14.9s (1213 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/profiles/route in 1327ms (639 modules)
+ ✓ Compiled (697 modules)
+ ○ compiling /admin/products/page ...
+ ✓ Compiled /admin/products/page in 7.9s (1281 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/add-on-items/route in 795ms (679 modules)
+ ✓ Compiled (683 modules)
+ ✓ Compiled /api/products/[id]/route in 858ms (615 modules)
+ ✓ Compiled /api/product-images/route in 590ms (617 modules)
+ ✓ Compiled /api/products/route in 1579ms (619 modules)
+ ✓ Compiled in 1050ms (1195 modules)
+ ✓ Compiled in 955ms (1209 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled in 477ms (618 modules)
+ ✓ Compiled in 529ms (618 modules)
+ ✓ Compiled in 722ms (1209 modules)
+ ✓ Compiled in 1057ms (1213 modules)
+ ✓ Compiled /api/products/route in 563ms (616 modules)
+ ✓ Compiled (622 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled in 710ms (619 modules)
+ ○ compiling /api/admin/export/puja-samagri/route ...
+ ✓ Compiled /api/admin/export/puja-samagri/route in 3.4s (1191 modules)

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Plus, Pencil, Trash2, Search, X, Upload, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, X, Upload, Link as LinkIcon, Loader2, FileSpreadsheet } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -349,6 +349,32 @@ export default function AdminProductsPage() {
     toast.success('Product deleted');
   }
 
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const res = await fetch(`/api/admin/export/puja-samagri?type=${activeTab}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error ?? 'Export failed');
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${activeTab}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Excel downloaded');
+    } catch {
+      toast.error('Export failed');
+    } finally {
+      setExporting(false);
+    }
+  }
+
   const filtered = products
     .filter((p) => p.product_type === activeTab)
     .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
@@ -381,6 +407,9 @@ export default function AdminProductsPage() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search..." className="pl-9" />
             </div>
+            <Button variant="outline" onClick={handleExport} disabled={exporting}>
+              <FileSpreadsheet className="mr-1 h-4 w-4 text-success" /> {exporting ? 'Exporting...' : 'Export Excel'}
+            </Button>
             <Button onClick={() => openNew(activeTab)}><Plus className="mr-1 h-4 w-4" /> Add {PRODUCT_TYPES.find((t) => t.value === activeTab)?.label}</Button>
           </div>
         </div>

@@ -1,5 +1,11 @@
 # AGENTS.md — Project Change Log
 
+## 2026-08-30: Admin product Excel export
+
+- New admin-only endpoint `GET /api/admin/export/puja-samagri?type=<productType>` (`exceljs` added): returns a styled `.xlsx` for the requested product type (puja_samagri / food / natural / general) with 28 columns — name, slug, description, category/subcategory/brand names, product chip label, purchase/sales/final price, discount, quantity/type, stock/type, gender, rating, review count, all 5 status flags, sort order, image URLs, linked festivals (from `pujaItems`), created/updated timestamps. Frozen header row, orange fill, auto widths.
+- "Export Excel" button in `app/admin/products/page.tsx` toolbar (per active tab) downloads `puja-samagri.xlsx` etc.; guards: 401 no token, 403 non-admin.
+- Verified 12/12 e2e assertions (auth guards, xlsx magic bytes, worksheet/28 columns, header, row count matches DB).
+
 ## 2026-08-30: Admin Users module + active/inactive account gating
 
 - `Profile` gained `isActive Boolean @default(true) @map("is_active")` (pushed via `prisma db push --skip-generate --accept-data-loss`, which also dropped unused legacy `profiles.refresh_token` column + `device_tokens` table).
