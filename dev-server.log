@@ -183,3 +183,12 @@ Browserslist: caniuse-lite is outdated. Please run:
  ✓ Compiled in 710ms (619 modules)
  ○ compiling /api/admin/export/puja-samagri/route ...
  ✓ Compiled /api/admin/export/puja-samagri/route in 3.4s (1191 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/auth/me/route in 1080ms (695 modules)
+ ✓ Compiled /api/auth/refresh/route in 693ms (697 modules)
+ ✓ Compiled /api/profiles/[id]/route in 937ms (700 modules)
+ ✓ Compiled /api/products/route in 1072ms (702 modules)
+ ✓ Compiled (708 modules)
+ ○ compiling /api/admin/export/puja-samagri/route ...
+ ✓ Compiled /api/admin/export/puja-samagri/route in 10s (1206 modules)

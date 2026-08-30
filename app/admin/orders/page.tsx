@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Package, Inbox, XCircle, CheckCircle2, RefreshCcw, Truck } from 'lucide-react';
+import { Loader2, Package, Inbox, XCircle, CheckCircle2, RefreshCcw, Truck, Flame } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Order, OrderStatus } from '@/lib/types';
 import { computeOrderAmounts, type OrderAmounts } from '@/lib/order-refunds';
@@ -62,6 +62,15 @@ function amountsOf(order: Order): OrderAmounts {
       cancelled: i.cancelled,
     })),
   } as any);
+}
+
+/** True when the order still contains an active (non-cancelled) food item. */
+function hasFood(order: Order): boolean {
+  return (order.order_items ?? []).some(
+    (it) =>
+      !it.cancelled &&
+      (it.item_type === 'food' || (it as any).product?.product_type === 'food')
+  );
 }
 
 export default function AdminOrdersPage() {
@@ -216,7 +225,13 @@ export default function AdminOrdersPage() {
         </TabsList>
 
         {TAB_DEFS.map((tab) => {
-          const tabOrders = orders.filter((o) => tab.statuses.includes(o.status));
+          const tabOrders = orders
+            .filter((o) => tab.statuses.includes(o.status))
+            .sort((a, b) => {
+              const foodDiff = (hasFood(b) ? 1 : 0) - (hasFood(a) ? 1 : 0);
+              if (foodDiff !== 0) return foodDiff;
+              return b.created_at.localeCompare(a.created_at);
+            });
           return (
             <TabsContent key={tab.value} value={tab.value} className="mt-4 space-y-3">
               {tabOrders.length === 0 ? (
@@ -297,15 +312,21 @@ function OrderCard({
   const addr = order.address as any;
   const items = order.order_items ?? [];
   const allItemsHandled = items.length > 0 && items.every((it) => it.ready || it.cancelled);
+  const food = hasFood(order);
 
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-sm">
+    <div className={`rounded-2xl border bg-card shadow-sm ${food ? 'border-orange-300 ring-1 ring-orange-200' : 'border-border'}`}>
       <div className="flex flex-wrap items-center justify-between gap-3 p-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <button onClick={onToggleExpand} className="text-sm font-semibold hover:text-primary">
               Order #{order.order_number}
             </button>
+            {food && (
+              <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300">
+                <Flame className="mr-1 h-3.5 w-3.5" /> FOOD
+              </Badge>
+            )}
             <Badge className={STATUS_COLORS[order.status] ?? 'bg-muted text-muted-foreground'}>{orderStatusLabel(order.status)}</Badge>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -362,6 +383,11 @@ function OrderCard({
       </div>
 
       <div className="flex flex-wrap items-center gap-4 border-t border-border px-4 py-2 text-xs text-muted-foreground">
+        {food && (
+          <span className="font-bold uppercase tracking-wide text-orange-600 dark:text-orange-400">
+            ⚡ Food items — deliver ASAP
+          </span>
+        )}
         <span className="uppercase">Payment: {order.payment_method}</span>
         <span className="capitalize">Payment status: {order.payment_status}</span>
         {order.coupon_code && Number(order.discount ?? 0) > 0 && (

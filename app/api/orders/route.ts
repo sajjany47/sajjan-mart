@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         user: { select: { id: true, email: true, fullName: true, phone: true, role: true, avatarUrl: true } },
-        items: true,
+        items: { include: { product: { select: { productType: true } } } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -103,6 +103,21 @@ export async function POST(request: NextRequest) {
           metadata: (it.metadata as object) ?? {},
         }))
       : [];
+
+    // Tag food items so the admin orders screen can prioritise them for delivery
+    // (independent of the product link, which can be deleted later).
+    const productIds = itemData
+      .flatMap((it) => (it.productId ? [it.productId] : []))
+      .filter((x): x is string => typeof x === 'string');
+    const productTypes = productIds.length
+      ? await prisma.product.findMany({ where: { id: { in: productIds } }, select: { id: true, productType: true } })
+      : [];
+    const typeById = new Map(productTypes.map((p) => [p.id, p.productType]));
+    for (const entry of itemData) {
+      if (entry.itemType === 'product' && typeById.get(entry.productId as string) === 'food') {
+        entry.itemType = 'food';
+      }
+    }
 
     const item = await prisma.order.create({
       data: {

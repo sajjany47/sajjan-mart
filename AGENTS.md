@@ -6,6 +6,11 @@
 - "Export Excel" button in `app/admin/products/page.tsx` toolbar (per active tab) downloads `puja-samagri.xlsx` etc.; guards: 401 no token, 403 non-admin.
 - Verified 12/12 e2e assertions (auth guards, xlsx magic bytes, worksheet/28 columns, header, row count matches DB).
 
+## 2026-08-30: Food orders highlighted on admin Orders screen
+
+- `app/api/orders/route.ts` GET now includes each item's `product.product_type`; POST auto-tags food order items `item_type='food'` (one product-type lookup by id) so the flag survives later product deletion.
+- Admin Orders (`app/admin/orders/page.tsx`): orders still containing an active food item get an orange border/ring, a "⚡ FOOD" badge next to the order number, an "⚡ Food items — deliver ASAP" note in the footer strip, and are sorted to the top of every tab (New/Processing/Dispatch/Cancel Request/Completed) — food-first, then newest first.
+
 ## 2026-08-30: Admin Users module + active/inactive account gating
 
 - `Profile` gained `isActive Boolean @default(true) @map("is_active")` (pushed via `prisma db push --skip-generate --accept-data-loss`, which also dropped unused legacy `profiles.refresh_token` column + `device_tokens` table).
