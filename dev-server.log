@@ -68,3 +68,59 @@ Argument `orderNumber` is missing.
     at async E:\FestivalMart\sajjan-mart\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:66877 {
   clientVersion: '5.22.0'
 }
+ ○ compiling /not-found ...
+AbortError: The user aborted a request.
+    at abort (E:\FestivalMart\sajjan-mart\node_modules\next\dist\compiled\node-fetch\index.js:1:65190)
+    at AbortSignal.abortAndFinalize (E:\FestivalMart\sajjan-mart\node_modules\next\dist\compiled\node-fetch\index.js:1:65410)
+    at [nodejs.internal.kHybridDispatch] (node:internal/event_target:843:20)
+    at AbortSignal.dispatchEvent (node:internal/event_target:776:26)
+    at runAbort (node:internal/abort_controller:547:10)
+    at abortSignal (node:internal/abort_controller:518:3)
+    at AbortController.abort (node:internal/abort_controller:566:5)
+    at Timeout.<anonymous> (E:\FestivalMart\sajjan-mart\node_modules\next\dist\compiled\@next\font\dist\google\fetch-font-file.js:24:51)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7) {
+  type: 'aborted'
+}
+ X Failed to download `Inter` from Google Fonts. Using fallback font instead.
+
+Failed to fetch `Inter` from Google Fonts.}
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ Compiled /admin/orders/page in 37.6s (628 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/auth/me/route in 460ms (411 modules)
+ ✓ Compiled /api/auth/refresh/route in 163ms (413 modules)
+ ✓ Compiled /api/profiles/[id]/route in 173ms (416 modules)
+ ✓ Compiled /api/orders/route in 434ms (471 modules)
+ ✓ Compiled /admin/users/page in 1266ms (799 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/admin/users/route in 246ms (484 modules)
+ ✓ Compiled /admin/users/[id]/page in 1032ms (816 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/admin/users/[id]/route in 166ms (494 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /admin/tickets/page in 1544ms (649 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/support-tickets/route in 190ms (404 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/admin/users/route in 185ms (485 modules)
+ ○ compiling /page ...
+ ✓ Compiled /page in 4.4s (1065 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/settings/route in 415ms (633 modules)
+ ✓ Compiled in 457ms (448 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled in 183ms (448 modules)
+ ✓ Compiled in 179ms (448 modules)
+ ✓ Compiled in 184ms (448 modules)
+ ✓ Compiled in 184ms (448 modules)
