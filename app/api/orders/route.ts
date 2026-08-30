@@ -4,6 +4,7 @@ import { jsonResponse, parseBody } from '@/lib/api-utils';
 import { getStoreConfig, isFoodOpenNow } from '@/lib/store-config';
 import { computeOrderAmounts } from '@/lib/order-refunds';
 import { sendOrderPlacedMails } from '@/lib/mailer';
+import { sendNewOrderNotification } from '@/lib/notifications';
 
 export async function GET(request: NextRequest) {
   try {
@@ -100,7 +101,11 @@ export async function POST(request: NextRequest) {
     // Notify customer + admin (never blocks the response)
     prisma.order
       .findUnique({ where: { id: item.id }, include: { items: true, user: true } })
-      .then((full) => full && sendOrderPlacedMails(full))
+      .then((full) => {
+        if (!full) return;
+        sendOrderPlacedMails(full);
+        sendNewOrderNotification(full, full.items, full.user);
+      })
       .catch((e) => console.error('[orders] placed-mail failed:', e));
 
     return jsonResponse(item, { status: 201 });
