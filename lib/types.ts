@@ -25,6 +25,7 @@ export interface Profile {
   phone: string | null;
   role: UserRole;
   avatar_url: string | null;
+  is_active: boolean;
   created_at: string;
 }
 
@@ -243,7 +244,7 @@ export interface OrderItem {
   unit_price: number;
   quantity: number;
   total: number;
-  item_type: 'product' | 'puja';
+  item_type: 'product' | 'puja' | 'food';
   metadata: Record<string, any>;
   ready: boolean;
   cancelled: boolean;

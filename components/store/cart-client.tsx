@@ -11,7 +11,6 @@ import {
   Tag,
   Truck,
   PhoneCall,
-  CheckCircle2,
   Sparkles,
   ShieldCheck,
   AlertTriangle,
@@ -176,24 +175,21 @@ export function CartClient() {
       <div className="min-h-[70vh] flex flex-col justify-center items-center">
         <CheckoutStepper currentStep={1} />
         <div className="container-px mx-auto max-w-lg py-12 text-center">
-          <div className="relative mx-auto h-28 w-28 flex items-center justify-center rounded-3xl bg-primary/10 text-primary mb-6 shadow-xl shadow-primary/10 border border-primary/20">
-            <ShoppingBag className="h-14 w-14" />
-            <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-white text-xs font-bold shadow-md">
-              0
-            </span>
+          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10">
+            <ShoppingBag className="h-10 w-10 text-primary/50" />
           </div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Your Cart is Empty</h1>
-          <p className="mt-3 text-muted-foreground leading-relaxed text-sm">
-            Looks like you haven&apos;t added any items to your cart yet. Explore our delicious food, Puja samagri, and kitchen products!
+          <h1 className="font-display text-2xl font-bold">Your Cart is Empty</h1>
+          <p className="mt-2 text-sm text-muted-foreground max-w-xs mx-auto">
+            Add food, puja samagri, natural products or general items to get started.
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/shop" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full px-8 shadow-lg shadow-primary/25 font-semibold">
-                Explore Shop <ArrowRight className="ml-2 h-4 w-4" />
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link href="/shop">
+              <Button className="px-6 font-semibold">
+                Explore Shop <ArrowRight className="ml-1.5 h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/category/food" className="w-full sm:w-auto">
-              <Button variant="outline" size="lg" className="w-full px-6">
+            <Link href="/category/food">
+              <Button variant="outline" className="px-6">
                 Order Food 🍲
               </Button>
             </Link>
@@ -208,48 +204,42 @@ export function CartClient() {
       <CheckoutStepper currentStep={1} />
 
       <div className="container-px mx-auto max-w-7xl">
-        {/* Top Header Title Banner */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 py-4 mb-4 border-b border-border/40">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight">Shopping Cart</h1>
-              <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary border border-primary/20">
-                {items.reduce((acc, item) => acc + item.quantity, 0)} {items.reduce((acc, item) => acc + item.quantity, 0) === 1 ? 'item' : 'items'}
-              </span>
-            </div>
-            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-              Review your selected items and apply coupons before checkout
-            </p>
+        {/* Header */}
+        <div className="flex items-center justify-between py-4 mb-2">
+          <div className="flex items-center gap-3">
+            <h1 className="font-display text-xl font-bold sm:text-2xl">Shopping Cart</h1>
+            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary">
+              {items.reduce((acc, item) => acc + item.quantity, 0)} items
+            </span>
           </div>
-
-          <Link href="/shop" className="self-start md:self-auto">
-            <Button variant="ghost" size="sm" className="text-xs font-medium hover:bg-card">
+          <Link href="/shop">
+            <Button variant="ghost" size="sm" className="text-xs font-medium">
               Continue Shopping <ChevronRight className="ml-1 h-3.5 w-3.5" />
             </Button>
           </Link>
         </div>
 
-        {/* Free Shipping Progress Indicator */}
+        {/* Free Shipping Progress */}
         {freeShippingThreshold > 0 && (
-          <div className="mb-6 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-card to-primary/5 p-4 shadow-sm">
-            <div className="flex items-center justify-between text-xs sm:text-sm font-semibold mb-2">
-              <span className="flex items-center gap-2 text-foreground">
-                <Truck className="h-4 w-4 text-primary animate-pulse" />
+          <div className="mb-5 overflow-hidden rounded-xl border border-border/60 bg-card p-3.5">
+            <div className="flex items-center justify-between text-xs font-medium mb-2">
+              <span className="flex items-center gap-1.5">
+                <Truck className="h-3.5 w-3.5 text-primary" />
                 {remainingForFreeShipping > 0 ? (
-                  <span>
-                    Add <strong className="text-primary font-bold">{formatINR(remainingForFreeShipping)}</strong> more to get <span className="text-emerald-600 dark:text-emerald-400 font-bold uppercase">FREE Delivery!</span>
+                  <span className="text-muted-foreground">
+                    Add <strong className="text-foreground">{formatINR(remainingForFreeShipping)}</strong> more for <strong className="text-emerald-600 dark:text-emerald-400">FREE delivery</strong>
                   </span>
                 ) : (
-                  <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5">
-                    <Sparkles className="h-4 w-4" /> Congratulations! You unlocked FREE Delivery!
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                    ✅ Free delivery unlocked!
                   </span>
                 )}
               </span>
-              <span className="text-xs font-bold text-muted-foreground">{shippingProgress}%</span>
+              <span className="text-[11px] text-muted-foreground">{shippingProgress}%</span>
             </div>
-            <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted/80 p-0.5 border border-border/50">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-amber-500 via-emerald-500 to-primary transition-all duration-500 shadow-sm"
+                className="h-full rounded-full bg-emerald-500 transition-all duration-500"
                 style={{ width: `${shippingProgress}%` }}
               />
             </div>
@@ -262,49 +252,46 @@ export function CartClient() {
             {groupItemsBySection(items).map((section) => (
               <section
                 key={section.key}
-                className={`overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition-all duration-300 hover:shadow-md ${section.card}`}
+                className="overflow-hidden rounded-xl border border-border/60 bg-card"
               >
                 {/* Section Header */}
-                <div className={`flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3 ${section.header}`}>
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 px-4 py-3">
                   <div className="flex items-center gap-2.5">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-background/90 shadow-sm border border-border/50">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
                       <section.icon className={`h-4 w-4 ${section.badge.split(' ')[1]}`} />
-                    </span>
+                    </div>
                     <div>
-                      <h2 className="text-sm font-bold tracking-wide">{section.label}</h2>
-                      <p className="text-[11px] text-muted-foreground">{section.items.length} item(s) in this section</p>
+                      <h2 className="text-sm font-bold">{section.label}</h2>
+                      <p className="text-[11px] text-muted-foreground">{section.items.length} item(s)</p>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2 rounded-xl bg-background/90 px-3 py-1.5 text-xs shadow-xs border border-border/50">
-                    <Truck className="h-3.5 w-3.5 shrink-0 text-primary" />
-                    <span className="text-[11px]">
-                      <span className="font-semibold text-foreground">{getDeliveryEstimate(section.key).title}:</span>{' '}
-                      <span className="font-bold text-primary">{getDeliveryEstimate(section.key).detail}</span>
-                    </span>
-                  </div>
+                  <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <Truck className="h-3 w-3" />
+                    <span className="font-medium text-foreground">{getDeliveryEstimate(section.key).title}</span>
+                    {getDeliveryEstimate(section.key).detail}
+                  </span>
                 </div>
 
                 {/* Items List */}
-                <div className="divide-y divide-border/50 p-3 sm:p-4">
+                <div className="divide-y divide-border/40 p-3 sm:p-4">
                   {section.items.map((item) => (
                     <div
                       key={item.id}
-                      className="group flex flex-col sm:flex-row gap-4 rounded-xl p-3 sm:p-4 transition-colors hover:bg-muted/30"
+                      className="flex flex-col sm:flex-row gap-3 sm:gap-4 py-3 first:pt-0 last:pb-0"
                     >
                       {/* Product Thumbnail */}
-                      <div className="relative h-24 w-24 sm:h-28 sm:w-28 flex-shrink-0 overflow-hidden rounded-xl bg-muted border border-border/60 shadow-xs group-hover:border-primary/30 transition-all">
+                      <div className="relative h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0 overflow-hidden rounded-xl bg-muted">
                         {item.image ? (
                           <Image
                             src={item.image}
                             alt={item.name}
                             fill
-                            sizes="112px"
-                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            sizes="96px"
+                            className="object-cover"
                           />
                         ) : (
-                          <div className="flex h-full items-center justify-center text-muted-foreground bg-muted/60">
-                            <ShoppingBag className="h-8 w-8 stroke-[1.5]" />
+                          <div className="flex h-full items-center justify-center text-muted-foreground/40">
+                            <ShoppingBag className="h-7 w-7 stroke-[1.5]" />
                           </div>
                         )}
                       </div>
@@ -312,79 +299,56 @@ export function CartClient() {
                       {/* Product Details */}
                       <div className="flex-1 flex flex-col justify-between">
                         <div>
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="space-y-1">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${typeBadgeClass(item)}`}>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border ${typeBadgeClass(item)}`}>
                                   {typeLabel(item)}
                                 </span>
                                 {item.bookingDate && (
-                                  <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground border border-border/50">
-                                    📅 {item.bookingDate} {item.bookingTime ? `· ${item.bookingTime}` : ''}
+                                  <span className="text-[10px] text-muted-foreground">
+                                    📅 {item.bookingDate}{item.bookingTime ? ` · ${item.bookingTime}` : ''}
                                   </span>
                                 )}
                               </div>
-
-                              <div className="flex flex-wrap items-center gap-2">
-                                <Link
-                                  href={item.type === 'product' ? `/product/${item.slug}` : `/puja`}
-                                  className="font-display text-base font-bold text-foreground hover:text-primary transition-colors line-clamp-1"
-                                >
-                                  {item.name}
-                                </Link>
-                                <span className="inline-flex items-center rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 text-xs font-bold border border-emerald-500/20">
-                                  {formatINR(item.price)} each
-                                </span>
-                              </div>
+                              <Link
+                                href={item.type === 'product' ? `/product/${item.slug}` : `/puja`}
+                                className="mt-1 block text-sm font-bold text-foreground hover:text-primary transition-colors line-clamp-1"
+                              >
+                                {item.name}
+                              </Link>
+                              <p className="mt-0.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                                {formatINR(item.price)} each
+                              </p>
                             </div>
-
-                            {/* Remove Item Button */}
                             <button
                               onClick={() => removeItem(item.id)}
-                              className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
-                              title="Remove item"
+                              className="shrink-0 rounded-lg p-1.5 text-muted-foreground/50 hover:bg-destructive/10 hover:text-destructive transition-all"
                               aria-label="Remove item"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-3.5 w-3.5" />
                             </button>
                           </div>
 
-                          {/* Extra Metadata (Variant, Pandit, Add-ons) */}
-                          <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                          {/* Extra Metadata */}
+                          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
                             {item.variantName && (
-                              <p className="flex items-center gap-1.5">
-                                <span className="font-medium text-foreground">Variant:</span> {item.variantName}
-                              </p>
+                              <span className="rounded-md bg-muted px-1.5 py-0.5">Variant: {item.variantName}</span>
                             )}
                             {item.panditName && (
-                              <p className="flex items-center gap-1.5 font-medium text-indigo-600 dark:text-indigo-400">
-                                <span>🛕 Pandit Ji:</span> {item.panditName}
-                              </p>
+                              <span className="rounded-md bg-indigo-500/10 px-1.5 py-0.5 text-indigo-600 dark:text-indigo-400 font-medium">🛕 {item.panditName}</span>
                             )}
                             {item.addOns && item.addOns.length > 0 && (
-                              <div className="flex flex-wrap items-center gap-1 mt-1">
-                                <span className="font-medium text-foreground">Add-ons:</span>
-                                {item.addOns.map((a) => (
-                                  <span
-                                    key={a.id}
-                                    className="inline-flex items-center rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 px-2 py-0.5 text-[11px] font-medium border border-amber-500/20"
-                                  >
-                                    +{a.name} ({formatINR(a.price)})
-                                  </span>
-                                ))}
-                              </div>
+                              item.addOns.map((a) => (
+                                <span key={a.id} className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-amber-700 dark:text-amber-300">
+                                  +{a.name}
+                                </span>
+                              ))
                             )}
                             {item.selectedItems && item.selectedItems.length > 0 && (
-                              <div className="mt-1.5 rounded-lg bg-muted/60 p-2 text-[11px] border border-border/40">
-                                <span className="font-semibold text-foreground block mb-0.5">Samagri Items Checklist:</span>
-                                <div className="flex flex-wrap gap-1">
-                                  {item.selectedItems.map((s, idx) => (
-                                    <span key={`${s.name}-${idx}`} className="rounded bg-card px-1.5 py-0.5 border border-border/60">
-                                      {s.name} (x{s.qty})
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
+                              <span className="rounded-md bg-muted px-1.5 py-0.5">
+                                {item.selectedItems.length} samagri items
+                              </span>
                             )}
                           </div>
 
@@ -401,37 +365,28 @@ export function CartClient() {
                           {item.type === 'puja' && <PujaNote date={item.bookingDate} />}
                         </div>
 
-                        {/* Bottom Row: Quantity Controls & Subtotal */}
-                        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/50">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-muted-foreground hidden sm:inline">Qty:</span>
-                            <div className="flex items-center gap-1 rounded-xl border border-border/80 bg-muted/60 p-1 shadow-2xs">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 rounded-lg hover:bg-background hover:shadow-xs"
-                                onClick={() => updateQty(item.id, item.quantity - 1)}
-                              >
-                                <Minus className="h-3 w-3" />
-                              </Button>
-                              <span className="w-7 text-center text-xs font-bold text-foreground">{item.quantity}</span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 rounded-lg hover:bg-background hover:shadow-xs"
-                                onClick={() => updateQty(item.id, item.quantity + 1)}
-                              >
-                                <Plus className="h-3 w-3" />
-                              </Button>
-                            </div>
+                        {/* Bottom Row: Quantity + Subtotal */}
+                        <div className="mt-3 flex items-center justify-between">
+                          <div className="flex items-center rounded-lg border border-border bg-card">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-l-lg"
+                              onClick={() => updateQty(item.id, item.quantity - 1)}
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="w-8 text-center text-xs font-bold">{item.quantity}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-r-lg"
+                              onClick={() => updateQty(item.id, item.quantity + 1)}
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
                           </div>
-
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-muted-foreground">Item Subtotal:</span>
-                            <div className="inline-flex items-center rounded-xl bg-primary/10 border border-primary/25 px-3 py-1.5 text-base sm:text-lg font-extrabold text-primary shadow-2xs">
-                              <span className="pl-0.5 tracking-tight font-sans">{formatINR(item.price * item.quantity)}</span>
-                            </div>
-                          </div>
+                          <span className="text-sm font-extrabold text-foreground">{formatINR(item.price * item.quantity)}</span>
                         </div>
                       </div>
                     </div>
@@ -440,41 +395,37 @@ export function CartClient() {
               </section>
             ))}
 
-            {/* Quick Customer Support Banner */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 via-card to-accent/5 p-5 shadow-sm">
-              <div className="flex items-center gap-3.5">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md shadow-primary/20">
-                  <PhoneCall className="h-5 w-5" />
-                </span>
+            {/* Support Banner */}
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card p-3.5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                  <PhoneCall className="h-4 w-4 text-primary" />
+                </div>
                 <div>
-                  <h3 className="text-sm font-bold text-foreground">Need help or custom bulk order?</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">{QUICK_SERVICE_CONTACT}</p>
+                  <p className="text-xs font-bold">Need help?</p>
+                  <p className="text-[11px] text-muted-foreground">Call or WhatsApp us</p>
                 </div>
               </div>
-
-              <a
-                href={`tel:${QUICK_SERVICE_CONTACT.replace(/\D/g, '')}`}
-                className="shrink-0 w-full sm:w-auto"
-              >
-                <Button variant="outline" size="sm" className="w-full text-xs font-semibold hover:bg-primary hover:text-primary-foreground">
+              <a href={`tel:${QUICK_SERVICE_CONTACT.replace(/\D/g, '')}`}>
+                <Button variant="outline" size="sm" className="text-xs font-semibold">
                   Call Support
                 </Button>
               </a>
             </div>
 
             {/* Bottom Actions */}
-            <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+            <div className="flex items-center justify-between pt-1">
               <Button
                 variant="ghost"
+                size="sm"
                 onClick={clearCart}
-                className="text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                className="text-xs text-muted-foreground hover:text-destructive"
               >
-                <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Clear Cart
+                <Trash2 className="mr-1 h-3 w-3" /> Clear Cart
               </Button>
-
               <Link href="/shop">
-                <Button variant="outline" className="text-xs font-semibold">
-                  <ShoppingBag className="mr-1.5 h-3.5 w-3.5" /> Explore More Items
+                <Button variant="ghost" size="sm" className="text-xs font-medium">
+                  Browse More <ChevronRight className="ml-0.5 h-3 w-3" />
                 </Button>
               </Link>
             </div>
@@ -482,48 +433,36 @@ export function CartClient() {
 
           {/* Right Column - Order Summary Sidebar */}
           <aside className="lg:sticky lg:top-28 lg:self-start space-y-6">
-            <div className="rounded-2xl border border-border/80 bg-card p-5 sm:p-6 shadow-lg shadow-black/5 backdrop-blur-md">
-              <h2 className="font-display text-lg font-bold tracking-tight border-b border-border/50 pb-3 flex items-center justify-between">
-                <span>Order Summary</span>
-                <span className="text-xs font-normal text-muted-foreground">
-                  {items.length} {items.length === 1 ? 'line item' : 'line items'}
-                </span>
+            <div className="rounded-xl border border-border/60 bg-card p-4 sm:p-5">
+              <h2 className="text-sm font-bold border-b border-border/40 pb-3">
+                Order Summary
               </h2>
 
-              {/* Coupon Section */}
-              <div className="mt-5 space-y-2">
-                <label className="text-xs font-semibold text-foreground flex items-center justify-between">
-                  <span>Have a promo coupon?</span>
-                  {appliedCoupon && <span className="text-[11px] text-emerald-600 font-bold">Active</span>}
-                </label>
+              {/* Coupon */}
+              <div className="mt-4 space-y-2">
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <Tag className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Tag className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                      placeholder="ENTER COUPON CODE"
+                      placeholder="Coupon code"
                       value={coupon}
                       onChange={(e) => setCoupon(e.target.value)}
-                      className="pl-9 text-xs font-semibold uppercase tracking-wider uppercase"
+                      className="h-9 pl-8 text-xs font-medium uppercase"
                     />
                   </div>
                   <Button
                     variant="secondary"
+                    size="sm"
                     onClick={applyCouponCode}
-                    className="shrink-0 text-xs font-bold px-4 hover:bg-primary hover:text-primary-foreground transition-all"
+                    className="shrink-0 px-3 text-xs font-semibold"
                   >
                     Apply
                   </Button>
                 </div>
-
                 {appliedCoupon && (
-                  <div className="mt-2.5 flex items-center justify-between rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
-                    <span className="flex items-center gap-1.5 font-bold">
-                      <Sparkles className="h-3.5 w-3.5" /> Code &quot;{appliedCoupon}&quot; Applied!
-                    </span>
-                    <button
-                      onClick={removeCoupon}
-                      className="text-[11px] font-semibold text-destructive underline hover:no-underline"
-                    >
+                  <div className="flex items-center justify-between rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-[11px] text-emerald-700 dark:text-emerald-300">
+                    <span className="font-bold">✅ "{appliedCoupon}" applied</span>
+                    <button onClick={removeCoupon} className="font-semibold text-destructive underline">
                       Remove
                     </button>
                   </div>
@@ -531,122 +470,91 @@ export function CartClient() {
               </div>
 
               {/* Price Breakdown */}
-              <div className="mt-6 space-y-3 text-sm border-t border-border/50 pt-4">
+              <div className="mt-4 space-y-2.5 text-sm border-t border-border/40 pt-4">
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Items Subtotal</span>
+                  <span>Subtotal</span>
                   <span className="font-semibold text-foreground">{formatINR(subtotal)}</span>
                 </div>
-
                 {couponDiscount > 0 && (
-                  <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
-                    <span className="flex items-center gap-1">
-                      <Tag className="h-3.5 w-3.5" /> Coupon Discount
-                    </span>
+                  <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                    <span>Coupon Discount</span>
                     <span className="font-bold">-{formatINR(couponDiscount)}</span>
                   </div>
                 )}
-
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Delivery Charge</span>
-                  <span>
-                    {shipping === 0 ? (
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400 uppercase text-xs">FREE</span>
-                    ) : (
-                      <span className="font-semibold text-foreground">{formatINR(shipping)}</span>
-                    )}
-                  </span>
+                  <span>Delivery</span>
+                  {shipping === 0 ? (
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400 text-xs">FREE</span>
+                  ) : (
+                    <span className="font-semibold text-foreground">{formatINR(shipping)}</span>
+                  )}
                 </div>
-
                 <div className="flex justify-between text-muted-foreground text-xs">
-                  <span className="flex items-center gap-1">
-                    Taxes &amp; Fees <span className="text-[10px] text-emerald-600 font-bold">(0% GST)</span>
-                  </span>
+                  <span>Tax (0% GST)</span>
                   <span>{formatINR(tax)}</span>
                 </div>
-
-                <div className="border-t border-border/80 pt-3">
+                <div className="border-t border-border/60 pt-3">
                   <div className="flex items-baseline justify-between">
-                    <div>
-                      <span className="text-base font-bold text-foreground block">Grand Total</span>
-                      <span className="text-[11px] text-muted-foreground">Inclusive of all taxes</span>
-                    </div>
-                    <span className="text-2xl sm:text-3xl font-extrabold text-primary font-sans tracking-tight pl-1">
-                      {formatINR(total)}
-                    </span>
+                    <span className="text-sm font-bold">Total</span>
+                    <span className="text-xl font-extrabold text-primary">{formatINR(total)}</span>
                   </div>
-
                   {couponDiscount > 0 && (
-                    <div className="mt-2 text-center rounded-lg bg-emerald-500/10 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                      🎉 You are saving {formatINR(couponDiscount)} on this order!
-                    </div>
+                    <p className="mt-1.5 text-center text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                      🎉 You save {formatINR(couponDiscount)}!
+                    </p>
                   )}
                 </div>
               </div>
 
-              {/* Food Location Restriction Warning */}
+              {/* Food Restriction Warning */}
               {isCheckoutDisabled && (
-                <div className="mt-5 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-xs space-y-2.5">
-                  <div className="flex items-start gap-2.5">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
-                      <XCircle className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-destructive text-sm">Food Delivery Restricted</p>
-                      <p className="text-muted-foreground mt-0.5 leading-relaxed">
-                        Your delivery address is outside our <strong className="text-foreground">6 km quick food delivery range</strong>. Food checkout is disabled for your current pin.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-2.5 text-emerald-700 dark:text-emerald-300 leading-relaxed">
-                    <strong>✅ Good news:</strong> Natural Products, General Items &amp; Puja Samagri have <strong>NO range restriction</strong> — you can order them anytime!
-                  </div>
-
-                  <p className="text-[11px] text-muted-foreground">
-                    Please remove food items from your cart or select a closer delivery address in the header.
+                <div className="mt-4 rounded-xl border border-rose-200/60 bg-rose-50/80 p-3.5 dark:border-rose-900/30 dark:bg-rose-950/20">
+                  <p className="text-xs font-bold text-rose-700 dark:text-rose-300">🚫 Food Delivery Restricted</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
+                    Your area is outside our 6 km food delivery range. Remove food items or change address.
+                  </p>
+                  <p className="mt-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                    ✅ Natural, General & Puja — no range restriction.
                   </p>
                 </div>
               )}
 
               {/* Checkout CTA */}
-              <div className="mt-6 space-y-3">
+              <div className="mt-4">
                 {user ? (
                   isCheckoutDisabled ? (
-                    <Button className="w-full text-xs font-bold py-6 cursor-not-allowed opacity-60" size="lg" disabled>
-                      Checkout Restricted (Out of Food Range)
+                    <Button className="w-full h-11 text-xs font-bold" disabled>
+                      Checkout Restricted
                     </Button>
                   ) : (
-                    <Link href="/checkout" className="block">
-                      <Button
-                        className="w-full font-bold text-sm py-6 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
-                        size="lg"
-                      >
-                        Proceed to Checkout <ArrowRight className="ml-2 h-5 w-5" />
+                    <Link href="/checkout">
+                      <Button className="w-full h-11 font-bold text-sm">
+                        Proceed to Checkout <ArrowRight className="ml-1.5 h-4 w-4" />
                       </Button>
                     </Link>
                   )
                 ) : (
-                  <Link href="/login?redirect=/cart" className="block">
-                    <Button className="w-full font-bold text-sm py-6 shadow-md" size="lg">
-                      Sign in to Checkout <ArrowRight className="ml-2 h-4 w-4" />
+                  <Link href="/login?redirect=/cart">
+                    <Button className="w-full h-11 font-bold text-sm">
+                      Sign in to Checkout <ArrowRight className="ml-1.5 h-4 w-4" />
                     </Button>
                   </Link>
                 )}
               </div>
 
-              {/* Trust badges */}
-              <div className="mt-6 grid grid-cols-3 gap-2 border-t border-border/50 pt-4 text-center text-[10px] text-muted-foreground">
+              {/* Trust */}
+              <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border/40 pt-3 text-center text-[10px] text-muted-foreground">
                 <div className="flex flex-col items-center gap-1">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                  <span className="font-medium">100% Safe</span>
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                  <span>Secure</span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <Truck className="h-4 w-4 text-primary" />
-                  <span className="font-medium">Fast Express</span>
+                  <Truck className="h-3.5 w-3.5 text-primary" />
+                  <span>Fast Delivery</span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <Sparkles className="h-4 w-4 text-amber-500" />
-                  <span className="font-medium">Zero GST</span>
+                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                  <span>0% GST</span>
                 </div>
               </div>
             </div>
@@ -657,31 +565,24 @@ export function CartClient() {
         </div>
       </div>
 
-      {/* Mobile Fixed Bottom Floating Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden border-t border-border/80 bg-card/95 p-3.5 backdrop-blur-xl shadow-2xl">
+      {/* Mobile Fixed Bottom Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden border-t border-border/60 bg-card/95 p-3 backdrop-blur-xl">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Grand Total</span>
-            <span className="font-sans text-xl font-extrabold text-primary tracking-tight pl-0.5">{formatINR(total)}</span>
+            <span className="text-[10px] font-medium text-muted-foreground block">Total</span>
+            <span className="text-lg font-extrabold text-primary">{formatINR(total)}</span>
           </div>
-
           {user ? (
             isCheckoutDisabled ? (
-              <Button className="flex-1 font-bold text-xs h-11 cursor-not-allowed opacity-60" disabled>
-                Out of Food Range
-              </Button>
+              <Button className="flex-1 h-11 text-xs font-bold" disabled>Out of Range</Button>
             ) : (
               <Link href="/checkout" className="flex-1">
-                <Button className="w-full font-bold text-sm h-11 shadow-md shadow-primary/25">
-                  Proceed to Checkout <ArrowRight className="ml-1.5 h-4 w-4" />
-                </Button>
+                <Button className="w-full h-11 font-bold text-sm">Checkout <ArrowRight className="ml-1.5 h-4 w-4" /></Button>
               </Link>
             )
           ) : (
             <Link href="/login?redirect=/cart" className="flex-1">
-              <Button className="w-full font-bold text-xs h-11 shadow-md">
-                Sign In to Checkout <ArrowRight className="ml-1.5 h-4 w-4" />
-              </Button>
+              <Button className="w-full h-11 font-bold text-sm">Sign In to Checkout</Button>
             </Link>
           )}
         </div>

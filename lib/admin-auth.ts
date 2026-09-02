@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/jwt';
+import { getAccessPayload } from '@/lib/auth-cookies';
 
 export async function requireAdmin(request: NextRequest) {
-  const token = request.cookies.get('token')?.value;
-  if (!token) {
-    return { payload: null, response: NextResponse.json({ error: 'Not authenticated' }, { status: 401 }) };
-  }
-  const payload = verifyToken(token);
+  const payload = getAccessPayload(request);
   if (!payload) {
     return { payload: null, response: NextResponse.json({ error: 'Invalid session' }, { status: 401 }) };
   }

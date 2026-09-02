@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/lib/auth-fetch';
+
 const API_BASE = '/api';
 
 const TABLE_MAP: Record<string, string> = {
@@ -94,7 +96,7 @@ function makeClientQueryBuilder(table: string) {
     async maybeSingle() {
       const url = `${API_BASE}/${apiTable}?${params.toString()}`;
       try {
-        const res = await fetch(url);
+        const res = await apiFetch(url);
         const data = await safeJson(res);
         if (Array.isArray(data)) return { data: data[0] || null, error: null };
         return { data: data || null, error: null };
@@ -107,7 +109,7 @@ function makeClientQueryBuilder(table: string) {
         if (mutationType === 'insert' && Array.isArray(bodyData)) {
           const results = [];
           for (const item of bodyData) {
-            const res = await fetch(`${API_BASE}/${apiTable}`, {
+            const res = await apiFetch(`${API_BASE}/${apiTable}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(item),
@@ -123,7 +125,7 @@ function makeClientQueryBuilder(table: string) {
         if (mutationType === 'update' && bodyData) {
           const id = params.get('id');
           const url = id ? `${API_BASE}/${apiTable}/${id}` : `${API_BASE}/${apiTable}`;
-          const res = await fetch(url, {
+          const res = await apiFetch(url, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(bodyData),
@@ -140,7 +142,7 @@ function makeClientQueryBuilder(table: string) {
           if (id) remaining.delete('id');
           const qs = remaining.toString();
           if (qs) url += `?${qs}`;
-          const res = await fetch(url, { method: 'DELETE' });
+          const res = await apiFetch(url, { method: 'DELETE' });
           const data = await safeJson(res);
           if (!res.ok) return resolve({ data: null, error: data });
           return resolve({ data, error: null });
@@ -151,7 +153,7 @@ function makeClientQueryBuilder(table: string) {
 
       const url = `${API_BASE}/${apiTable}?${params.toString()}`;
       try {
-        const res = await fetch(url);
+        const res = await apiFetch(url);
         const data = await safeJson(res);
         if (params.get('single') === 'true') {
           return resolve({
@@ -170,7 +172,7 @@ function makeClientQueryBuilder(table: string) {
       }
     },
     async upsert(data: any) {
-      const res = await fetch(`${API_BASE}/${apiTable}`, {
+      const res = await apiFetch(`${API_BASE}/${apiTable}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -186,7 +188,7 @@ function makeClientQueryBuilder(table: string) {
 function makeAuthStub() {
   return {
     async getSession() {
-      const res = await fetch('/api/auth/me');
+      const res = await apiFetch('/api/auth/me');
       if (!res.ok) return { data: { session: null }, error: null };
       const data = await res.json();
       return { data: { session: data.user ? { user: data.user } : null }, error: null };
@@ -201,10 +203,10 @@ function makeAuthStub() {
       return { data: null, error: new Error('Use signUp from useAuth()') };
     },
     async signOut() {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await apiFetch('/api/auth/logout', { method: 'POST' });
     },
     async resetPasswordForEmail(email: string, _opts?: any) {
-      const res = await fetch('/api/auth/reset-password', {
+      const res = await apiFetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),

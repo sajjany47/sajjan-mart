@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma/client';
-import { verifyToken } from '@/lib/jwt';
+import { getAccessPayload } from '@/lib/auth-cookies';
 import { jsonResponse } from '@/lib/api-utils';
 import { sendCancelRequestMail } from '@/lib/mailer';
 
@@ -8,11 +8,7 @@ const CANCELLABLE_STATUSES = ['pending', 'confirmed', 'processing', 'packed'];
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const token = request.cookies.get('token')?.value;
-    if (!token) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-    const payload = verifyToken(token);
+    const payload = getAccessPayload(request);
     if (!payload) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }

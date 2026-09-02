@@ -340,9 +340,9 @@ export function CategoryProductsClient({
     <div className="space-y-6">
       {isFood && (
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-          <h3 className="flex items-center gap-1.5 border-b border-border pb-3 text-sm font-semibold">
+          <h3 className="flex items-center gap-1.5 border-b border-border pb-3 text-sm font-bold">
             <Utensils className="h-4 w-4 text-primary" />
-            Food Type / Dietary
+            Food Type
           </h3>
           <div className="mt-3 space-y-2.5">
             {[
@@ -524,76 +524,92 @@ export function CategoryProductsClient({
 
   if (isFood && !isWithinRange) {
     return (
-      <div className="space-y-4 pb-12">
-        <div>
-          <h1 className="font-display text-xl font-semibold sm:text-2xl">
-            {title}
-          </h1>
-          {description && (
-            <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-              {description}
+      <div className="pb-12">
+        {/* Hero Banner */}
+        <div className="relative -mx-4 overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 via-red-500 to-pink-600 px-6 py-8 text-center text-white shadow-xl sm:-mx-0 sm:rounded-2xl">
+          <div className="absolute inset-0 bg-[url('/images/banners/food_banner.jpg')] bg-cover bg-center opacity-20 mix-blend-overlay" />
+          <div className="relative z-10">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+              <Utensils className="h-7 w-7" />
+            </div>
+            <h1 className="font-display text-2xl font-bold sm:text-3xl">
+              {title}
+            </h1>
+            <p className="mt-1.5 text-sm text-white/80">
+              {description ?? 'Cloud kitchen — fresh meals delivered hot'}
             </p>
-          )}
-        </div>
-
-        {/* Restricted + Available notice strip */}
-        <div className="grid grid-cols-2 gap-3 mt-6">
-          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3.5 flex items-start gap-3">
-            <span className="text-xl mt-0.5">🚫</span>
-            <div>
-              <p className="text-xs font-bold text-destructive">Food Ordering</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-                Not available outside 6 km of our Kalighat kitchen
-              </p>
-            </div>
-          </div>
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3.5 flex items-start gap-3">
-            <span className="text-xl mt-0.5">✅</span>
-            <div>
-              <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">All Other Categories</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-                Natural, General &amp; Puja — available everywhere
-              </p>
-            </div>
           </div>
         </div>
 
-        <div className="mx-auto max-w-lg mt-6 rounded-2xl border border-border bg-card/60 p-6 shadow-xl backdrop-blur-md text-center space-y-5">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-            <MapPin className="h-7 w-7" />
+        {/* Delivery Range Notice */}
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-900/50 dark:bg-rose-950/30">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/40">
+                <span className="text-base">🚫</span>
+              </div>
+              <div>
+                <p className="text-sm font-bold text-rose-700 dark:text-rose-300">Food Delivery</p>
+                <p className="mt-0.5 text-[12px] leading-relaxed text-rose-600/80 dark:text-rose-400/70">
+                  Not available outside 6 km of our Kalighat kitchen
+                </p>
+              </div>
+            </div>
           </div>
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/30">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
+                <span className="text-base">✅</span>
+              </div>
+              <div>
+                <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">All Other Categories</p>
+                <p className="mt-0.5 text-[12px] leading-relaxed text-emerald-600/80 dark:text-emerald-400/70">
+                  Natural, General &amp; Puja — available everywhere!
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-          <div className="space-y-1.5">
+        {/* Location Verification Card */}
+        <div className="mx-auto mt-6 max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+          {/* Card Header */}
+          <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-6 py-5 text-center">
+            <div className="mx-auto mb-2.5 flex h-12 w-12 items-center justify-center rounded-full bg-primary/15">
+              <MapPin className="h-6 w-6 text-primary" />
+            </div>
             <h2 className="text-base font-bold tracking-tight">
               {status === "pending" || status === "checking"
-                ? "Verify Your Location for Food Delivery"
-                : "Food Delivery Not Available at Your Location"}
+                ? "Verify Your Location"
+                : "Delivery Not Available"}
             </h2>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
               {status === "pending" || status === "checking"
-                ? "Food delivery is limited to a 6 km radius around our outlet. Set your location below to check availability."
-                : <>Aapka area hamari 6 km food delivery range se bahar hai, <strong className="text-foreground">isliye food order nahi kar sakte.</strong> Baaki sabhi categories mein aap freely order kar sakte hain.</>}
+                ? "Food is delivered within 6 km of our kitchen. Check if your area is covered."
+                : <>Your area is outside our 6 km food delivery range. <strong className="text-foreground">Food order nahi kar sakte.</strong></>}
             </p>
           </div>
 
-          {status !== "pending" && distance !== null && (
-            <div className="rounded-xl bg-destructive/5 border border-destructive/15 p-3 text-xs flex items-center justify-between">
-              <div className="text-left">
-                <span className="font-semibold text-destructive block">Your Distance</span>
-                <span className="text-muted-foreground text-[11px]">from our Kalighat kitchen</span>
+          {/* Card Body */}
+          <div className="space-y-4 px-6 py-5">
+            {status !== "pending" && distance !== null && (
+              <div className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50/50 p-3 dark:border-rose-900/30 dark:bg-rose-950/20">
+                <div>
+                  <p className="text-[11px] font-medium text-muted-foreground">Your Distance</p>
+                  <p className="text-[10px] text-muted-foreground/70">from Kalighat kitchen</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-rose-600 dark:text-rose-400">{distance.toFixed(1)} km</p>
+                  <p className="text-[10px] font-medium text-muted-foreground">Limit: 6 km</p>
+                </div>
               </div>
-              <div className="text-right">
-                <span className="text-lg font-bold text-destructive">{distance.toFixed(1)} km</span>
-                <span className="text-[10px] text-muted-foreground block">Limit: 6 km</span>
-              </div>
-            </div>
-          )}
+            )}
 
-          <div className="space-y-3">
             <Button
               onClick={detectLocation}
               disabled={locLoading}
-              className="w-full flex items-center justify-center gap-2 text-xs font-semibold"
+              className="w-full gap-2 text-sm font-semibold"
+              size="lg"
             >
               {locLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -603,12 +619,12 @@ export function CategoryProductsClient({
               Detect My Location
             </Button>
 
-            <div className="relative flex py-0.5 items-center">
-              <div className="flex-grow border-t border-border"></div>
+            <div className="relative flex items-center py-1">
+              <div className="flex-grow border-t border-border" />
               <span className="flex-shrink mx-3 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
                 or enter address
               </span>
-              <div className="flex-grow border-t border-border"></div>
+              <div className="flex-grow border-t border-border" />
             </div>
 
             <FoodManualAddressForm
@@ -618,37 +634,52 @@ export function CategoryProductsClient({
           </div>
         </div>
 
-        {/* Browse available categories */}
-        <div className="mt-6">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">✅ Available for You — Order Freely</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {/* Available Categories */}
+        <div className="mt-8">
+          <div className="mb-4 flex items-center gap-2">
+            <div className="h-5 w-1 rounded-full bg-emerald-500" />
+            <p className="text-sm font-bold">Available for You — Order Freely</p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <Link
               href="/category/natural-products"
-              className="group flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-all"
+              className="group flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-all hover:border-emerald-400 hover:bg-emerald-50/50 hover:shadow-md dark:hover:bg-emerald-950/20"
             >
-              <span className="text-2xl">🌿</span>
-              <div className="text-left">
-                <p className="text-sm font-semibold group-hover:text-primary transition-colors">Natural Products</p>
-                <p className="text-[11px] text-muted-foreground">Organic groceries, oils &amp; more</p>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-2xl transition-transform group-hover:scale-110 dark:bg-emerald-900/30">
+                🌿
+              </div>
+              <div>
+                <p className="text-sm font-bold group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+                  Natural Products
+                </p>
+                <p className="text-[11px] text-muted-foreground">Organic groceries, oils &amp; spices</p>
               </div>
             </Link>
             <Link
               href="/category/general"
-              className="group flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-all"
+              className="group flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-all hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-md dark:hover:bg-blue-950/20"
             >
-              <span className="text-2xl">🛍️</span>
-              <div className="text-left">
-                <p className="text-sm font-semibold group-hover:text-primary transition-colors">General Products</p>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-2xl transition-transform group-hover:scale-110 dark:bg-blue-900/30">
+                🛍️
+              </div>
+              <div>
+                <p className="text-sm font-bold group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                  General Products
+                </p>
                 <p className="text-[11px] text-muted-foreground">Electronics, fashion &amp; more</p>
               </div>
             </Link>
             <Link
               href="/puja"
-              className="group flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-all"
+              className="group flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-all hover:border-amber-400 hover:bg-amber-50/50 hover:shadow-md dark:hover:bg-amber-950/20"
             >
-              <span className="text-2xl">🪔</span>
-              <div className="text-left">
-                <p className="text-sm font-semibold group-hover:text-primary transition-colors">Puja Samagri</p>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-2xl transition-transform group-hover:scale-110 dark:bg-amber-900/30">
+                🪔
+              </div>
+              <div>
+                <p className="text-sm font-bold group-hover:text-amber-600 dark:group-hover:text-amber-400">
+                  Puja Samagri
+                </p>
                 <p className="text-[11px] text-muted-foreground">Rituals, pandits &amp; packages</p>
               </div>
             </Link>
@@ -660,38 +691,124 @@ export function CategoryProductsClient({
 
   return (
     <div className="space-y-4 pb-12">
-      <div>
-        <h1 className="font-display text-xl font-semibold sm:text-2xl">
-          {title}
-        </h1>
-        {description && (
-          <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-            {description}
-          </p>
-        )}
-      </div>
-
-      {isFood && !foodOpen && storeConfig && (
-        <div className="flex items-center gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm">
-          <Clock className="h-4 w-4 shrink-0 text-destructive" />
-          <p className="text-xs">
-            <span className="font-semibold text-destructive">
-              The kitchen is currently closed.
-            </span>{" "}
-            <span className="text-muted-foreground">
-              Orders reopen at {storeConfig.food_open_time}. Hours:{" "}
-              {storeConfig.food_open_time} - {storeConfig.food_close_time}.
-            </span>
-          </p>
+      {/* Hero Banner for Food */}
+      {isFood && (
+        <div className="relative -mx-4 overflow-hidden rounded-2xl border border-orange-200/60 bg-gradient-to-br from-orange-50 via-rose-50 to-pink-50 px-5 py-5 shadow-sm sm:-mx-0 sm:rounded-2xl sm:px-6 sm:py-6 dark:from-orange-950/30 dark:via-rose-950/20 dark:to-pink-950/20 dark:border-orange-900/30">
+          <div className="absolute inset-0 bg-[url('/images/banners/food_banner.jpg')] bg-cover bg-center opacity-[0.07] mix-blend-multiply" />
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-400 to-rose-500 text-white shadow-md">
+              <Utensils className="h-6 w-6" />
+            </div>
+            <div className="flex-1">
+              <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">
+                {title}
+              </h1>
+              {description && (
+                <p className="mt-0.5 text-[12px] text-muted-foreground sm:text-sm">
+                  {description}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="relative z-10 mt-3 flex items-center gap-3 border-t border-orange-200/50 pt-3 text-[11px] text-muted-foreground dark:border-orange-900/30 sm:text-xs sm:gap-4">
+            <span className="flex items-center gap-1">🔥 Fresh Hot Food</span>
+            <span className="flex items-center gap-1">⚡ Fast Delivery</span>
+            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">0% Extra</span>
+          </div>
         </div>
       )}
 
+      {/* Hero Banner for Natural Products */}
+      {productType === 'natural' && (
+        <div className="relative -mx-4 overflow-hidden rounded-2xl border border-emerald-200/60 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 px-5 py-5 shadow-sm sm:-mx-0 sm:rounded-2xl sm:px-6 sm:py-6 dark:from-emerald-950/30 dark:via-green-950/20 dark:to-teal-950/20 dark:border-emerald-900/30">
+          <div className="absolute inset-0 bg-[url('/images/banners/natural_banner.jpg')] bg-cover bg-center opacity-[0.07] mix-blend-multiply" />
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-md text-2xl">
+              🌿
+            </div>
+            <div className="flex-1">
+              <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">
+                {title}
+              </h1>
+              {description && (
+                <p className="mt-0.5 text-[12px] text-muted-foreground sm:text-sm">
+                  {description}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="relative z-10 mt-3 flex items-center gap-3 border-t border-emerald-200/50 pt-3 text-[11px] text-muted-foreground dark:border-emerald-900/30 sm:text-xs sm:gap-4">
+            <span className="flex items-center gap-1">🌱 100% Pure</span>
+            <span className="flex items-center gap-1">🚚 Delivered Fresh</span>
+            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">0% Extra</span>
+          </div>
+        </div>
+      )}
+
+      {/* Hero Banner for General Products */}
+      {productType === 'general' && (
+        <div className="relative -mx-4 overflow-hidden rounded-2xl border border-blue-200/60 bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 px-5 py-5 shadow-sm sm:-mx-0 sm:rounded-2xl sm:px-6 sm:py-6 dark:from-blue-950/30 dark:via-indigo-950/20 dark:to-violet-950/20 dark:border-blue-900/30">
+          <div className="absolute inset-0 bg-[url('/images/banners/zero_charges_banner.jpg')] bg-cover bg-center opacity-[0.07] mix-blend-multiply" />
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-md text-2xl">
+              🛍️
+            </div>
+            <div className="flex-1">
+              <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">
+                {title}
+              </h1>
+              {description && (
+                <p className="mt-0.5 text-[12px] text-muted-foreground sm:text-sm">
+                  {description}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="relative z-10 mt-3 flex items-center gap-3 border-t border-blue-200/50 pt-3 text-[11px] text-muted-foreground dark:border-blue-900/30 sm:text-xs sm:gap-4">
+            <span className="flex items-center gap-1">🏷️ Best Prices</span>
+            <span className="flex items-center gap-1">🚚 Fast Delivery</span>
+            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">0% Extra</span>
+          </div>
+        </div>
+      )}
+
+      {/* Fallback title for other categories */}
+      {!isFood && productType !== 'natural' && productType !== 'general' && (
+        <div>
+          <h1 className="font-display text-xl font-semibold sm:text-2xl">
+            {title}
+          </h1>
+          {description && (
+            <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+              {description}
+            </p>
+          )}
+        </div>
+      )}
+
+      {isFood && !foodOpen && storeConfig && (
+        <div className="flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3 dark:border-amber-800/50 dark:bg-amber-950/30">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/40">
+            <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-amber-700 dark:text-amber-300">
+              Kitchen is currently closed
+            </p>
+            <p className="text-[11px] text-amber-600/80 dark:text-amber-400/70">
+              Reopens at {storeConfig.food_open_time} • Hours: {storeConfig.food_open_time} - {storeConfig.food_close_time}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Category Chips */}
       {chips.length > 0 && (
         <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
           <Button
-            variant={selectedCategory === "" ? "secondary" : "ghost"}
+            variant={selectedCategory === "" ? "default" : "outline"}
             size="sm"
-            className="rounded-xl text-xs whitespace-nowrap font-medium"
+            className="shrink-0 rounded-full text-xs font-semibold"
             onClick={() => setSelectedCategory("")}
           >
             All
@@ -699,12 +816,12 @@ export function CategoryProductsClient({
           {chips.map((c) => (
             <Button
               key={c.value}
-              variant={selectedCategory === c.value ? "secondary" : "ghost"}
+              variant={selectedCategory === c.value ? "default" : "outline"}
               size="sm"
-              className={`rounded-xl text-xs whitespace-nowrap font-medium transition-all ${
+              className={`shrink-0 rounded-full text-xs font-medium transition-all ${
                 selectedCategory === c.value
-                  ? "bg-primary/15 text-primary font-semibold"
-                  : ""
+                  ? "shadow-sm"
+                  : "hover:border-primary/40"
               }`}
               onClick={() =>
                 setSelectedCategory(selectedCategory === c.value ? "" : c.value)
@@ -716,7 +833,8 @@ export function CategoryProductsClient({
         </div>
       )}
 
-      <div className="flex items-center gap-3">
+      {/* Search + Sort + Filter */}
+      <div className="flex items-center gap-2 sm:gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -727,12 +845,12 @@ export function CategoryProductsClient({
                 ? "Search pizza, burger, biryani, momos..."
                 : "Search products..."
             }
-            className="bg-card pl-9"
+            className="bg-card pl-9 text-sm"
           />
           {q && (
             <button
               onClick={() => setQ("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
               <X className="h-4 w-4" />
             </button>
@@ -740,7 +858,7 @@ export function CategoryProductsClient({
         </div>
 
         <Select value={sort} onValueChange={setSort}>
-          <SelectTrigger className="w-[150px] bg-card text-xs sm:w-[170px]">
+          <SelectTrigger className="w-[140px] bg-card text-xs sm:w-[160px]">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
@@ -754,7 +872,7 @@ export function CategoryProductsClient({
 
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" className="lg:hidden relative">
+            <Button variant="outline" size="icon" className="lg:hidden shrink-0 relative">
               <SlidersHorizontal className="h-4 w-4" />
               {hasActiveFilters && (
                 <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-primary" />
@@ -798,41 +916,41 @@ export function CategoryProductsClient({
             </div>
           )}
           {loading ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
-                  className="space-y-3 rounded-xl border border-border bg-card p-3"
+                  className="space-y-3 overflow-hidden rounded-2xl border border-border bg-card p-3"
                 >
-                  <Skeleton className="aspect-square w-full rounded-lg" />
+                  <Skeleton className="aspect-square w-full rounded-xl" />
                   <Skeleton className="h-4 w-3/4" />
                   <Skeleton className="h-3 w-1/2" />
-                  <Skeleton className="h-8 w-full rounded-md" />
+                  <Skeleton className="h-9 w-full rounded-xl" />
                 </div>
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 p-12 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary mb-3">
-                <Utensils className="h-7 w-7" />
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center sm:p-14">
+              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                <Utensils className="h-8 w-8 text-primary/60" />
               </div>
-              <h3 className="text-base font-semibold">
+              <h3 className="text-base font-bold">
                 No {isFood ? "food items" : "products"} found
               </h3>
-              <p className="mt-1 text-sm text-muted-foreground max-w-sm">
-                Try a different search or clear your filters to see more.
+              <p className="mt-1.5 max-w-xs text-sm text-muted-foreground">
+                Try a different search or clear your filters to discover more.
               </p>
               <Button
                 variant="outline"
-                className="mt-4 text-xs"
+                className="mt-5 gap-1.5 text-xs font-semibold"
                 onClick={clearAllFilters}
               >
-                Clear all filters
+                <X className="h-3.5 w-3.5" /> Clear all filters
               </Button>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                 {products.map((p) => (
                   <ProductCard key={p.id} product={p} />
                 ))}
