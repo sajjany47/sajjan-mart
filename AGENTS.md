@@ -1,5 +1,14 @@
 # AGENTS.md — Project Change Log
 
+## 2026-09-03: Excel upload extended to all product types
+
+- The 3-step import wizard is now available on **every tab** of `/admin/products` (Food, Puja, Natural, General) and on `/admin/pujas`. `PujaImportDialog` generalized into `ProductImportDialog` (`components/admin/product-import-dialog.tsx`) keyed by `productType`.
+- **Puja** tab keeps the two-sheet flow (Puja Items + Pujas). **Food / Natural / General** tabs import a single-sheet product catalog, upserting products **by name within that product type** (found → update, missing → insert). Demo download + review/edit/delete + result steps identical.
+- New per-type APIs: `POST /api/admin/import/product/preview` (parse .xlsx for a type, read-only existing-name detection, no writes) and `POST /api/admin/import/product` (apply reviewed JSON rows). Apply logic in `lib/product-import-apply.ts` (category per type via `CATEGORY_SLUG_BY_TYPE`, per-type chip lists in `lib/puja-import-types.ts`, `purchase = 60%` default, food gets `food_type` default Veg + stock disabled, natural/general default `piece` stock 100, products start `isFeatured: false`).
+- `parseCatalogWorkbook(buffer, type)` added to the server parser (single-sheet items-only, optional **Food Type** column: Veg / Non Veg / Egg aliases); existing puja two-sheet parser unchanged.
+- Demo templates: `GET /api/admin/export/puja-samagri?type=<type>&template=1` returns headers + example rows per type (food template includes a Food Type column); the live food export also gained a Food Type column for round-trips.
+- Verified: 13/13 catalog parser assertions (per-type chips by label/slug, food-type aliases, two-sheet puja intact), `tsc` clean for touched files, ESLint clean, product preview/apply + template endpoints → 401 without auth, admin pages render 200.
+
 ## 2026-09-03: 3-step puja Excel import wizard (+ preview/demo APIs)
 
 - `PujaImportDialog` (`components/admin/puja-import-dialog.tsx`) replaces the one-shot upload button on `/admin/pujas` and the Puja tab of `/admin/products`. Dialog flow: **(1) Download & Upload** — downloads `puja-import-demo.xlsx` (`GET /api/admin/export/pujas?template=1`, headers + clearly-marked example rows) with instructions (never change header row), then chooses the `.xlsx`; **(2) Review & Edit** — parsed rows shown per sheet with Update-existing/Add-new badges (preview does read-only name lookups), inline edit for every field (name, price, category select, description, image URLs, active toggle; puja items as comma-separated text), per-row delete, row/global warnings from the parse; **(3) Result** — "Data imported successfully" with counts (items/pujas added·updated, links, images) and warnings list.

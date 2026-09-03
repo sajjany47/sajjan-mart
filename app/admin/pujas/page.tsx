@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
 import { PageLoader } from '@/components/ui/page-loader';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { PujaImportDialog } from '@/components/admin/puja-import-dialog';
+import { ProductImportDialog } from '@/components/admin/product-import-dialog';
 import type { Puja } from '@/lib/types';
 
 interface PujaSamagriProduct {
@@ -162,7 +162,8 @@ export default function AdminPujasPage() {
             <FileSpreadsheet className="mr-1 h-4 w-4 text-success" />
             {exporting ? 'Exporting...' : 'Export Excel'}
           </Button>
-          <PujaImportDialog
+          <ProductImportDialog
+            productType="puja_samagri"
             onImported={load}
             title="Import pujas & puja items from Excel — existing names update, new names are added. Follow the 3-step wizard."
           />

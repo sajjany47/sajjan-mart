@@ -48,6 +48,7 @@ export interface ParsedPujaItem {
   imageUrls: string[];
   chip?: string;
   isActive?: boolean;
+  foodType?: string;
   warnings?: string[];
 }
 
@@ -76,6 +77,80 @@ export interface PujaImportSummary {
   linksCreated: number;
   warnings: string[];
 }
+
+export type ProductType = 'food' | 'puja_samagri' | 'natural' | 'general';
+
+export const PRODUCT_TYPE_LABELS: Record<ProductType, string> = {
+  food: 'Food',
+  puja_samagri: 'Puja',
+  natural: 'Natural',
+  general: 'General',
+};
+
+export const FOOD_CHIP_LABELS: Array<[string, string]> = [
+  ['pizza', 'Pizza'],
+  ['burger', 'Burger'],
+  ['biryani', 'Biryani'],
+  ['rolls_wraps', 'Rolls & Wraps'],
+  ['momos', 'Momos'],
+  ['chinese', 'Chinese'],
+  ['north_indian', 'North Indian'],
+  ['south_indian', 'South Indian'],
+  ['fast_food', 'Fast Food'],
+  ['snacks', 'Snacks & Starters'],
+  ['desserts', 'Desserts & Ice Cream'],
+  ['beverages', 'Beverages & Shakes'],
+  ['other', 'Other'],
+];
+
+export const NATURAL_CHIP_LABELS: Array<[string, string]> = [
+  ['fruits_vegetables', 'Fruits & Veg'],
+  ['oil_ghee', 'Oil & Ghee'],
+  ['masala_spices', 'Masala & Spices'],
+  ['noodles_pasta', 'Noodles & Pasta'],
+  ['grains_rice', 'Grains & Rice'],
+  ['dal_legumes', 'Dal & Legumes'],
+  ['honey_jaggery', 'Honey & Jaggery'],
+  ['dry_fruits', 'Dry Fruits'],
+  ['dairy_bread', 'Dairy & Bread'],
+  ['snacks', 'Snacks'],
+  ['beverages', 'Beverages'],
+  ['health_wellness', 'Health & Care'],
+  ['other', 'Other'],
+];
+
+export const GENERAL_CHIP_LABELS: Array<[string, string]> = [
+  ['electronics', 'Electronics'],
+  ['fashion', 'Fashion'],
+  ['food', 'Food'],
+  ['beauty', 'Beauty'],
+  ['home', 'Home'],
+  ['sports', 'Sports'],
+  ['books', 'Books'],
+  ['toys', 'Toys'],
+  ['automotive', 'Automotive'],
+  ['other', 'Other'],
+];
+
+export const FOOD_TYPE_LABELS: Array<[string, string]> = [
+  ['veg', 'Veg'],
+  ['non_veg', 'Non Veg'],
+  ['egg', 'Egg'],
+];
+
+export const CHIP_LABELS_BY_TYPE: Record<ProductType, Array<[string, string]>> = {
+  food: FOOD_CHIP_LABELS,
+  puja_samagri: PUJA_CHIP_LABELS,
+  natural: NATURAL_CHIP_LABELS,
+  general: GENERAL_CHIP_LABELS,
+};
+
+export const CATEGORY_SLUG_BY_TYPE: Record<ProductType, string> = {
+  food: 'food',
+  puja_samagri: 'puja-samagri',
+  natural: 'natural-products',
+  general: 'general',
+};
 
 export interface ChipOption {
   slug: string;
@@ -139,13 +214,37 @@ export function parseItemsCell(v: unknown): ParsedPujaEntry[] {
 }
 
 export function resolveChip(v: unknown): { slug?: string; note?: string } {
+  return resolveChipFromList(PUJA_CHIP_LABELS, v);
+}
+
+export function resolveChipFromList(
+  labels: Array<[string, string]>,
+  v: unknown,
+): { slug?: string; note?: string } {
   if (v === null || v === undefined) return {};
   const raw = String(v).trim();
   if (!raw) return {};
   const normalized = normalizeLabel(raw);
-  if (CHIP_BY_SLUG[raw]) return { slug: raw };
-  if (CHIP_BY_SLUG[normalized]) return { slug: normalized };
-  const byLabel = CHIP_BY_NORMALIZED_LABEL[normalized];
-  if (byLabel) return { slug: byLabel };
+  const bySlug: Record<string, string> = {};
+  const byLabel: Record<string, string> = {};
+  for (const [slug, label] of labels) {
+    bySlug[slug] = slug;
+    byLabel[normalizeLabel(label)] = slug;
+  }
+  if (bySlug[raw]) return { slug: raw };
+  if (bySlug[normalized]) return { slug: normalized };
+  const matched = byLabel[normalized];
+  if (matched) return { slug: matched };
   return { note: `Unrecognized category "${raw}" -> Other` };
+}
+
+export function resolveFoodType(v: unknown): { slug?: string; note?: string } {
+  if (v === null || v === undefined) return {};
+  const raw = String(v).trim().toLowerCase();
+  if (!raw) return {};
+  const normalized = raw.replace(/[^a-z0-9]+/g, '');
+  if (['veg', 'vegetarian', 'pureveg'].includes(normalized)) return { slug: 'veg' };
+  if (['nonveg', 'nonvegetarian'].includes(normalized)) return { slug: 'non_veg' };
+  if (['egg', 'eggetarian'].includes(normalized)) return { slug: 'egg' };
+  return { note: `Unrecognized food type "${raw}" ignored` };
 }

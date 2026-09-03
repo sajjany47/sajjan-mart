@@ -26,13 +26,16 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import {
+  CHIP_LABELS_BY_TYPE,
+  FOOD_TYPE_LABELS,
+  PRODUCT_TYPE_LABELS,
   parseItemsCell,
   parseNumber,
   splitImageUrls,
-  PUJA_CHIP_LABELS,
   type ChipOption,
   type ParsedPuja,
   type ParsedPujaItem,
+  type ProductType,
   type PujaImportSummary,
 } from '@/lib/puja-import-types';
 
@@ -45,6 +48,7 @@ interface ItemEditRow {
   description: string;
   images: string;
   chip: string;
+  foodType: string;
   isActive: boolean;
   existing: boolean;
   warnings: string[];
@@ -62,7 +66,7 @@ interface PujaEditRow {
   warnings: string[];
 }
 
-interface PreviewSheetItem {
+interface PreviewRow {
   rowId: string;
   existing?: boolean;
   name: string;
@@ -72,10 +76,11 @@ interface PreviewSheetItem {
   imageUrls?: string[];
   chip?: string;
   isActive?: boolean;
+  foodType?: string;
   warnings?: string[];
 }
 
-interface PreviewSheetPuja {
+interface PreviewPujaRow {
   rowId: string;
   existing?: boolean;
   name: string;
@@ -91,11 +96,12 @@ interface PreviewResponse {
   fileName?: string;
   warnings?: string[];
   chipOptions?: ChipOption[];
-  sheets?: Array<{ kind: string; rows: Array<PreviewSheetItem | PreviewSheetPuja> }>;
+  sheets?: Array<{ kind: string; rows: Array<PreviewRow | PreviewPujaRow> }>;
   error?: string;
 }
 
-interface PujaImportDialogProps {
+interface ProductImportDialogProps {
+  productType: ProductType;
   onImported?: () => void;
   label?: string;
   title?: string;
@@ -115,14 +121,24 @@ function entriesToText(entries: Array<{ name: string; qty: number }> | undefined
     .join(', ');
 }
 
-export function PujaImportDialog({ onImported, label = 'Upload Excel', title, className }: PujaImportDialogProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+export function ProductImportDialog({
+  productType,
+  onImported,
+  label = 'Upload Excel',
+  title,
+  className,
+}: ProductImportDialogProps) {
+  const isPuja = productType === 'puja_samagri';
+  const typeLabel = PRODUCT_TYPE_LABELS[productType];
+
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0); // 0 upload, 1 review, 2 result
   const [busy, setBusy] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [chipOptions, setChipOptions] = useState<ChipOption[]>([]);
+  const [chipOptions, setChipOptions] = useState<ChipOption[]>(
+    CHIP_LABELS_BY_TYPE[productType].map(([slug, label]) => ({ slug, label })),
+  );
   const [items, setItems] = useState<ItemEditRow[]>([]);
   const [pujas, setPujas] = useState<PujaEditRow[]>([]);
   const [deleted, setDeleted] = useState<Set<string>>(new Set());
@@ -146,24 +162,28 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
     setSummary(null);
     setSubmitting(false);
     setSubmitError(null);
+    setChipOptions(CHIP_LABELS_BY_TYPE[productType].map(([slug, label]) => ({ slug, label })));
   }
 
   async function downloadDemo() {
     setDownloadingDemo(true);
     try {
-      const res = await fetch('/api/admin/export/pujas?template=1');
+      const url = isPuja
+        ? '/api/admin/export/pujas?template=1'
+        : `/api/admin/export/puja-samagri?type=${productType}&template=1`;
+      const res = await fetch(url);
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         toast.error(data?.error ?? 'Download failed');
         return;
       }
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      const downloadUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = 'puja-import-demo.xlsx';
+      a.href = downloadUrl;
+      a.download = isPuja ? 'puja-import-demo.xlsx' : `${productType}-import-demo.xlsx`;
       a.click();
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(downloadUrl);
       toast.success('Demo Excel downloaded');
     } catch {
       toast.error('Download failed');
@@ -182,7 +202,9 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch('/api/admin/import/puja/preview', { method: 'POST', body: fd });
+      fd.append('productType', productType);
+      const url = isPuja ? '/api/admin/import/puja/preview' : '/api/admin/import/product/preview';
+      const res = await fetch(url, { method: 'POST', body: fd });
       const data = (await res.json().catch(() => null)) as PreviewResponse | null;
       if (!res.ok || !data?.ok) {
         setUploadError(data?.error ?? 'Could not read the file. Please check it and try again.');
@@ -194,7 +216,7 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
       for (const sheet of data.sheets ?? []) {
         for (const row of sheet.rows) {
           if (sheet.kind === 'items') {
-            const r = row as PreviewSheetItem;
+            const r = row as PreviewRow;
             itemRows.push({
               rowId: r.rowId,
               originalName: r.name,
@@ -204,12 +226,13 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
               description: r.description ?? '',
               images: (r.imageUrls ?? []).join(', '),
               chip: r.chip ?? '',
+              foodType: r.foodType ?? '',
               isActive: r.isActive ?? true,
               existing: !!r.existing,
               warnings: r.warnings ?? [],
             });
           } else {
-            const r = row as PreviewSheetPuja;
+            const r = row as PreviewPujaRow;
             pujaRows.push({
               rowId: r.rowId,
               originalName: r.name,
@@ -226,7 +249,7 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
       }
 
       setFileName(data.fileName ?? file.name);
-      setChipOptions(data.chipOptions ?? PUJA_CHIP_LABELS.map(([slug, label]) => ({ slug, label })));
+      if (data.chipOptions && data.chipOptions.length > 0) setChipOptions(data.chipOptions);
       setItems(itemRows);
       setPujas(pujaRows);
       setTopWarnings(data.warnings ?? []);
@@ -254,7 +277,6 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
   }
 
   async function submitImport() {
-    // Build rows and validate names/prices.
     const problems: string[] = [];
     const itemRows: ParsedPujaItem[] = [];
     for (const r of visibleItems) {
@@ -271,20 +293,23 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
         imageUrls: splitImageUrls(r.images),
         chip: r.chip || undefined,
         isActive: r.isActive,
+        foodType: isPuja ? undefined : r.foodType || undefined,
         warnings: [],
       });
     }
     const pujaRows: ParsedPuja[] = [];
-    for (const r of visiblePujas) {
-      if (!r.name.trim()) problems.push(`Puja row "${r.originalName}" is missing a name.`);
-      pujaRows.push({
-        name: r.name.trim(),
-        description: r.description.trim() || undefined,
-        imageUrl: r.imageUrl.trim() || undefined,
-        isActive: r.isActive,
-        entries: parseItemsCell(r.itemsText),
-        warnings: [],
-      });
+    if (isPuja) {
+      for (const r of visiblePujas) {
+        if (!r.name.trim()) problems.push(`Puja row "${r.originalName}" is missing a name.`);
+        pujaRows.push({
+          name: r.name.trim(),
+          description: r.description.trim() || undefined,
+          imageUrl: r.imageUrl.trim() || undefined,
+          isActive: r.isActive,
+          entries: parseItemsCell(r.itemsText),
+          warnings: [],
+        });
+      }
     }
     if (problems.length > 0) {
       setSubmitError(problems[0]);
@@ -294,10 +319,11 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const res = await fetch('/api/admin/import/puja', {
+      const url = isPuja ? '/api/admin/import/puja' : '/api/admin/import/product';
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: itemRows, pujas: pujaRows }),
+        body: JSON.stringify(isPuja ? { items: itemRows, pujas: pujaRows } : { items: itemRows, productType }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.ok) {
@@ -341,7 +367,7 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Import Pujas &amp; Puja Items</DialogTitle>
+            <DialogTitle>Import {isPuja ? 'Pujas & Puja Items' : `${typeLabel} Products`}</DialogTitle>
             <DialogDescription>
               {step === 0 && 'Download the demo Excel, fill in your data without touching the header row, then upload it.'}
               {step === 1 && `Review the ${totalRows} row(s) read from ${fileName ?? 'your file'}. Edit or delete rows, then import.`}
@@ -382,36 +408,53 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
           {step === 0 && (
             <div className="space-y-4">
               <div className="rounded-lg border border-border bg-muted/30 p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="space-y-1.5 text-sm">
-                    <p className="flex items-center gap-2 font-semibold text-foreground">
-                      <Download className="h-4 w-4 text-primary" /> Step 1 — Download the demo Excel
-                    </p>
-                    <ul className="list-inside list-disc space-y-1 text-xs text-muted-foreground">
+                <div className="space-y-1.5 text-sm">
+                  <p className="flex items-center gap-2 font-semibold text-foreground">
+                    <Download className="h-4 w-4 text-primary" /> Step 1 — Download the demo Excel
+                  </p>
+                  <ul className="list-inside list-disc space-y-1 text-xs text-muted-foreground">
+                    {isPuja ? (
+                      <>
+                        <li>
+                          The workbook has two sheets: <span className="font-medium text-foreground">Puja Items</span> (item
+                          name, price, category…) and <span className="font-medium text-foreground">Pujas</span> (puja name + its
+                          items).
+                        </li>
+                        <li>
+                          In the Pujas sheet, list each puja&apos;s items in the Items column as comma-separated names
+                          (optional quantity prefix, e.g. <span className="font-medium text-foreground">2 x Coconut</span>).
+                        </li>
+                      </>
+                    ) : (
                       <li>
-                        The workbook has two sheets: <span className="font-medium text-foreground">Puja Items</span> (item name,
-                        price, category…) and <span className="font-medium text-foreground">Pujas</span> (puja name + its items).
+                        The workbook is a single {typeLabel} sheet. Fill the item rows —{' '}
+                        {typeLabel === 'Food' && (
+                          <span>
+                            the Food Type column (Veg / Non Veg / Egg) is optional,{' '}
+                          </span>
+                        )}
+                        category values come from the {typeLabel} category list and price is required.
                       </li>
-                      <li>
-                        Fill your data in the sample rows. <span className="font-medium text-foreground">Never change the header
-                        row (row 1)</span> — the file is read by the header names.
-                      </li>
-                      <li>
-                        In the Pujas sheet, list each puja&apos;s items in the Items column as comma-separated names (optional
-                        quantity prefix, e.g. <span className="font-medium text-foreground">2 x Coconut</span>).
-                      </li>
-                      <li>Rows whose name already exists in the database will update it; new names will be added.</li>
-                    </ul>
-                    <Button type="button" variant="outline" size="sm" onClick={downloadDemo} disabled={downloadingDemo}>
-                      {downloadingDemo ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <FileSpreadsheet className="mr-1 h-3.5 w-3.5 text-success" />}
-                      {downloadingDemo ? 'Downloading…' : 'Download demo Excel (.xlsx)'}
-                    </Button>
-                  </div>
+                    )}
+                    <li>
+                      <span className="font-medium text-foreground">Never change the header row (row 1)</span> — the file is read
+                      by the header names.
+                    </li>
+                    <li>Rows whose name already exists in the database will update it; new names will be added.</li>
+                  </ul>
+                  <Button type="button" variant="outline" size="sm" onClick={downloadDemo} disabled={downloadingDemo}>
+                    {downloadingDemo ? (
+                      <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <FileSpreadsheet className="mr-1 h-3.5 w-3.5 text-success" />
+                    )}
+                    {downloadingDemo ? 'Downloading…' : 'Download demo Excel (.xlsx)'}
+                  </Button>
                 </div>
               </div>
 
               <label
-                className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition cursor-pointer hover:bg-muted/50 ${
+                className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition hover:bg-muted/50 ${
                   uploadError ? 'border-destructive/60' : 'border-input'
                 }`}
               >
@@ -432,7 +475,6 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
                   </span>
                 )}
                 <input
-                  ref={fileInputRef}
                   type="file"
                   accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                   className="hidden"
@@ -471,38 +513,42 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setReviewTab('items')}
-                  className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                    reviewTab === 'items' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'
-                  }`}
-                >
-                  Puja Items ({itemCount})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setReviewTab('pujas')}
-                  className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                    reviewTab === 'pujas' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'
-                  }`}
-                >
-                  Pujas ({pujaCount})
-                </button>
-              </div>
-
-              {reviewTab === 'items' && itemCount === 0 && (
-                <p className="py-6 text-center text-sm text-muted-foreground">No puja items in this file (deleted rows are skipped).</p>
+              {isPuja && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setReviewTab('items')}
+                    className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                      reviewTab === 'items' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'
+                    }`}
+                  >
+                    Puja Items ({itemCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReviewTab('pujas')}
+                    className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                      reviewTab === 'pujas' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'
+                    }`}
+                  >
+                    Pujas ({pujaCount})
+                  </button>
+                </div>
               )}
-              {reviewTab === 'items' &&
+
+              {(reviewTab === 'items' || !isPuja) && itemCount === 0 && (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  No {typeLabel.toLowerCase()} products in this file (deleted rows are skipped).
+                </p>
+              )}
+              {(reviewTab === 'items' || !isPuja) &&
                 visibleItems.map((r) => {
                   const nameChanged = r.name.trim().toLowerCase() !== r.originalName.trim().toLowerCase();
                   return (
                     <div key={r.rowId} className="rounded-lg border border-border bg-card p-3">
                       <div className="mb-2 flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Item</span>
+                          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Product</span>
                           <Badge className={r.existing && !nameChanged ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400' : 'bg-success/15 text-success'}>
                             {r.existing && !nameChanged ? 'Update existing' : 'Add new'}
                           </Badge>
@@ -513,7 +559,7 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
                       </div>
                       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                         <div className="col-span-2 sm:col-span-1">
-                          <p className="mb-1 text-[11px] font-medium text-muted-foreground">Item Name *</p>
+                          <p className="mb-1 text-[11px] font-medium text-muted-foreground">Name *</p>
                           <Input value={r.name} onChange={(e) => updateItem(r.rowId, { name: e.target.value })} className="h-8 text-sm" />
                         </div>
                         <div>
@@ -547,6 +593,23 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
                           <p className="mb-1 text-[11px] font-medium text-muted-foreground">Image URL(s) — comma separated</p>
                           <Input value={r.images} onChange={(e) => updateItem(r.rowId, { images: e.target.value })} className="h-8 text-sm" />
                         </div>
+                        {productType === 'food' && (
+                          <div>
+                            <p className="mb-1 text-[11px] font-medium text-muted-foreground">Food Type</p>
+                            <select
+                              value={r.foodType}
+                              onChange={(e) => updateItem(r.rowId, { foodType: e.target.value })}
+                              className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm"
+                            >
+                              <option value="">Default (Veg)</option>
+                              {FOOD_TYPE_LABELS.map(([slug, fLabel]) => (
+                                <option key={slug} value={slug}>
+                                  {fLabel}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
                         <label className="col-span-2 flex items-center gap-2 sm:col-span-4">
                           <Checkbox checked={r.isActive} onCheckedChange={(v) => updateItem(r.rowId, { isActive: v === true })} />
                           <span className="text-xs text-muted-foreground">Active (visible in the store)</span>
@@ -565,10 +628,11 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
                   );
                 })}
 
-              {reviewTab === 'pujas' && pujaCount === 0 && (
+              {isPuja && reviewTab === 'pujas' && pujaCount === 0 && (
                 <p className="py-6 text-center text-sm text-muted-foreground">No pujas in this file (deleted rows are skipped).</p>
               )}
-              {reviewTab === 'pujas' &&
+              {isPuja &&
+                reviewTab === 'pujas' &&
                 visiblePujas.map((r) => {
                   const nameChanged = r.name.trim().toLowerCase() !== r.originalName.trim().toLowerCase();
                   return (
@@ -627,28 +691,32 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
               <div className="grid w-full max-w-md grid-cols-2 gap-2 sm:grid-cols-3">
                 <div className="rounded-lg border border-border bg-muted/30 p-3">
                   <p className="text-2xl font-bold text-primary">{summary.itemsCreated}</p>
-                  <p className="text-xs text-muted-foreground">Items added</p>
+                  <p className="text-xs text-muted-foreground">Products added</p>
                 </div>
                 <div className="rounded-lg border border-border bg-muted/30 p-3">
                   <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{summary.itemsUpdated}</p>
-                  <p className="text-xs text-muted-foreground">Items updated</p>
-                </div>
-                <div className="rounded-lg border border-border bg-muted/30 p-3">
-                  <p className="text-2xl font-bold text-primary">{summary.pujasCreated}</p>
-                  <p className="text-xs text-muted-foreground">Pujas added</p>
-                </div>
-                <div className="rounded-lg border border-border bg-muted/30 p-3">
-                  <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{summary.pujasUpdated}</p>
-                  <p className="text-xs text-muted-foreground">Pujas updated</p>
-                </div>
-                <div className="rounded-lg border border-border bg-muted/30 p-3">
-                  <p className="text-2xl font-bold">{summary.linksCreated}</p>
-                  <p className="text-xs text-muted-foreground">Item links synced</p>
+                  <p className="text-xs text-muted-foreground">Products updated</p>
                 </div>
                 <div className="rounded-lg border border-border bg-muted/30 p-3">
                   <p className="text-2xl font-bold">{summary.imagesAdded}</p>
                   <p className="text-xs text-muted-foreground">Images added</p>
                 </div>
+                {isPuja && (
+                  <>
+                    <div className="rounded-lg border border-border bg-muted/30 p-3">
+                      <p className="text-2xl font-bold text-primary">{summary.pujasCreated}</p>
+                      <p className="text-xs text-muted-foreground">Pujas added</p>
+                    </div>
+                    <div className="rounded-lg border border-border bg-muted/30 p-3">
+                      <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{summary.pujasUpdated}</p>
+                      <p className="text-xs text-muted-foreground">Pujas updated</p>
+                    </div>
+                    <div className="rounded-lg border border-border bg-muted/30 p-3">
+                      <p className="text-2xl font-bold">{summary.linksCreated}</p>
+                      <p className="text-xs text-muted-foreground">Item links synced</p>
+                    </div>
+                  </>
+                )}
               </div>
               {summary.warnings.length > 0 && (
                 <div className="w-full max-w-md rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-left">
@@ -693,9 +761,9 @@ export function PujaImportDialog({ onImported, label = 'Upload Excel', title, cl
                     </>
                   ) : (
                     <>
-                      Import {itemCount > 0 && `${itemCount} item${itemCount === 1 ? '' : 's'}`}
-                      {itemCount > 0 && pujaCount > 0 && ' · '}
-                      {pujaCount > 0 && `${pujaCount} puja${pujaCount === 1 ? '' : 's'}`}
+                      Import {itemCount > 0 && `${itemCount} product${itemCount === 1 ? '' : 's'}`}
+                      {isPuja && itemCount > 0 && pujaCount > 0 && ' · '}
+                      {isPuja && pujaCount > 0 && `${pujaCount} puja${pujaCount === 1 ? '' : 's'}`}
                     </>
                   )}
                 </Button>

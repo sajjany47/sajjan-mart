@@ -42,8 +42,9 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageLoader } from "@/components/ui/page-loader";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PujaImportDialog } from "@/components/admin/puja-import-dialog";
+import { ProductImportDialog } from "@/components/admin/product-import-dialog";
 import type { Product, Category, Brand, AddOnItem } from "@/lib/types";
+import type { ProductType } from "@/lib/puja-import-types";
 
 const PRODUCT_TYPES = [
   { value: "food", label: "Food" },
@@ -537,12 +538,11 @@ export default function AdminProductsPage() {
                   className="pl-9"
                 />
               </div>
-              {activeTab === "puja_samagri" && (
-                <PujaImportDialog
-                  onImported={load}
-                  title="Import pujas & puja items from Excel — existing names update, new names are added. Follow the 3-step wizard."
-                />
-              )}
+              <ProductImportDialog
+                productType={activeTab as ProductType}
+                onImported={load}
+                title="Import products from Excel — existing names update, new names are added. Follow the 3-step wizard."
+              />
               <Button
                 variant="outline"
                 onClick={handleExport}
