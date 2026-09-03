@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Plus, Trash2, Pencil } from 'lucide-react';
+import { Plus, Trash2, Pencil, FileSpreadsheet } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
 import { PageLoader } from '@/components/ui/page-loader';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { PujaImportDialog } from '@/components/admin/puja-import-dialog';
 import type { Puja } from '@/lib/types';
 
 interface PujaSamagriProduct {
@@ -121,16 +122,52 @@ export default function AdminPujasPage() {
     load(); toast.success('Puja deleted');
   }
 
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const res = await fetch('/api/admin/export/pujas');
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error ?? 'Export failed');
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'pujas.xlsx';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Excel downloaded');
+    } catch {
+      toast.error('Export failed');
+    } finally {
+      setExporting(false);
+    }
+  }
+
   if (loading) return <PageLoader text="Loading pujas..." />;
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-semibold">Pujas</h1>
           <p className="mt-1 text-sm text-muted-foreground">{pujas.length} pujas</p>
         </div>
-        <Button onClick={openNew}><Plus className="mr-1 h-4 w-4" /> Add</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleExport} disabled={exporting} title="Download pujas.xlsx (Pujas + Puja Items sheets) — edit it in Excel and re-upload it here">
+            <FileSpreadsheet className="mr-1 h-4 w-4 text-success" />
+            {exporting ? 'Exporting...' : 'Export Excel'}
+          </Button>
+          <PujaImportDialog
+            onImported={load}
+            title="Import pujas & puja items from Excel — existing names update, new names are added. Follow the 3-step wizard."
+          />
+          <Button onClick={openNew}><Plus className="mr-1 h-4 w-4" /> Add</Button>
+        </div>
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

@@ -42,6 +42,7 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageLoader } from "@/components/ui/page-loader";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PujaImportDialog } from "@/components/admin/puja-import-dialog";
 import type { Product, Category, Brand, AddOnItem } from "@/lib/types";
 
 const PRODUCT_TYPES = [
@@ -514,37 +515,42 @@ export default function AdminProductsPage() {
                 </TabsTrigger>
               );
             })}
-          </TabsList>
-          <div className="flex items-center gap-2">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-              aria-label="Sort products"
-            >
-              <option value="image-missing">Image missing first</option>
-              <option value="name-asc">Name A–Z</option>
-              <option value="name-desc">Name Z–A</option>
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-            </select>
-            <div className="relative max-w-xs">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search..."
-                className="pl-9"
-              />
-            </div>
-            <Button
-              variant="outline"
-              onClick={handleExport}
-              disabled={exporting}
-            >
-              <FileSpreadsheet className="mr-1 h-4 w-4 text-success" />{" "}
-              {exporting ? "Exporting..." : "Export Excel"}
-            </Button>
+          </TabsList>            <div className="flex items-center gap-2">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                aria-label="Sort products"
+              >
+                <option value="image-missing">Image missing first</option>
+                <option value="name-asc">Name A–Z</option>
+                <option value="name-desc">Name Z–A</option>
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+              </select>
+              <div className="relative max-w-xs">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Search..."
+                  className="pl-9"
+                />
+              </div>
+              {activeTab === "puja_samagri" && (
+                <PujaImportDialog
+                  onImported={load}
+                  title="Import pujas & puja items from Excel — existing names update, new names are added. Follow the 3-step wizard."
+                />
+              )}
+              <Button
+                variant="outline"
+                onClick={handleExport}
+                disabled={exporting}
+              >
+                <FileSpreadsheet className="mr-1 h-4 w-4 text-success" />{" "}
+                {exporting ? "Exporting..." : "Export Excel"}
+              </Button>
             <Button onClick={() => openNew(activeTab)}>
               <Plus className="mr-1 h-4 w-4" /> Add{" "}
               {PRODUCT_TYPES.find((t) => t.value === activeTab)?.label}
