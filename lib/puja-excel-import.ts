@@ -46,7 +46,7 @@ const IMAGE_HEADERS = ['imageurl', 'image', 'images', 'imageurls', 'photo', 'pho
 const CATEGORY_HEADERS = ['category', 'chip', 'productcategory', 'categorychip', 'samagricategory'];
 const ACTIVE_HEADERS = ['isactive', 'active', 'status', 'enabled', 'visible'];
 const FOOD_TYPE_HEADERS = ['foodtype', 'food', 'diet', 'vegtype'];
-const ITEMS_HEADERS = ['items', 'itemlist', 'itemnames', 'contents', 'includeditems', 'samagri', 'productnames'];
+const ITEMS_HEADERS = ['items', 'itemlist', 'includeditems', 'contents', 'pujaitems', 'samagriitems'];
 
 export interface PujaImportParseResult {
   items: ParsedPujaItem[];
@@ -72,13 +72,17 @@ function firstMatchingHeader(headers: string[], candidates: string[]): string | 
 }
 
 function detectSheetKind(worksheet: ExcelJS.Worksheet, headers: string[]): SheetKind {
+  const hasPrice = !!firstMatchingHeader(headers, PRICE_HEADERS);
+  // If the sheet has an explicit price column, it is a product items sheet.
+  if (hasPrice) return 'items';
+
   const name = (worksheet.name ?? '').toLowerCase().trim();
-  if (name.includes('item')) return 'items';
+  if (name.includes('item') || name.includes('product') || name.includes('samagri item')) return 'items';
   if (name.includes('puja')) return 'pujas';
 
-  // Fall back to header inspection when the sheet is renamed.
+  // Fall back to header inspection when the sheet is generic (e.g. Sheet1).
   if (firstMatchingHeader(headers, ITEMS_HEADERS)) return 'pujas';
-  if (headers.includes('pujaname') || headers.includes('puja')) return 'pujas';
+  if (headers.includes('pujaname')) return 'pujas';
   return 'items';
 }
 

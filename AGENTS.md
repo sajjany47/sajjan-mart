@@ -1,5 +1,12 @@
 # AGENTS.md — Project Change Log
 
+## 2026-09-04: Fix Excel import isolation between products and puja packages
+
+- **Separated product catalog import from puja package import**: `IMPORTABLE_TYPES` in `/api/admin/import/product/preview` and `/api/admin/import/product` extended to include `puja_samagri`.
+- **`ProductImportDialog`** (`components/admin/product-import-dialog.tsx`) gained an explicit `isPujaPackageImport?: boolean` prop (default `false`). On `/admin/products` (all tabs: Food, Puja, Natural, General), Excel upload imports single-sheet product items into the `products` table only. On `/admin/pujas` (`app/admin/pujas/page.tsx`), `isPujaPackageImport={true}` invokes the 2-sheet Puja Package + Puja Items flow (`/api/admin/import/puja`).
+- **Robust sheet detection in `lib/puja-excel-import.ts`**: `detectSheetKind` checks for price columns (`PRICE_HEADERS`) to classify product catalog sheets as `'items'` regardless of sheet name, refined `ITEMS_HEADERS` to prevent column headers like "Item Name" / "Product Name" from misclassifying catalog sheets as package sheets.
+- **Database cleaned**: Removed 225 accidental product records created in `pujas` table, restoring `pujas` table count to 59 genuine puja packages.
+
 ## 2026-09-03: Excel upload extended to all product types
 
 - The 3-step import wizard is now available on **every tab** of `/admin/products` (Food, Puja, Natural, General) and on `/admin/pujas`. `PujaImportDialog` generalized into `ProductImportDialog` (`components/admin/product-import-dialog.tsx`) keyed by `productType`.

@@ -106,6 +106,7 @@ interface ProductImportDialogProps {
   label?: string;
   title?: string;
   className?: string;
+  isPujaPackageImport?: boolean;
 }
 
 const STEPS = [
@@ -127,8 +128,9 @@ export function ProductImportDialog({
   label = 'Upload Excel',
   title,
   className,
+  isPujaPackageImport = false,
 }: ProductImportDialogProps) {
-  const isPuja = productType === 'puja_samagri';
+  const isPuja = isPujaPackageImport;
   const typeLabel = PRODUCT_TYPE_LABELS[productType];
 
   const [open, setOpen] = useState(false);

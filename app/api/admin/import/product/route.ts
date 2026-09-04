@@ -3,7 +3,7 @@ import { requireAdmin } from '@/lib/admin-auth';
 import { applyProductImport } from '@/lib/product-import-apply';
 import type { ParsedPujaItem, ProductType } from '@/lib/puja-import-types';
 
-const IMPORTABLE_TYPES: ProductType[] = ['food', 'natural', 'general'];
+const IMPORTABLE_TYPES: ProductType[] = ['food', 'natural', 'general', 'puja_samagri'];
 
 export async function POST(request: NextRequest) {
   const { payload, response } = await requireAdmin(request);

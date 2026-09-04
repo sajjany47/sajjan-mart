@@ -164,6 +164,7 @@ export default function AdminPujasPage() {
           </Button>
           <ProductImportDialog
             productType="puja_samagri"
+            isPujaPackageImport={true}
             onImported={load}
             title="Import pujas & puja items from Excel — existing names update, new names are added. Follow the 3-step wizard."
           />

@@ -9,7 +9,7 @@ import {
 } from '@/lib/puja-import-types';
 
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
-const IMPORTABLE_TYPES: ProductType[] = ['food', 'natural', 'general'];
+const IMPORTABLE_TYPES: ProductType[] = ['food', 'natural', 'general', 'puja_samagri'];
 
 export async function POST(request: NextRequest) {
   const { payload, response } = await requireAdmin(request);
