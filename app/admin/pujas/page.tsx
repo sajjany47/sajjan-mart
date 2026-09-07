@@ -26,6 +26,16 @@ interface PujaSamagriProduct {
 
 const EMPTY = { name: '', description: '', image_url: '', base_price: 0, is_active: true };
 
+const SORT_OPTIONS = [
+  { value: 'image-missing', label: 'Image missing first' },
+  { value: 'name', label: 'Name A–Z' },
+  { value: 'name-desc', label: 'Name Z–A' },
+  { value: 'price-asc', label: 'Price low to high' },
+  { value: 'price-desc', label: 'Price high to low' },
+  { value: 'newest', label: 'Newest first' },
+  { value: 'oldest', label: 'Oldest first' },
+] as const;
+
 export default function AdminPujasPage() {
   const [pujas, setPujas] = useState<Puja[]>([]);
   const [products, setProducts] = useState<PujaSamagriProduct[]>([]);
@@ -37,18 +47,19 @@ export default function AdminPujasPage() {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<Puja | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [sort, setSort] = useState<'image-missing' | 'name' | 'name-desc' | 'price-asc' | 'price-desc' | 'newest' | 'oldest'>('image-missing');
 
   async function load() {
     setLoading(true);
     const [pujasRes, productsRes] = await Promise.all([
-      supabase.from('pujas').select('*').order('name'),
+      supabase.from('pujas').select('*').eq('sort', sort),
       supabase.from('products').select('id,name,sales_price,quantity_type').eq('product_type', 'puja_samagri').eq('active', 'true').order('name'),
     ]);
     setPujas((pujasRes.data ?? []) as Puja[]);
     setProducts((productsRes.data ?? []) as PujaSamagriProduct[]);
     setLoading(false);
   }
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [sort]);
 
   function openNew() { setEditing(null); setForm(EMPTY); setSelectedItems([]); setOpen(true); }
 
@@ -168,6 +179,15 @@ export default function AdminPujasPage() {
             onImported={load}
             title="Import pujas & puja items from Excel — existing names update, new names are added. Follow the 3-step wizard."
           />
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as typeof sort)}
+            className="h-9 px-3 text-sm border border-input bg-background rounded-md"
+          >
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
           <Button onClick={openNew}><Plus className="mr-1 h-4 w-4" /> Add</Button>
         </div>
       </div>
