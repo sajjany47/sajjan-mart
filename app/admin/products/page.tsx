@@ -144,12 +144,6 @@ const PUJA_SAMAGRI_CATEGORIES = [
   { value: "other", label: "Other" },
 ];
 
-const PUJA_ITEM_CATEGORIES = [
-  { value: "basic", label: "Basic" },
-  { value: "special", label: "Special" },
-  { value: "recommended", label: "Recommended" },
-];
-
 const CATEGORY_SLUG_MAP: Record<string, string> = {
   food: "food",
   puja_samagri: "puja-samagri",
@@ -281,8 +275,6 @@ export default function AdminProductsPage() {
   const [uploading, setUploading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [pujaFilter, setPujaFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
   const [pujaAssignments, setPujaAssignments] = useState<
     { puja_id: string; category: string }[]
   >([]);
@@ -590,21 +582,7 @@ export default function AdminProductsPage() {
 
   const filtered = products
     .filter((p) => p.product_type === activeTab)
-    .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))
-    .filter((p) => {
-      if (activeTab !== "puja_samagri" || !pujaFilter) return true;
-      return pujaItems.some(
-        (pi) => pi.product_id === p.id && pi.puja_id === pujaFilter
-      );
-    })
-    .filter((p) => {
-      if (activeTab !== "puja_samagri" || !categoryFilter) return true;
-      return pujaItems.some(
-        (pi) =>
-          pi.product_id === p.id &&
-          pi.category === categoryFilter
-      );
-    });
+    .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
 
   function getPujaAssignments(productId: string) {
     return pujaItems
@@ -664,36 +642,6 @@ export default function AdminProductsPage() {
                   className="pl-9"
                 />
               </div>
-              {activeTab === "puja_samagri" && (
-                <>
-                  <select
-                    value={pujaFilter}
-                    onChange={(e) => setPujaFilter(e.target.value)}
-                    className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-                    aria-label="Filter by Puja"
-                  >
-                    <option value="">All Pujas</option>
-                    {pujas.map((p: any) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-                    aria-label="Filter by Category"
-                  >
-                    <option value="">All Categories</option>
-                    {PUJA_ITEM_CATEGORIES.map((c) => (
-                      <option key={c.value} value={c.value}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
-                </>
-              )}
               <ProductImportDialog
                 productType={activeTab as ProductType}
                 onImported={load}
