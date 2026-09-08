@@ -144,6 +144,12 @@ const PUJA_SAMAGRI_CATEGORIES = [
   { value: "other", label: "Other" },
 ];
 
+const PUJA_ITEM_CATEGORIES = [
+  { value: "basic", label: "Basic" },
+  { value: "special", label: "Special" },
+  { value: "recommended", label: "Recommended" },
+];
+
 const CATEGORY_SLUG_MAP: Record<string, string> = {
   food: "food",
   puja_samagri: "puja-samagri",
@@ -261,6 +267,8 @@ export default function AdminProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [addOns, setAddOns] = useState<AddOnItem[]>([]);
+  const [pujas, setPujas] = useState<any[]>([]);
+  const [pujaItems, setPujaItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [activeTab, setActiveTab] = useState("food");
@@ -273,14 +281,25 @@ export default function AdminProductsPage() {
   const [uploading, setUploading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [pujaFilter, setPujaFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [pujaAssignments, setPujaAssignments] = useState<
+    { puja_id: string; category: string }[]
+  >([]);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("products")
-      .select("*, category(*), sub_category(*), brand(*), product_images(*)")
-      .eq("sort", sortBy);
-    setProducts((data ?? []) as Product[]);
+    const [productsRes, pujaItemsRes] = await Promise.all([
+      supabase
+        .from("products")
+        .select("*, category(*), sub_category(*), brand(*), product_images(*)")
+        .eq("sort", sortBy),
+      supabase
+        .from("puja_items")
+        .select("*, puja(*)"),
+    ]);
+    setProducts((productsRes.data ?? []) as Product[]);
+    setPujaItems(pujaItemsRes.data ?? []);
     setLoading(false);
   }, [sortBy]);
 
@@ -301,6 +320,11 @@ export default function AdminProductsPage() {
       .eq("is_active", true)
       .order("name")
       .then(({ data }: any) => setAddOns((data ?? []) as AddOnItem[]));
+    supabase
+      .from("pujas")
+      .select("*")
+      .order("name")
+      .then(({ data }: any) => setPujas((data ?? []) as any[]));
   }, []);
 
   useEffect(() => {
@@ -312,14 +336,29 @@ export default function AdminProductsPage() {
     setImages([]);
     setImageInputMode("url");
     setImageUrl("");
+    setPujaAssignments([]);
     setOpen(true);
   }
 
-  function openEdit(p: Product) {
+  async function openEdit(p: Product) {
     setEditing(p);
     setImages(p.product_images?.map((img) => img.url) ?? []);
     setImageInputMode("url");
     setImageUrl("");
+    if (p.product_type === "puja_samagri") {
+      const { data } = await supabase
+        .from("puja_items")
+        .select("*")
+        .eq("product_id", p.id);
+      setPujaAssignments(
+        (data ?? []).map((pi: any) => ({
+          puja_id: pi.puja_id,
+          category: pi.category ?? "basic",
+        }))
+      );
+    } else {
+      setPujaAssignments([]);
+    }
     setOpen(true);
   }
 
@@ -363,6 +402,31 @@ export default function AdminProductsPage() {
   }
 
   async function onSubmit(values: FormValues, { setSubmitting }: any) {
+    if (values.product_type === "puja_samagri") {
+      const assigned = pujaAssignments.filter((pa) => pa.puja_id);
+      if (assigned.length === 0) {
+        toast.error("At least one puja assignment is required for puja samagri items.");
+        setSubmitting(false);
+        return;
+      }
+      const invalidCategory = assigned.some(
+        (pa) => !["basic", "special", "recommended"].includes(pa.category)
+      );
+      if (invalidCategory) {
+        toast.error("Every puja assignment must have a valid category.");
+        setSubmitting(false);
+        return;
+      }
+      const duplicates = assigned.some(
+        (pa, i) =>
+          assigned.findIndex((other) => other.puja_id === pa.puja_id) !== i
+      );
+      if (duplicates) {
+        toast.error("A product cannot be assigned to the same puja twice.");
+        setSubmitting(false);
+        return;
+      }
+    }
     const slug =
       editing?.slug ??
       slugify(values.name) + "-" + Math.random().toString(36).slice(2, 6);
@@ -414,6 +478,25 @@ export default function AdminProductsPage() {
           sort_order: i,
         });
       }
+      if (values.product_type === "puja_samagri") {
+        await supabase
+          .from("puja_items")
+          .delete()
+          .eq("product_id", editing.id);
+        for (let i = 0; i < pujaAssignments.length; i++) {
+          const pa = pujaAssignments[i];
+          await supabase.from("puja_items").insert({
+            puja_id: pa.puja_id,
+            product_id: editing.id,
+            name: values.name,
+            category: pa.category,
+            unit: values.quantity_type || "pc",
+            price: Number(values.sales_price),
+            default_qty: 1,
+            sort_order: i + 1,
+          });
+        }
+      }
       toast.success("Product updated");
     } else {
       const { data, error } = await supabase
@@ -433,6 +516,21 @@ export default function AdminProductsPage() {
           alt: values.name,
           sort_order: i,
         });
+      }
+      if (values.product_type === "puja_samagri") {
+        for (let i = 0; i < pujaAssignments.length; i++) {
+          const pa = pujaAssignments[i];
+          await supabase.from("puja_items").insert({
+            puja_id: pa.puja_id,
+            product_id: data.id,
+            name: values.name,
+            category: pa.category,
+            unit: values.quantity_type || "pc",
+            price: Number(values.sales_price),
+            default_qty: 1,
+            sort_order: i + 1,
+          });
+        }
       }
       toast.success("Product created");
     }
@@ -488,7 +586,31 @@ export default function AdminProductsPage() {
 
   const filtered = products
     .filter((p) => p.product_type === activeTab)
-    .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
+    .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))
+    .filter((p) => {
+      if (activeTab !== "puja_samagri" || !pujaFilter) return true;
+      return pujaItems.some(
+        (pi) => pi.product_id === p.id && pi.puja_id === pujaFilter
+      );
+    })
+    .filter((p) => {
+      if (activeTab !== "puja_samagri" || !categoryFilter) return true;
+      return pujaItems.some(
+        (pi) =>
+          pi.product_id === p.id &&
+          pi.category === categoryFilter
+      );
+    });
+
+  function getPujaAssignments(productId: string) {
+    return pujaItems
+      .filter((pi) => pi.product_id === productId)
+      .map((pi) => ({
+        pujaId: pi.puja_id,
+        pujaName: pi.puja?.name ?? "Unknown",
+        category: pi.category ?? "basic",
+      }));
+  }
 
   if (loading) return <PageLoader text="Loading products..." />;
 
@@ -538,6 +660,36 @@ export default function AdminProductsPage() {
                   className="pl-9"
                 />
               </div>
+              {activeTab === "puja_samagri" && (
+                <>
+                  <select
+                    value={pujaFilter}
+                    onChange={(e) => setPujaFilter(e.target.value)}
+                    className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                    aria-label="Filter by Puja"
+                  >
+                    <option value="">All Pujas</option>
+                    {pujas.map((p: any) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                    aria-label="Filter by Category"
+                  >
+                    <option value="">All Categories</option>
+                    {PUJA_ITEM_CATEGORIES.map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
               <ProductImportDialog
                 productType={activeTab as ProductType}
                 onImported={load}
@@ -601,6 +753,16 @@ export default function AdminProductsPage() {
                       t.value === "puja_samagri") && (
                       <th className="px-4 py-3 text-left font-medium">
                         Category
+                      </th>
+                    )}
+                    {t.value === "puja_samagri" && (
+                      <th className="px-4 py-3 text-left font-medium">
+                        Item Category
+                      </th>
+                    )}
+                    {t.value === "puja_samagri" && (
+                      <th className="px-4 py-3 text-left font-medium">
+                        Assigned Pujas
                       </th>
                     )}
                     <th className="px-4 py-3 text-left font-medium">Status</th>
@@ -670,6 +832,52 @@ export default function AdminProductsPage() {
                           t.value === "puja_samagri") && (
                           <td className="px-4 py-3 capitalize">
                             {p.product_category?.replace(/_/g, " ") ?? "-"}
+                          </td>
+                        )}
+                        {t.value === "puja_samagri" && (
+                          <td className="px-4 py-3">
+                            {getPujaAssignments(p.id).length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {Array.from(
+                                  new Set(
+                                    getPujaAssignments(p.id).map(
+                                      (a) => a.category
+                                    )
+                                  )
+                                ).map((cat) => (
+                                  <Badge
+                                    key={cat}
+                                    variant="outline"
+                                    className="capitalize"
+                                  >
+                                    {cat}
+                                  </Badge>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </td>
+                        )}
+                        {t.value === "puja_samagri" && (
+                          <td className="px-4 py-3">
+                            <div className="flex flex-col gap-0.5">
+                              {getPujaAssignments(p.id).length > 0 ? (
+                                getPujaAssignments(p.id).map((a) => (
+                                  <span
+                                    key={a.pujaId}
+                                    className="text-xs text-muted-foreground"
+                                  >
+                                    <span className="font-medium text-foreground">
+                                      {a.pujaName}
+                                    </span>{" "}
+                                    · <span className="capitalize">{a.category}</span>
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-muted-foreground">Not assigned</span>
+                              )}
+                            </div>
                           </td>
                         )}
                         <td className="px-4 py-3">
@@ -755,6 +963,9 @@ export default function AdminProductsPage() {
                   removeImage={removeImage}
                   uploading={uploading}
                   uploadFile={uploadFile}
+                  pujas={pujas}
+                  pujaAssignments={pujaAssignments}
+                  setPujaAssignments={setPujaAssignments}
                 />
                 <DialogFooter>
                   <Button
@@ -808,6 +1019,9 @@ function ProductFormContent({
   removeImage,
   uploading,
   uploadFile,
+  pujas,
+  pujaAssignments,
+  setPujaAssignments,
 }: {
   values: any;
   setFieldValue: any;
@@ -824,6 +1038,11 @@ function ProductFormContent({
   removeImage: (i: number) => void;
   uploading: boolean;
   uploadFile: (f: File) => void;
+  pujas: any[];
+  pujaAssignments: { puja_id: string; category: string }[];
+  setPujaAssignments: (
+    v: { puja_id: string; category: string }[]
+  ) => void;
 }) {
   const pt = values.product_type;
 
@@ -948,6 +1167,109 @@ function ProductFormContent({
           )}
         </div>
       </div>
+
+      {/* Puja Assignments */}
+      {pt === "puja_samagri" && (
+        <div className="rounded-lg border border-border bg-muted/30 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <span className="flex h-5 w-5 items-center justify-center rounded bg-primary/10 text-xs font-bold text-primary">
+                2
+              </span>
+              Puja Assignments
+            </h3>
+          </div>
+          {pujas.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No pujas found. Create them under Admin → Pujas first.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {pujaAssignments.map((pa, idx) => (
+                <div
+                  key={idx}
+                  className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-background p-2"
+                >
+                  <select
+                    value={pa.puja_id}
+                    onChange={(e) => {
+                      const next = [...pujaAssignments];
+                      next[idx].puja_id = e.target.value;
+                      setPujaAssignments(next);
+                    }}
+                    className="h-9 flex-1 min-w-[180px] rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="">Select puja...</option>
+                    {pujas
+                      .filter(
+                        (p) =>
+                          p.id === pa.puja_id ||
+                          !pujaAssignments.some((a) => a.puja_id === p.id)
+                      )
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                  </select>
+                  <select
+                    value={pa.category}
+                    onChange={(e) => {
+                      const next = [...pujaAssignments];
+                      next[idx].category = e.target.value;
+                      setPujaAssignments(next);
+                    }}
+                    className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="basic">Basic</option>
+                    <option value="special">Special</option>
+                    <option value="recommended">Recommended</option>
+                  </select>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      setPujaAssignments(
+                        pujaAssignments.filter((_, i) => i !== idx)
+                      )
+                    }
+                    aria-label="Remove puja assignment"
+                  >
+                    <X className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+              {pujaAssignments.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No pujas assigned yet. Add at least one puja for this item.
+                </p>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const unassigned = pujas.find(
+                    (p) => !pujaAssignments.some((a) => a.puja_id === p.id)
+                  );
+                  setPujaAssignments([
+                    ...pujaAssignments,
+                    { puja_id: unassigned?.id ?? "", category: "basic" },
+                  ]);
+                }}
+              >
+                <Plus className="mr-1 h-4 w-4" /> Add Puja
+              </Button>
+            </div>
+          )}
+          <p className="mt-2 text-xs text-muted-foreground">
+            Assign this item to one or more pujas. Each puja assignment has its
+            own category (Basic / Special / Recommended). The same item can be
+            in different categories for different pujas.
+          </p>
+        </div>
+      )}
 
       {/* Pricing */}
       <div className="rounded-lg border border-border bg-muted/30 p-4">

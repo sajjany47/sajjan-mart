@@ -6,14 +6,37 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const pujaId = searchParams.get('pujaId') || searchParams.get('puja_id');
+    const productId = searchParams.get('productId') || searchParams.get('product_id');
+    const grouped = (searchParams.get('grouped') || searchParams.get('group_by_category')) === 'true';
 
-    const where = pujaId ? { pujaId } : {};
+    const where: Record<string, any> = {};
+    if (pujaId) where.pujaId = pujaId;
+    if (productId) where.productId = productId;
 
     const items = await prisma.pujaItem.findMany({
       where,
-      include: { puja: true },
-      orderBy: { sortOrder: 'asc' },
+      distinct: productId ? ['pujaId'] : undefined,
+      include: { puja: true, product: true },
+      orderBy: productId ? { pujaId: 'asc' } : { sortOrder: 'asc' },
     });
+
+    if (productId) {
+      const pujas = items
+        .map((i) => i.puja)
+        .filter(Boolean)
+        .sort((a: any, b: any) => a.name.localeCompare(b.name));
+      return jsonResponse(pujas);
+    }
+
+    if (grouped) {
+      const groupedItems: Record<string, any[]> = {};
+      for (const item of items) {
+        const key = item.category || 'basic';
+        (groupedItems[key] ||= []).push(item);
+      }
+      return jsonResponse({ items: groupedItems });
+    }
+
     return jsonResponse(items);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });

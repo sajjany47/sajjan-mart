@@ -257,14 +257,15 @@ model Puja {
 }
 
 model PujaItem {
-  id        String @id @default(dbgenerated("gen_random_uuid()"))
-  pujaId    String @map("puja_id")
+  id        String  @id @default(dbgenerated("gen_random_uuid()"))
+  pujaId    String  @map("puja_id")
   productId String? @map("product_id")
   name      String
-  unit      String @default("pc")
+  category  String  @default("basic") // basic | special | recommended
+  unit      String  @default("pc")
   price     Decimal @default(0)
-  defaultQty Int   @default(1) @map("default_qty")
-  sortOrder Int    @default(0) @map("sort_order")
+  defaultQty Int    @default(1) @map("default_qty")
+  sortOrder Int     @default(0) @map("sort_order")
 
   puja    Puja?    @relation(fields: [pujaId], references: [id], onDelete: Cascade)
   product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)

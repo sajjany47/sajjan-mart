@@ -138,6 +138,7 @@ export interface PujaItem {
   puja_id: string;
   product_id: string | null;
   name: string;
+  category: string;
   unit: string;
   price: number;
   default_qty: number;
