@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
     const pujaId = searchParams.get('pujaId') || searchParams.get('puja_id');
     const productId = searchParams.get('productId') || searchParams.get('product_id');
     const grouped = (searchParams.get('grouped') || searchParams.get('group_by_category')) === 'true';
+    const pujasOnly = (searchParams.get('pujasOnly') || searchParams.get('pujas_only')) === 'true';
 
     const where: Record<string, any> = {};
     if (pujaId) where.pujaId = pujaId;
@@ -15,12 +16,13 @@ export async function GET(request: NextRequest) {
 
     const items = await prisma.pujaItem.findMany({
       where,
-      distinct: productId ? ['pujaId'] : undefined,
+      distinct: productId && pujasOnly ? ['pujaId'] : undefined,
       include: { puja: true, product: true },
-      orderBy: productId ? { pujaId: 'asc' } : { sortOrder: 'asc' },
+      orderBy:
+        productId && pujasOnly ? { pujaId: 'asc' } : { sortOrder: 'asc' },
     });
 
-    if (productId) {
+    if (productId && pujasOnly) {
       const pujas = items
         .map((i) => i.puja)
         .filter(Boolean)
