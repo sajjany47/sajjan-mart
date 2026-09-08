@@ -286,6 +286,10 @@ export default function AdminProductsPage() {
   const [pujaAssignments, setPujaAssignments] = useState<
     { puja_id: string; category: string }[]
   >([]);
+  const [assignmentsDialog, setAssignmentsDialog] = useState<{
+    productName: string;
+    assignments: { pujaId: string; pujaName: string; category: string }[];
+  } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -861,23 +865,26 @@ export default function AdminProductsPage() {
                         )}
                         {t.value === "puja_samagri" && (
                           <td className="px-4 py-3">
-                            <div className="flex flex-col gap-0.5">
-                              {getPujaAssignments(p.id).length > 0 ? (
-                                getPujaAssignments(p.id).map((a) => (
-                                  <span
-                                    key={a.pujaId}
-                                    className="text-xs text-muted-foreground"
-                                  >
-                                    <span className="font-medium text-foreground">
-                                      {a.pujaName}
-                                    </span>{" "}
-                                    · <span className="capitalize">{a.category}</span>
-                                  </span>
-                                ))
-                              ) : (
-                                <span className="text-muted-foreground">Not assigned</span>
-                              )}
-                            </div>
+                            {getPujaAssignments(p.id).length > 0 ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setAssignmentsDialog({
+                                    productName: p.name,
+                                    assignments: getPujaAssignments(p.id),
+                                  })
+                                }
+                                className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2.5 py-1 text-sm font-medium text-primary transition hover:bg-primary/10"
+                              >
+                                <LinkIcon className="h-3.5 w-3.5" />
+                                {getPujaAssignments(p.id).length} Puja
+                                {getPujaAssignments(p.id).length > 1 ? "s" : ""}
+                              </button>
+                            ) : (
+                              <span className="text-muted-foreground">
+                                Not assigned
+                              </span>
+                            )}
                           </td>
                         )}
                         <td className="px-4 py-3">
@@ -999,6 +1006,51 @@ export default function AdminProductsPage() {
         onConfirm={confirmDelete}
         loading={deleting}
       />
+
+      <Dialog
+        open={!!assignmentsDialog}
+        onOpenChange={(open) => {
+          if (!open) setAssignmentsDialog(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Assigned Pujas
+              {assignmentsDialog ? ` — "${assignmentsDialog.productName}"` : ""}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[50vh] overflow-y-auto">
+            {assignmentsDialog && assignmentsDialog.assignments.length > 0 ? (
+              <ul className="space-y-1.5">
+                {assignmentsDialog.assignments.map((a) => (
+                  <li
+                    key={a.pujaId}
+                    className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2"
+                  >
+                    <span className="text-sm font-medium">{a.pujaName}</span>
+                    <Badge variant="outline" className="capitalize">
+                      {a.category}
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                No pujas assigned.
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setAssignmentsDialog(null)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
