@@ -391,6 +391,24 @@ model Order {
   @@map("orders")
 }
 
+// Holds a payment that is still awaiting confirmation. A real Razonpay order
+// is only persisted in `orders` AFTER the payment is successfully verified —
+// so failed/dismissed payments never create an order. `payload` snapshots the
+// checkout details the order will be built from once the payment settles.
+model PaymentSession {
+  id              String   @id @default(dbgenerated("gen_random_uuid()"))
+  razorpayOrderId String   @unique @map("razorpay_order_id")
+  razorpayPaymentId String? @map("razorpay_payment_id")
+  userId          String?  @map("user_id")
+  payload         Json     @default("{}")
+  status          String   @default("pending") // pending | processing | paid | failed | expired
+  orderId         String?  @map("order_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("payment_sessions")
+}
+
 model OrderItem {
   id         String   @id @default(dbgenerated("gen_random_uuid()"))
   orderId    String   @map("order_id")

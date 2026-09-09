@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma/client';
 import { verifyWebhookSignature } from '@/lib/razorpay';
+import { createOrderFromPaymentSession } from '@/lib/razorpay-settle';
 import { sendPaymentSuccessMail } from '@/lib/mailer';
 
 /**
@@ -34,8 +35,23 @@ export async function POST(request: NextRequest) {
   try {
     switch (event) {
       case 'payment.captured': {
+        const razorpayOrderId = String(entity.order_id ?? '');
+
+        // New flow: capture settles the awaiting-payment session into a real
+        // order (idempotent alongside a concurrent /api/payments/verify).
+        const session = await prisma.paymentSession.findUnique({ where: { razorpayOrderId } });
+        if (session) {
+          const settled = await createOrderFromPaymentSession(session, {
+            paymentId: String(entity.id ?? session.razorpayPaymentId ?? ''),
+          });
+          return NextResponse.json({ received: true, ...(settled && !settled.created ? { note: 'already-settled' } : settled ? { order_created: true } : { skipped: 'settle-declined' }) });
+        }
+
+        // Fallback: orders created while the session flow wasn't active, or a
+        // duplicate delivery after a successful verify — mark any pending order
+        // paid and notify.
         const order = await prisma.order.findFirst({
-          where: { razorpayOrderId: String(entity.order_id ?? '') },
+          where: { razorpayOrderId },
         });
         if (!order) return NextResponse.json({ received: true, skipped: 'order-not-found' });
 
@@ -58,12 +74,21 @@ export async function POST(request: NextRequest) {
       }
 
       case 'payment.failed': {
-        const order = await prisma.order.findFirst({
-          where: { razorpayOrderId: String(entity.order_id ?? '') },
-        });
-        if (!order) return NextResponse.json({ received: true, skipped: 'order-not-found' });
+        const razorpayOrderId = String(entity.order_id ?? '');
 
-        if (order.paymentStatus !== 'paid') {
+        const session = await prisma.paymentSession.findUnique({ where: { razorpayOrderId } });
+        if (session && session.status !== 'paid') {
+          await prisma.paymentSession.update({
+            where: { id: session.id },
+            data: {
+              status: 'failed',
+              razorpayPaymentId: String(entity.id ?? session.razorpayPaymentId ?? ''),
+            },
+          });
+        }
+
+        const order = await prisma.order.findFirst({ where: { razorpayOrderId } });
+        if (order && order.paymentStatus !== 'paid') {
           await prisma.order.update({
             where: { id: order.id },
             data: {

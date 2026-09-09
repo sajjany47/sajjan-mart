@@ -295,14 +295,11 @@ export function CheckoutClient() {
     }
 
     const placed = order as any;
-    const orderId = placed?.id;
-    if (!orderId) {
-      setLoading(false);
-      toast.error("Order could not be created.");
-      return;
-    }
 
-    // Real Razorpay payment — open the Checkout modal and settle server-side.
+    // Real Razorpay payment — no DB order exists yet. The server only places
+    // the order AFTER the payment is verified, so we open the Checkout modal
+    // and settle server-side. If the payment fails or the modal is dismissed,
+    // nothing is charged and no order is created (cart stays intact).
     if (paymentMethod === "razorpay" && !placed?.demo_mode) {
       const keyId = placed?.key_id;
       const rzpOrderId = placed?.razorpay_order_id;
@@ -320,19 +317,19 @@ export function CheckoutClient() {
       }
 
       try {
-        const success = await new Promise<boolean>((resolve) => {
+        const createdOrderId = await new Promise<string | null>((resolve) => {
           let settled = false;
-          const settle = (v: boolean) => {
+          const settle = (id: string | null) => {
             if (settled) return;
             settled = true;
-            resolve(v);
+            resolve(id);
           };
           const rzp = new (window as any).Razorpay({
             key: keyId,
             amount: Math.round(Number(placed.total ?? total) * 100),
             currency: "INR",
             name: "Sajjan Mart",
-            description: `Order #${placed.order_number}`,
+            description: `Checkout ${rzpOrderId}`,
             order_id: rzpOrderId,
             prefill: {
               name: address.full_name,
@@ -346,7 +343,6 @@ export function CheckoutClient() {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
-                    orderId,
                     razorpayOrderId: response.razorpay_order_id,
                     razorpayPaymentId: response.razorpay_payment_id,
                     razorpaySignature: response.razorpay_signature,
@@ -355,19 +351,19 @@ export function CheckoutClient() {
                 const data = await res.json();
                 if (!res.ok) {
                   toast.error(data?.error ?? "Payment could not be verified.");
-                  settle(false);
+                  settle(null);
                   return;
                 }
-                settle(true);
+                settle(data?.id ?? null);
               } catch {
                 toast.error("Payment could not be verified.");
-                settle(false);
+                settle(null);
               }
             },
             modal: {
               ondismiss: () => {
-                toast.info("Payment window closed. Your order is saved with a pending payment.");
-                settle(false);
+                toast.info("Payment window closed. No order was placed and nothing was charged.");
+                settle(null);
               },
             },
           });
@@ -378,25 +374,25 @@ export function CheckoutClient() {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                orderId,
+                razorpayOrderId: rzpOrderId,
                 razorpayPaymentId: err?.payment_id ?? null,
                 failureReason: reason,
               }),
             }).catch(() => {});
             toast.error(`Payment failed: ${reason}`);
-            settle(false);
+            settle(null);
           });
           rzp.open();
         });
 
-        // The order exists in either case; only the payment state differs now.
-        clearCart();
         setLoading(false);
-        if (success) {
+        if (createdOrderId) {
+          // Payment confirmed server-side — the order now exists.
+          clearCart();
           toast.success("Payment successful! Order placed.");
-          router.push(`/account/orders/${orderId}`);
+          router.push(`/account/orders/${createdOrderId}`);
         } else {
-          router.push(`/account/orders/${orderId}`);
+          toast.info("No payment was completed, so no order was placed. Your cart is still intact.");
         }
         return;
       } catch {
@@ -404,6 +400,14 @@ export function CheckoutClient() {
         toast.error("Something went wrong while processing payment. Please try again.");
         return;
       }
+    }
+
+    // COD and demo-mode Razorpay: the order already exists server-side.
+    const orderId = placed?.id;
+    if (!orderId) {
+      setLoading(false);
+      toast.error("Order could not be created.");
+      return;
     }
 
     clearCart();
