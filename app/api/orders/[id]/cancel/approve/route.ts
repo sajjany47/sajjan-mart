@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma/client';
 import { requireAdmin } from '@/lib/admin-auth';
 import { jsonResponse } from '@/lib/api-utils';
 import { computeOrderAmounts, buildRefundUpdate } from '@/lib/order-refunds';
+import { initiateRefundIfNeeded } from '@/lib/razorpay-refunds';
 import { sendCancelApprovedMail } from '@/lib/mailer';
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
@@ -96,17 +97,29 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       include: { items: true, user: true },
     });
 
-    // Notify the customer that the cancellation was accepted (never blocks the response)
+    // Auto-refund the approved items through Razorpay (idempotent — approving
+    // the same request twice can never double-refund).
     if (updated) {
-      const cancelledNames = updated.items
+      await initiateRefundIfNeeded(updated);
+    }
+    const refreshed = updated
+      ? await prisma.order.findUnique({
+          where: { id: updated.id },
+          include: { items: true, user: true },
+        })
+      : null;
+
+    // Notify the customer that the cancellation was accepted (never blocks the response)
+    if (refreshed) {
+      const cancelledNames = refreshed.items
         .filter((i) => cancelledIds.includes(i.id))
         .map((i) => `${i.name}${i.variantName ? ` (${i.variantName})` : ''}`);
-      sendCancelApprovedMail(updated, cancelledNames, fullCancellation).catch((e) =>
+      sendCancelApprovedMail(refreshed, cancelledNames, fullCancellation).catch((e) =>
         console.error('[orders] cancel-approved-mail failed:', e)
       );
     }
 
-    return jsonResponse({ ...(updated ?? {}), amounts: updated ? computeOrderAmounts(updated) : null });
+    return jsonResponse({ ...(refreshed ?? {}), amounts: refreshed ? computeOrderAmounts(refreshed) : null });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to approve cancellation' }, { status: 500 });
   }

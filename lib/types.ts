@@ -15,7 +15,7 @@ export type OrderStatus =
   | 'cancel_request'
   | 'return'
   | 'refunded';
-export type PaymentMethod = 'cod' | 'razorpay' | 'cashfree';
+export type PaymentMethod = 'cod' | 'razorpay';
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 
 export interface Profile {
@@ -228,6 +228,12 @@ export interface Order {
   previous_status: string | null;
   refunded_amount: number | null;
   refund_id: string | null;
+  refund_status: string | null;
+  razorpay_order_id: string | null;
+  razorpay_payment_id: string | null;
+  razorpay_signature: string | null;
+  paid_at: string | null;
+  payment_failure_reason: string | null;
   created_at: string;
   updated_at: string;
   order_items?: OrderItem[];

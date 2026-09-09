@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma/client';
 import { requireAdmin } from '@/lib/admin-auth';
 import { jsonResponse } from '@/lib/api-utils';
 import { computeOrderAmounts, buildRefundUpdate } from '@/lib/order-refunds';
+import { initiateRefundIfNeeded } from '@/lib/razorpay-refunds';
 import { sendAdminItemCancelledMail } from '@/lib/mailer';
 
 const PROCESSABLE_STATUSES = ['confirmed', 'processing', 'packed'];
@@ -111,16 +112,28 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       include: { items: true, user: true },
     });
 
-    // Notify the customer immediately (never blocks the response).
+    // Auto-refund the cancelled item through Razorpay (idempotent — clicking
+    // cancel twice can never double-refund).
     if (updated) {
+      await initiateRefundIfNeeded(updated);
+    }
+    const refreshed = updated
+      ? await prisma.order.findUnique({
+          where: { id: updated.id },
+          include: { items: true, user: true },
+        })
+      : null;
+
+    // Notify the customer immediately (never blocks the response).
+    if (refreshed) {
       const itemName = `${item.name}${item.variantName ? ` (${item.variantName})` : ''}`;
-      sendAdminItemCancelledMail(updated, [itemName], computeOrderAmounts(updated)).catch((e) =>
+      sendAdminItemCancelledMail(refreshed, [itemName], computeOrderAmounts(refreshed)).catch((e) =>
         console.error('[orders] item-cancelled-mail failed:', e)
       );
     }
 
-    const amounts = updated ? computeOrderAmounts(updated) : null;
-    return jsonResponse({ ...(updated ?? {}), amounts });
+    const amounts = refreshed ? computeOrderAmounts(refreshed) : null;
+    return jsonResponse({ ...(refreshed ?? {}), amounts });
   } catch (error) {
     console.error('[orders] process-item failed:', error);
     return NextResponse.json({ error: 'Failed to process item' }, { status: 500 });

@@ -461,7 +461,7 @@ export function CartClient() {
                 </div>
                 {appliedCoupon && (
                   <div className="flex items-center justify-between rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-[11px] text-emerald-700 dark:text-emerald-300">
-                    <span className="font-bold">✅ "{appliedCoupon}" applied</span>
+                    <span className="font-bold">✅ &ldquo;{appliedCoupon}&rdquo; applied</span>
                     <button onClick={removeCoupon} className="font-semibold text-destructive underline">
                       Remove
                     </button>

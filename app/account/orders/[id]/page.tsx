@@ -7,7 +7,7 @@ import { notFound, useParams, useRouter } from 'next/navigation';
 import { ShoppingBag, ArrowLeft, Package, XCircle, Clock } from 'lucide-react';
 import { useAuth } from '@/components/providers/auth-provider';
 import { supabase } from '@/lib/supabase/client';
-import { formatINR, orderStatusLabel } from '@/lib/format';
+import { formatINR, orderStatusLabel, paymentStatusLabel, refundStatusLabel } from '@/lib/format';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -226,7 +226,21 @@ export default function OrderDetailPage() {
             <h2 className="font-display text-base font-semibold">Payment</h2>
             <div className="mt-3 space-y-1 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Method</span><span className="uppercase">{order.payment_method}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Status</span><span className="capitalize">{order.payment_status}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Status</span><span className="capitalize">{paymentStatusLabel(order.payment_status)}</span></div>
+              {order.refund_status && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Refund</span>
+                  <span className={order.refund_status === 'failed' ? 'text-destructive' : 'text-success'}>
+                    {refundStatusLabel(order.refund_status)}
+                  </span>
+                </div>
+              )}
+              {order.razorpay_payment_id && (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">Razorpay payment</span>
+                  <span className="font-mono text-[11px]">{order.razorpay_payment_id}</span>
+                </div>
+              )}
             </div>
             <div className="mt-4 space-y-1 border-t border-border pt-3 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatINR(Number(order.subtotal))}</span></div>

@@ -375,6 +375,12 @@ model Order {
   previousStatus String?  @map("previous_status")
   refundedAmount Decimal? @map("refunded_amount")
   refundId      String?   @map("refund_id")
+  refundStatus  String?   @map("refund_status")
+  razorpayOrderId   String? @map("razorpay_order_id")
+  razorpayPaymentId String? @map("razorpay_payment_id")
+  razorpaySignature String? @map("razorpay_signature")
+  paidAt        DateTime? @map("paid_at")
+  paymentFailureReason String? @map("payment_failure_reason")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @default(now()) @map("updated_at")
 

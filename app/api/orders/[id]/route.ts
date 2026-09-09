@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma/client';
 import { jsonResponse, parseBody } from '@/lib/api-utils';
 import { requireAdmin } from '@/lib/admin-auth';
 import { computeOrderAmounts, buildRefundUpdate } from '@/lib/order-refunds';
+import { initiateRefundIfNeeded } from '@/lib/razorpay-refunds';
 import { sendOrderStatusMail, sendAdminItemCancelledMail } from '@/lib/mailer';
 
 const ACTIVE_STATUSES = ['pending', 'confirmed', 'processing', 'packed'];
@@ -49,7 +50,6 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         // refund (original total − 0) capped at what was actually paid.
         const settlement = buildRefundUpdate({
           ...full,
-          orderNumber: full.orderNumber,
           items: full.items.map((i) => ({ ...i, cancelled: true })),
         });
 
@@ -70,19 +70,29 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
           include: { items: true, user: true },
         });
 
-        // Notify the customer with the cancellation details (never blocks).
+        // Auto-refund a genuinely paid order through Razorpay (idempotent —
+        // replays of this API call can never double-refund).
         if (updated) {
-          const names = updated.items
+          await initiateRefundIfNeeded(updated);
+        }
+        const refreshed = updated ? await prisma.order.findUnique({
+          where: { id: updated.id },
+          include: { items: true, user: true },
+        }) : null;
+
+        // Notify the customer with the cancellation details (never blocks).
+        if (refreshed) {
+          const names = refreshed.items
             .filter((i) => i.cancelled)
             .map((i) => `${i.name}${i.variantName ? ` (${i.variantName})` : ''}`);
-          sendAdminItemCancelledMail(updated, names, computeOrderAmounts(updated)).catch((e) =>
+          sendAdminItemCancelledMail(refreshed, names, computeOrderAmounts(refreshed)).catch((e) =>
             console.error('[orders] cancel-mail failed:', e)
           );
         }
 
         return jsonResponse({
-          ...(updated ?? {}),
-          amounts: updated ? computeOrderAmounts(updated) : null,
+          ...(refreshed ?? {}),
+          amounts: refreshed ? computeOrderAmounts(refreshed) : null,
         });
       }
     }

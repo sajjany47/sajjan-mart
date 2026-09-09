@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma/client';
 import { jsonResponse, parseBody } from '@/lib/api-utils';
 import { getStoreConfig, isFoodOpenNow } from '@/lib/store-config';
 import { computeOrderAmounts } from '@/lib/order-refunds';
+import { createRazorpayOrder, razorpayConfigured, razorpayKeyId } from '@/lib/razorpay';
 import { sendOrderPlacedMails } from '@/lib/mailer';
 
 export async function GET(request: NextRequest) {
@@ -119,9 +120,46 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // ---- Razorpay order creation (backend-owned) ----
+    // Create the Razorpay order BEFORE writing the Prisma order so a payment
+    // init failure can never orphan a DB row. COD and demo (no key secret)
+    // orders skip this entirely.
+    const wantsRazorpay = String(orderData.paymentMethod ?? 'cod') === 'razorpay';
+    const payable = Number(orderData.total ?? 0);
+    let keyId: string | null = wantsRazorpay ? razorpayKeyId() : null;
+    let razorpayOrderId: string | null = null;
+    let demoMode = false;
+
+    if (wantsRazorpay && razorpayConfigured() && payable > 0) {
+      try {
+        const rzOrder = await createRazorpayOrder(payable, String(orderData.orderNumber ?? ''));
+        razorpayOrderId = rzOrder.id;
+      } catch (error) {
+        console.error('[orders] razorpay order creation failed:', error);
+        return NextResponse.json(
+          { error: 'Failed to initialise payment. Please try again.' },
+          { status: 502 }
+        );
+      }
+    }
+
+    // Payment status is owned by the server, never trusted from the client.
+    if (wantsRazorpay) {
+      if (razorpayOrderId) {
+        orderData.paymentStatus = 'pending';
+      } else {
+        // Demo mode (no key configured) or a zero-value order: simulate an
+        // instant paid payment so the storefront keeps working without keys.
+        demoMode = true;
+        orderData.paymentStatus = 'paid';
+        keyId = null;
+      }
+    }
+
     const item = await prisma.order.create({
       data: {
         ...orderData,
+        ...(razorpayOrderId ? { razorpayOrderId } : {}),
         ...(itemData.length > 0 ? { items: { create: itemData } } : {}),
       } as any,
     });
@@ -132,7 +170,10 @@ export async function POST(request: NextRequest) {
       .then((full) => full && sendOrderPlacedMails(full))
       .catch((e) => console.error('[orders] placed-mail failed:', e));
 
-    return jsonResponse(item, { status: 201 });
+    return jsonResponse(
+      { ...item, keyId, demoMode, razorpayOrderId: razorpayOrderId ?? (item as any).razorpayOrderId ?? null },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('[orders] create failed:', error);
     return NextResponse.json({ error: 'Failed to create' }, { status: 500 });

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { formatINR, orderStatusLabel } from '@/lib/format';
+import { formatINR, orderStatusLabel, paymentStatusLabel, refundStatusLabel } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -389,7 +389,13 @@ function OrderCard({
           </span>
         )}
         <span className="uppercase">Payment: {order.payment_method}</span>
-        <span className="capitalize">Payment status: {order.payment_status}</span>
+        <span className="capitalize">Payment status: {paymentStatusLabel(order.payment_status)}</span>
+        {order.refund_status && order.refund_status !== 'processed' && (
+          <span className="font-semibold text-warning">{refundStatusLabel(order.refund_status)}</span>
+        )}
+        {order.razorpay_payment_id && (
+          <span className="font-mono text-[11px]" title="Razorpay payment id">{order.razorpay_payment_id}</span>
+        )}
         {order.coupon_code && Number(order.discount ?? 0) > 0 && (
           <span className="text-success">
             Coupon: {order.coupon_code} (−{formatINR(Number(order.discount))})
@@ -578,6 +584,20 @@ function OrderCard({
                       <span>Refund amount</span>
                       <span>{formatINR(amt.refund_due_total)}</span>
                     </div>
+                    {order.refund_status && (
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Refund status</span>
+                        <span className={order.refund_status === 'failed' ? 'text-destructive' : 'text-success'}>
+                          {refundStatusLabel(order.refund_status)}
+                        </span>
+                      </div>
+                    )}
+                    {order.razorpay_payment_id && (
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Razorpay payment</span>
+                        <span className="font-mono">{order.razorpay_payment_id}</span>
+                      </div>
+                    )}
                     {amt.refunded_so_far > 0 && (
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>Already refunded</span>
