@@ -1,5 +1,13 @@
 # AGENTS.md — Project Change Log
 
+## 2026-09-09: Puja detail page redesign — item rows with product images (display-only)
+
+- **Product images on puja items**: `app/puja/[slug]/page.tsx` (`getPujaData`) now fetches `products.product_images` for each `puja_items.product_id` and attaches the first (lowest `sort_order`) image URL to the item as `image`. Display-only; no cart/pricing logic changed.
+- **Item rows redesigned** (`components/store/puja-detail-client.tsx`): items render as a cohesive card list per category (`divide-y` rounded container). Each row: 48/56px thumbnail (graceful fallback to a per-category tinted icon tile via `ItemThumb` when the product has no image or the image 404s — seeded `/images/puja-items/*.jpg` files are absent), name (wrapping, not truncated, to avoid mobile overflow) + `₹price / unit`, a custom round checkbox tile in the category colour, and qty stepper + line total when selected. Category headers use icon chips (`Sparkles`/`Package`/`HandHeart`) with dark-mode variants.
+- **Hero**: banner image with gradient overlay title (falls back to a soft gradient tile when `puja.image_url` is empty).
+- Fixed mobile overflow on `/puja/*`: item-name `truncate` made long rows' min-content width (451px) blow out the page on 440px viewports; letting names wrap yields 0px horizontal overflow and columns of min-content 364/267px.
+- Verified live: 95 rows render, 74 real images, 0 broken images, toggle/qty/cart math correct (Surya Dev Photo +₹130 → total ₹1,475, reverted), defaults unchanged (20 items ₹1,345 for Chhath Puja), `tsc` clean, ESLint clean.
+
 ## 2026-09-08: Puja Samagri restructure (one product per item, per-Puja category) + puja sort & richer puja-items API
 
 - **Data model**: `PujaItem` gained `category String @default("basic")` (`// basic | special | recommended`) — the category lives on the Puja↔Product join row, so the *same* product can be `basic` in one Puja and `recommended` in another. Schema pushed to Neon (`npm run prisma:push -- --accept-data-loss`), `lib/types.ts` `PujaItem` updated with `category`, Prisma client regenerated (requires dev server restart to unblock the query-engine DLL swap).
