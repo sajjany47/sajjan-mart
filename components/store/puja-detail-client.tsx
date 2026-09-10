@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Minus, Plus, ShoppingBag, Star, Check, Clock, Calendar, Languages, Package, Sparkles, HandHeart, CheckSquare, X } from 'lucide-react';
+import { Minus, Plus, ShoppingBag, Star, Check, Clock, Calendar, Languages, Package, Sparkles, HandHeart, CheckSquare, X, UserRound, BadgeCheck } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { toast } from 'sonner';
 import { formatINR } from '@/lib/format';
@@ -370,50 +370,127 @@ return (
 
           {/* Pandit selection */}
           <div className="mt-8">
-            <h2 className="font-display text-xl font-semibold">Select a Pandit</h2>
-            <RadioGroup value={panditId} onValueChange={setPanditId} className="mt-4 space-y-3">
-              <div
-                className={`flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition has-[:checked]:border-primary has-[:checked]:bg-primary/5`}
-              >
-                <RadioGroupItem value="" id="p-no-pandit" className="mt-1" />
-                <div className="flex-1">
-                  <Label htmlFor="p-no-pandit" className="cursor-pointer">
-                    <p className="font-semibold">No Need</p>
-                    <p className="text-xs text-muted-foreground">I will arrange the pandit myself</p>
-                  </Label>
-                </div>
-                <span className="text-lg font-semibold text-muted-foreground">Free</span>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-300">
+                  <HandHeart className="h-3.5 w-3.5" />
+                  Select a Pandit
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {pandit ? '1 of 1 selected' : 'Choose 1 or no pandit'}
+                </span>
               </div>
-              {pandits.map((p) => (
-                  <div
-                    key={p.id}
-                    className={`flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition has-[:checked]:border-primary has-[:checked]:bg-primary/5`}
-                  >
-                    <RadioGroupItem value={p.id} id={`p-${p.id}`} className="mt-1" />
-                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-muted">
-                      {p.photo_url && (
-                        <Image src={p.photo_url} alt={p.name} fill sizes="48px" className="object-cover" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <Label htmlFor={`p-${p.id}`} className="cursor-pointer">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold">{p.name}</p>
-                            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {p.experience} yrs exp</span>
-                              <span className="flex items-center gap-1"><Star className="h-3 w-3 fill-warning text-warning" /> {p.rating}</span>
-                              <span className="flex items-center gap-1"><Languages className="h-3 w-3" /> {p.languages.join(', ')}</span>
-                            </div>
-                          </div>
-                          <span className="text-lg font-semibold">{formatINR(p.price)}</span>
-                        </div>
-                        {p.bio && <p className="mt-2 text-xs text-muted-foreground">{p.bio}</p>}
-                      </Label>
-                    </div>
+              {pandit && (
+                <span className="text-xs font-semibold text-orange-700 dark:text-orange-400">
+                  {formatINR(pandit.price)}
+                </span>
+              )}
+            </div>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Verify a Vedic pandit for your puja — or arrange your own at no cost.
+            </p>
+            <RadioGroup value={panditId} onValueChange={setPanditId} className="mt-2.5">
+              <div className="divide-y divide-border/70 overflow-hidden rounded-2xl border border-border bg-card">
+                <div
+                  className={`flex items-center gap-3 p-2.5 pl-3 transition sm:p-3 sm:pl-4 ${
+                    panditId === ''
+                      ? 'border-l-4 border-l-orange-400 bg-orange-50/70 dark:border-l-orange-500/60 dark:bg-orange-500/5'
+                      : 'border-l-4 border-l-transparent'
+                  }`}
+                >
+                  <RadioGroupItem value="" id="p-no-pandit" className="sr-only" />
+                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-muted sm:h-14 sm:w-14">
+                    <UserRound className="h-5 w-5 text-muted-foreground" />
                   </div>
-              ))}
+                  <Label htmlFor="p-no-pandit" className="min-w-0 flex-1 cursor-pointer">
+                    <span className="block text-sm font-medium leading-snug">
+                      No Need
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      I will arrange the pandit myself
+                    </span>
+                  </Label>
+                  <span className="text-sm font-semibold text-muted-foreground">Free</span>
+                  <span
+                    onClick={() => setPanditId('')}
+                    className={`flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition ${
+                      panditId === ''
+                        ? 'border-transparent bg-orange-500 text-white'
+                        : 'border-border bg-background hover:border-primary/50'
+                    }`}
+                    aria-hidden="true"
+                  >
+                    {panditId === '' && <Check className="h-3 w-3" strokeWidth={3.5} />}
+                  </span>
+                </div>
+                {pandits.map((p) => {
+                  const selected = panditId === p.id;
+                  return (
+                    <div
+                      key={p.id}
+                      className={`flex items-center gap-3 p-2.5 pl-3 transition sm:p-3 sm:pl-4 ${
+                        selected
+                          ? 'border-l-4 border-l-orange-400 bg-orange-50/70 dark:border-l-orange-500/60 dark:bg-orange-500/5'
+                          : 'border-l-4 border-l-transparent'
+                      }`}
+                    >
+                      <RadioGroupItem value={p.id} id={`p-${p.id}`} className="sr-only" />
+                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-border bg-muted sm:h-14 sm:w-14">
+                        {p.photo_url ? (
+                          <Image src={p.photo_url} alt={p.name} fill sizes="56px" className="object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center">
+                            <UserRound className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <Label htmlFor={`p-${p.id}`} className="min-w-0 flex-1 cursor-pointer">
+                        <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <span className="text-sm font-medium leading-snug">
+                            {p.name}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                            <BadgeCheck className="h-3 w-3" /> Verified
+                          </span>
+                        </span>
+                        <span className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {p.experience} yrs exp</span>
+                          <span className="flex items-center gap-1"><Star className="h-3 w-3 fill-warning text-warning" /> {p.rating}</span>
+                          <span className="flex items-center gap-1"><Languages className="h-3 w-3" /> {p.languages.join(', ')}</span>
+                        </span>
+                        {p.bio && (
+                          <span className="mt-1 block text-xs text-muted-foreground">
+                            {p.bio}
+                          </span>
+                        )}
+                      </Label>
+                      <span className="text-sm font-semibold">
+                        {formatINR(p.price)}
+                      </span>
+                      <span
+                        onClick={() => setPanditId(p.id)}
+                        className={`flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition ${
+                          selected
+                            ? 'border-transparent bg-orange-500 text-white'
+                            : 'border-border bg-background hover:border-primary/50'
+                        }`}
+                        aria-hidden="true"
+                      >
+                        {selected && <Check className="h-3 w-3" strokeWidth={3.5} />}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </RadioGroup>
+            <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl border border-primary/20 bg-secondary px-4 py-3 text-sm">
+              <span className="text-muted-foreground">
+                Selected pandit: <strong className="text-foreground">{pandit ? pandit.name : 'No Need'}</strong>
+              </span>
+              <span className="text-muted-foreground">
+                Pandit fee: <strong className="text-foreground">{pandit ? formatINR(pandit.price) : 'Free'}</strong>
+              </span>
+            </div>
           </div>
         </div>
 
