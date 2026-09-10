@@ -34,6 +34,7 @@ const CATEGORY_META: Record<
     checkedBorder: string;
     dot: string;
     fallbackTile: string;
+    rowAccent: string;
   }
 > = {
   basic: {
@@ -46,6 +47,7 @@ const CATEGORY_META: Record<
     checkedBorder: 'border-emerald-400 dark:border-emerald-500/60',
     dot: 'bg-emerald-500',
     fallbackTile: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
+    rowAccent: 'border-l-emerald-400/60 dark:border-l-emerald-500/40',
   },
   special: {
     label: 'Special Items',
@@ -57,6 +59,7 @@ const CATEGORY_META: Record<
     checkedBorder: 'border-amber-400 dark:border-amber-500/60',
     dot: 'bg-amber-500',
     fallbackTile: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+    rowAccent: 'border-l-amber-400/60 dark:border-l-amber-500/40',
   },
   recommended: {
     label: 'Recommended Items',
@@ -68,6 +71,7 @@ const CATEGORY_META: Record<
     checkedBorder: 'border-violet-400 dark:border-violet-500/60',
     dot: 'bg-violet-500',
     fallbackTile: 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300',
+    rowAccent: 'border-l-violet-400/60 dark:border-l-violet-500/40',
   },
 };
 
@@ -221,40 +225,42 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
                   if (!s?.checked) return sum;
                   return sum + i.price * s.qty;
                 }, 0);
-                return (
+return (
                   <section key={cat}>
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${meta.badgeChip}`}>
-                          <meta.icon className="h-3.5 w-3.5" />
-                          {meta.label}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {groupSelected} of {groupItems.length} selected
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {cat !== 'basic' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 px-2.5 text-[11px]"
-                            onClick={() => toggleGroup(cat)}
-                          >
-                            {groupAllChecked ? (
-                              <>
-                                <X className="mr-1 h-3 w-3" /> Clear All
-                              </>
-                            ) : (
-                              <>
-                                <CheckSquare className="mr-1 h-3 w-3" /> Select All
-                              </>
-                            )}
-                          </Button>
-                        )}
-                        <span className={`text-xs font-semibold ${meta.accent}`}>
-                          {formatINR(groupTotal)}
-                        </span>
+                    <div className="sticky top-24 z-10 -mx-4 rounded-2xl border border-border/70 bg-background/95 px-4 py-2.5 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-2 sm:px-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${meta.badgeChip}`}>
+                            <meta.icon className="h-3.5 w-3.5" />
+                            {meta.label}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {groupSelected} of {groupItems.length} selected
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {cat !== 'basic' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2.5 text-[11px]"
+                              onClick={() => toggleGroup(cat)}
+                            >
+                              {groupAllChecked ? (
+                                <>
+                                  <X className="mr-1 h-3 w-3" /> Clear All
+                                </>
+                              ) : (
+                                <>
+                                  <CheckSquare className="mr-1 h-3 w-3" /> Select All
+                                </>
+                              )}
+                            </Button>
+                          )}
+                          <span className={`text-xs font-semibold ${meta.accent}`}>
+                            {formatINR(groupTotal)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <p className="mt-1.5 text-xs text-muted-foreground">
@@ -266,10 +272,10 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
                         return (
                           <div
                             key={item.id}
-                            className={`flex items-center gap-3 p-2.5 pl-3 transition sm:p-3 sm:pl-4 ${
+                            className={`flex items-center gap-3 border-l-4 p-2.5 pl-3 transition sm:p-3 sm:pl-4 ${
                               s?.checked
                                 ? `${meta.checkedBorder} ${meta.checkedBg}`
-                                : ''
+                                : `${meta.rowAccent}`
                             }`}
                           >
                             {/* Item image */}
@@ -282,9 +288,15 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
                               htmlFor={`item-${item.id}`}
                               className="min-w-0 flex-1 cursor-pointer"
                             >
-                              <span className="block text-sm font-medium leading-snug">
-                                {item.name}
-                              </span>
+                              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                <span className="text-sm font-medium leading-snug">
+                                  {item.name}
+                                </span>
+                                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-bold uppercase tracking-wide ${meta.badgeChip}`}>
+                                  <meta.icon className="h-2.5 w-2.5" />
+                                  {cat === 'basic' ? 'Basic' : cat === 'special' ? 'Special' : 'Recommended'}
+                                </span>
+                              </div>
                               <span className="text-xs text-muted-foreground">
                                 {formatINR(item.price)} / {item.unit}
                               </span>
