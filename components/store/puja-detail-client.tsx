@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Minus, Plus, ShoppingBag, Star, Check, Clock, Calendar, Languages, Package, Sparkles, HandHeart } from 'lucide-react';
+import { Minus, Plus, ShoppingBag, Star, Check, Clock, Calendar, Languages, Package, Sparkles, HandHeart, CheckSquare, X } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { toast } from 'sonner';
 import { formatINR } from '@/lib/format';
@@ -140,6 +140,18 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
     setSelected((prev) => ({ ...prev, [id]: { ...prev[id], qty: Math.max(1, qty) } }));
   }
 
+  function toggleGroup(cat: string) {
+    const groupItems = items.filter((i) => categoryOf(i) === cat);
+    const allChecked = groupItems.every((i) => selected[i.id]?.checked);
+    setSelected((prev) => {
+      const next = { ...prev };
+      for (const i of groupItems) {
+        next[i.id] = { ...next[i.id], checked: !allChecked };
+      }
+      return next;
+    });
+  }
+
   function handleAddToCart() {
     if (!bookingDate || !bookingTime) {
       toast.error('Please select a booking date and time.');
@@ -201,6 +213,9 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
                 const groupSelected = groupItems.filter(
                   (i) => selected[i.id]?.checked
                 ).length;
+                const groupAllChecked =
+                  groupItems.length > 0 &&
+                  groupItems.every((i) => selected[i.id]?.checked);
                 const groupTotal = groupItems.reduce((sum, i) => {
                   const s = selected[i.id];
                   if (!s?.checked) return sum;
@@ -218,9 +233,29 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
                           {groupSelected} of {groupItems.length} selected
                         </span>
                       </div>
-                      <span className={`text-xs font-semibold ${meta.accent}`}>
-                        {formatINR(groupTotal)}
-                      </span>
+                      <div className="flex items-center gap-3">
+                        {cat !== 'basic' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2.5 text-[11px]"
+                            onClick={() => toggleGroup(cat)}
+                          >
+                            {groupAllChecked ? (
+                              <>
+                                <X className="mr-1 h-3 w-3" /> Clear All
+                              </>
+                            ) : (
+                              <>
+                                <CheckSquare className="mr-1 h-3 w-3" /> Select All
+                              </>
+                            )}
+                          </Button>
+                        )}
+                        <span className={`text-xs font-semibold ${meta.accent}`}>
+                          {formatINR(groupTotal)}
+                        </span>
+                      </div>
                     </div>
                     <p className="mt-1.5 text-xs text-muted-foreground">
                       {meta.description}
