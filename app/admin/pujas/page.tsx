@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Plus, Trash2, Pencil, FileSpreadsheet } from "lucide-react";
+import { Plus, Trash2, Pencil, FileSpreadsheet, Search } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +68,7 @@ export default function AdminPujasPage() {
     | "newest"
     | "oldest"
   >("image-missing");
+  const [search, setSearch] = useState("");
 
   async function load() {
     setLoading(true);
@@ -244,10 +245,19 @@ export default function AdminPujasPage() {
         <div>
           <h1 className="font-display text-2xl font-semibold">Pujas</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {pujas.length} pujas
+            {pujas.filter((p) => p.name.toLowerCase().includes(search.toLowerCase())).length} pujas{search && ` (filtered from ${pujas.length})`}
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <div className="relative max-w-xs sm:max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search pujas by name..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-9 text-sm"
+            />
+          </div>
           <Button
             variant="outline"
             onClick={handleExport}
@@ -279,7 +289,11 @@ export default function AdminPujasPage() {
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {pujas.map((p) => (
+        {pujas
+          .filter((p) =>
+            p.name.toLowerCase().includes(search.toLowerCase()),
+          )
+          .map((p) => (
           <div
             key={p.id}
             className="overflow-hidden rounded-xl border border-border bg-card"
