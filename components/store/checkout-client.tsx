@@ -519,16 +519,19 @@ export function CheckoutClient() {
                         >
                           <RadioGroupItem value={a.id} id={`addr-${a.id}`} className="mt-1" />
                           <Label htmlFor={`addr-${a.id}`} className="flex-1 cursor-pointer space-y-1">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-sm text-foreground">{a.full_name}</span>
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex min-w-0 items-center gap-2">
+                                <span className="truncate text-sm font-bold text-foreground">{a.full_name}</span>
                                 {a.is_default && (
-                                  <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary border border-primary/20">
+                                  <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary border border-primary/20">
                                     Default
                                   </span>
                                 )}
                               </div>
-                              <span className="text-xs font-semibold text-muted-foreground">{a.phone}</span>
+                              <div className="flex shrink-0 items-center gap-1.5">
+                                <span className="text-xs font-semibold text-muted-foreground">{a.phone}</span>
+                                {isSelected && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                              </div>
                             </div>
 
                             <p className="text-xs text-muted-foreground leading-relaxed pt-0.5">
@@ -537,12 +540,6 @@ export function CheckoutClient() {
                               {a.state} - <strong className="text-foreground">{a.pincode}</strong>
                             </p>
                           </Label>
-
-                          {isSelected && (
-                            <div className="absolute top-3 right-3 text-primary">
-                              <CheckCircle2 className="h-5 w-5" />
-                            </div>
-                          )}
                         </div>
                       );
                     })}
