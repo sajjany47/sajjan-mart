@@ -114,7 +114,8 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
   );
   const [panditId, setPanditId] = useState<string>('');
   const [bookingDate, setBookingDate] = useState('');
-  const [bookingTime, setBookingTime] = useState('');
+
+  const today = new Date().toISOString().split('T')[0];
 
   const pandit = pandits.find((p) => p.id === panditId);
   const cartItem = cartItems.find(
@@ -157,8 +158,8 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
   }
 
   function handleAddToCart() {
-    if (!bookingDate || !bookingTime) {
-      toast.error('Please select a booking date and time.');
+    if (!bookingDate) {
+      toast.error('Please select a booking date.');
       return;
     }
     const selectedItems = items
@@ -176,7 +177,6 @@ export function PujaDetailClient({ puja, items, pandits }: Props) {
       panditName: pandit?.name,
       selectedItems,
       bookingDate: bookingDate || undefined,
-      bookingTime: bookingTime || undefined,
     });
     toast.success(`${puja.name} package added to cart`);
   }
@@ -518,11 +518,7 @@ return (
             <div className="mt-5 space-y-3">
               <div>
                 <Label htmlFor="date" className="text-xs">Booking Date</Label>
-                <Input id="date" type="date" value={bookingDate} onChange={(e) => setBookingDate(e.target.value)} className="mt-1" />
-              </div>
-              <div>
-                <Label htmlFor="time" className="text-xs">Preferred Time</Label>
-                <Input id="time" type="time" value={bookingTime} onChange={(e) => setBookingTime(e.target.value)} className="mt-1" />
+                <Input id="date" type="date" min={today} value={bookingDate} onChange={(e) => setBookingDate(e.target.value)} className="mt-1" />
               </div>
             </div>
 

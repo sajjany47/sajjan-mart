@@ -1,5 +1,14 @@
 # AGENTS.md — Project Change Log
 
+## 2026-09-15: Account page mobile redesign + hydration fix
+
+- **Goal**: make `/account` mobile responsive and visually polished without touching data logic (queries, stats, order rows unchanged).
+- **Hydration fixes in `app/account/page.tsx`**: the hero date used `new Date().toLocaleDateString(undefined, …)` — server (en-IN) and client (en-US) rendered different strings, crashing hydration and throwing the Next.js error overlay over the page. Now guarded by a `mounted` flag and pinned to `en-IN`. Also replaced the invalid `<p><Skeleton/></p>` (div-in-p) nesting in stat cards with a `<div>` value line — both were "Unhandled Runtime Error" sources on this page.
+- **Mobile-first layout**: compact hero (smaller paddings, avatar with online dot, CTAs kept at all sizes) with stat cards pulled up over the hero via `-mt-9/-mt-12` overlap; Quick Actions converted from stacked full-width rows to a 2-col tile grid (1-col on desktop sidebar column) with tinted icon chips; help card got a soft blur accent and a proper button-style CTA. Empty orders state has an icon medallion + clearer CTA.
+- **Icon contrast fix**: stat/quick-action icon tiles use the `bg-*-500/10 text-*-600 dark:text-*-400` pattern (white-on-white `-100`/`-400/20` combos from the first pass were invisible on white cards).
+- **`components/store/account-sidebar.tsx`**: mobile nav pill strip got `no-scrollbar` (the horizontal scrollbar under the pills was a visible layout wart).
+- **Verified**: hydration error gone (clean console after reload), 0px horizontal overflow at 422px viewport, all four stat tiles + 2-col quick actions render with correct computed colors, date renders once, `tsc` and ESLint clean for touched files.
+
 ## 2026-09-09: Razorpay payments (replaces Cashfree) — backend-owned orders + server-side signature verification + auto-refunds
 
 - **Goal**: move Sajjan Mart from Cashfree to Razorpay. Order creation, payment confirmation, failed-payment recording and refunds are all backend-owned; secrets (`RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`) never leave the server; only the public `RAZORPAY_KEY_ID` is exposed to the Checkout UI.

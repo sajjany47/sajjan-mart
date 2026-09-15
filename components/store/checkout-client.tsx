@@ -25,6 +25,7 @@ import {
   AlertCircle,
   FileText,
   ShoppingBag,
+  MessageCircle,
 } from "lucide-react";
 import { useCart } from "@/components/providers/cart-provider";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -35,7 +36,7 @@ import type { Address } from "@/lib/types";
 import { isFoodOpenNow, isPaymentModeAllowed, PAYMENT_METHODS, computeTotals, getTaxRate } from "@/lib/store-config-utils";
 import { geocodeAddress, getDistanceInKm, OUTLET_LAT, OUTLET_LNG } from "@/lib/location-utils";
 import { groupItemsBySection } from "@/lib/cart-sections";
-import { getDeliveryEstimate, QUICK_SERVICE_CONTACT } from "@/lib/delivery-estimate";
+import { getDeliveryEstimate, SUPPORT_PHONE, SUPPORT_PHONE_TEL, SUPPORT_WHATSAPP_URL } from "@/lib/delivery-estimate";
 import { CheckoutStepper } from "@/components/store/checkout-stepper";
 
 interface StoreConfigData {
@@ -452,7 +453,7 @@ export function CheckoutClient() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen pb-16 bg-muted/20">
+    <div className="min-h-screen pb-8 lg:pb-0 bg-muted/20">
       <CheckoutStepper currentStep={2} />
 
       <div className="container-px mx-auto max-w-7xl">
@@ -469,12 +470,12 @@ export function CheckoutClient() {
           <div className="space-y-6">
             {/* Section 1: Delivery Address */}
             <section className="rounded-2xl border border-border/70 bg-card p-5 sm:p-6 shadow-sm">
-              <div className="flex items-center justify-between border-b border-border/50 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 font-bold text-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/50 pb-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 font-bold text-sm">
                     1
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h2 className="font-display text-lg font-bold text-foreground">Delivery Address</h2>
                     <p className="text-xs text-muted-foreground">Where should we deliver your order?</p>
                   </div>
@@ -485,7 +486,7 @@ export function CheckoutClient() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowAddAddressForm((prev) => !prev)}
-                    className="text-xs font-semibold text-primary hover:bg-primary/10"
+                    className="self-start sm:self-auto w-full sm:w-auto justify-center text-xs font-semibold text-primary hover:bg-primary/10"
                   >
                     {showAddAddressForm ? (
                       <span className="flex items-center gap-1">
@@ -518,16 +519,19 @@ export function CheckoutClient() {
                         >
                           <RadioGroupItem value={a.id} id={`addr-${a.id}`} className="mt-1" />
                           <Label htmlFor={`addr-${a.id}`} className="flex-1 cursor-pointer space-y-1">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-sm text-foreground">{a.full_name}</span>
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex min-w-0 items-center gap-2">
+                                <span className="truncate text-sm font-bold text-foreground">{a.full_name}</span>
                                 {a.is_default && (
-                                  <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary border border-primary/20">
+                                  <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary border border-primary/20">
                                     Default
                                   </span>
                                 )}
                               </div>
-                              <span className="text-xs font-semibold text-muted-foreground">{a.phone}</span>
+                              <div className="flex shrink-0 items-center gap-1.5">
+                                <span className="text-xs font-semibold text-muted-foreground">{a.phone}</span>
+                                {isSelected && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                              </div>
                             </div>
 
                             <p className="text-xs text-muted-foreground leading-relaxed pt-0.5">
@@ -536,12 +540,6 @@ export function CheckoutClient() {
                               {a.state} - <strong className="text-foreground">{a.pincode}</strong>
                             </p>
                           </Label>
-
-                          {isSelected && (
-                            <div className="absolute top-3 right-3 text-primary">
-                              <CheckCircle2 className="h-5 w-5" />
-                            </div>
-                          )}
                         </div>
                       );
                     })}
@@ -736,18 +734,18 @@ export function CheckoutClient() {
 
             {/* Section 3: Payment Method */}
             <section className="rounded-2xl border border-border/70 bg-card p-5 sm:p-6 shadow-sm">
-              <div className="flex items-center justify-between border-b border-border/50 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 font-bold text-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border-b border-border/50 pb-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 font-bold text-sm">
                     3
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h2 className="font-display text-lg font-bold text-foreground">Payment Method</h2>
                     <p className="text-xs text-muted-foreground">Select how you would like to pay</p>
                   </div>
                 </div>
 
-                <span className="flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                <span className="self-start sm:self-auto shrink-0 flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
                   <ShieldCheck className="h-3.5 w-3.5" /> 100% Encrypted
                 </span>
               </div>
@@ -937,37 +935,49 @@ export function CheckoutClient() {
               </div>
 
               {/* Support info */}
-              <div className="mt-4 flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/15 p-2.5 text-xs text-muted-foreground">
+              <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-primary/5 border border-primary/15 p-2.5">
                 <PhoneCall className="h-4 w-4 shrink-0 text-primary" />
-                <span className="text-[11px]">{QUICK_SERVICE_CONTACT}</span>
+                <span className="text-[11px] text-muted-foreground">Need help? Call or WhatsApp us</span>
+                <span className="ml-auto flex gap-1.5">
+                  <a href={SUPPORT_PHONE_TEL} className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[10px] font-semibold text-foreground transition-colors hover:bg-primary/5">
+                    <PhoneCall className="h-3 w-3" />
+                    {SUPPORT_PHONE}
+                  </a>
+                  <a href={SUPPORT_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[10px] font-semibold text-white transition-colors hover:bg-emerald-700">
+                    <MessageCircle className="h-3 w-3" />
+                    WhatsApp
+                  </a>
+                </span>
               </div>
 
-              {/* Place Order CTA Button */}
-              <Button
-                onClick={placeOrder}
-                disabled={loading || foodClosed}
-                className="mt-5 w-full font-bold text-sm py-6 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
-                size="lg"
-              >
-                {foodClosed ? (
-                  "Food Section Closed"
-                ) : loading ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Verifying &amp; Placing Order...
-                  </span>
-                ) : (
-                  `Place Order · ${formatINR(total)}`
-                )}
-              </Button>
+              {/* Place Order CTA Button (desktop only; mobile uses the fixed bottom bar) */}
+              <div className="hidden lg:block">
+                <Button
+                  onClick={placeOrder}
+                  disabled={loading || foodClosed}
+                  className="mt-5 w-full font-bold text-sm py-6 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
+                  size="lg"
+                >
+                  {foodClosed ? (
+                    "Food Section Closed"
+                  ) : loading ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Verifying &amp; Placing Order...
+                    </span>
+                  ) : (
+                    `Place Order · ${formatINR(total)}`
+                  )}
+                </Button>
 
-              {foodClosed && (
-                <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-center text-xs text-destructive">
-                  <p className="font-bold">Food Section Currently Closed</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Store Hours: {config?.food_open_time} - {config?.food_close_time}
-                  </p>
-                </div>
-              )}
+                {foodClosed && (
+                  <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-center text-xs text-destructive">
+                    <p className="font-bold">Food Section Currently Closed</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Store Hours: {config?.food_open_time} - {config?.food_close_time}
+                    </p>
+                  </div>
+                )}
+              </div>
 
               {/* Safety Footer */}
               <div className="mt-5 text-center text-[10px] text-muted-foreground flex items-center justify-center gap-2">
