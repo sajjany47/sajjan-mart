@@ -23,15 +23,18 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  AlertCircle,
+  CheckCircle2,
   Clock,
+  Compass,
   Loader2,
+  MapPin,
+  Navigation,
   Search,
   SlidersHorizontal,
+  Truck,
   Utensils,
   X,
-  MapPin,
-  Compass,
-  AlertCircle,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import type { FoodType, Product } from "@/lib/types";
@@ -523,81 +526,205 @@ export function CategoryProductsClient({
   );
 
   if (isFood && !isWithinRange) {
+    const isPending = status === "pending" || status === "checking";
+    const isOutOfRange = status === "out_of_range";
+
     return (
-      <div className="pb-8 sm:pb-10">
-        {/* Hero Banner */}
-        <div className="relative overflow-hidden rounded-2xl border border-orange-200/70 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 px-4 py-3.5 shadow-sm sm:px-6 sm:py-6 dark:border-orange-900/40 dark:from-orange-950/40 dark:via-rose-950/20 dark:to-amber-950/30">
+      <div className="pb-10 sm:pb-14">
+        {/* ============ HERO ============ */}
+        <div className="relative overflow-hidden rounded-2xl border border-orange-200/70 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 px-4 py-4 shadow-sm sm:px-6 sm:py-6 dark:border-orange-900/40 dark:from-orange-950/40 dark:via-rose-950/20 dark:to-amber-950/30">
           <div className="absolute inset-0 bg-[url('/images/banners/food_banner.jpg')] bg-cover bg-center opacity-[0.08] mix-blend-multiply dark:opacity-[0.12] dark:mix-blend-screen" />
-          <div className="relative z-10 flex items-center gap-3 sm:gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-rose-500 text-white shadow-md shadow-orange-500/20 sm:h-14 sm:w-14 sm:rounded-2xl">
-              <Utensils className="h-5 w-5 sm:h-6 sm:w-6" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-rose-500 text-white shadow-md shadow-orange-500/20 sm:h-14 sm:w-14 sm:rounded-2xl">
+                <Utensils className="h-5 w-5 sm:h-6 sm:w-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h1 className="font-display text-xl font-bold leading-tight text-foreground sm:text-2xl">
+                  {title}
+                </h1>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground sm:mt-1 sm:whitespace-normal sm:text-sm">
+                  {description ?? 'Cloud kitchen — fresh meals delivered hot'}
+                </p>
+              </div>
+              <span className="hidden shrink-0 items-center gap-1 rounded-full border border-orange-200 bg-white/80 px-3 py-1 text-[11px] font-bold text-orange-700 shadow-sm dark:border-orange-900/50 dark:bg-card dark:text-orange-300 sm:inline-flex">
+                <MapPin className="h-3.5 w-3.5" />
+                6 km Zone
+              </span>
             </div>
-            <div className="min-w-0 flex-1">
-              <h1 className="font-display text-xl font-bold leading-tight text-foreground sm:text-2xl">
-                {title}
-              </h1>
-              <p className="mt-0.5 truncate text-xs text-muted-foreground sm:mt-1 sm:whitespace-normal sm:text-sm">
-                {description ?? 'Cloud kitchen — fresh meals delivered hot'}
-              </p>
+            <div className="relative z-10 mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-orange-200/60 pt-3 text-[11px] font-medium text-orange-700/80 dark:border-orange-900/40 dark:text-orange-300/80 sm:mt-4 sm:text-xs">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/40">
+                  <X className="h-3 w-3 text-rose-600 dark:text-rose-400" />
+                </span>
+                Hot food — only within <strong className="font-bold text-foreground dark:text-orange-100">6 km</strong> of our kitchen
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
+                  <CheckCircle2 className="h-3 w-3" />
+                </span>
+                Natural, General &amp; Puja — everywhere
+              </span>
             </div>
-            <span className="shrink-0 rounded-full border border-orange-200 bg-white/80 px-2.5 py-1 text-[10px] font-bold text-orange-700 shadow-sm dark:border-orange-900/50 dark:bg-card dark:text-orange-300 sm:px-3 sm:text-[11px]">
-              📍 6 km
-            </span>
           </div>
         </div>
 
-        {/* Delivery Range Notice */}
-        <div className="mt-3 grid grid-cols-2 gap-2.5">
-          <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-2 dark:border-rose-900/50 dark:bg-rose-950/30">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-rose-100 text-xs dark:bg-rose-900/40">🚫</span>
-            <p className="text-[10px] font-semibold leading-snug text-rose-700 dark:text-rose-300">
-              Food not delivered outside 6 km of our kitchen
-            </p>
+        {/* ============ DELIVERY ZONE COMPARISON ============ */}
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {/* Food card */}
+          <div className="relative overflow-hidden rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50 to-orange-50 p-4 dark:border-rose-900/40 dark:from-rose-950/30 dark:to-orange-950/20">
+            <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-rose-500/10 blur-2xl" />
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-100 dark:bg-rose-900/40">
+                <Truck className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-bold text-foreground">Food Delivery</p>
+                  <span className="shrink-0 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-600 dark:bg-rose-900/40 dark:text-rose-300">
+                    LIMITED AREA
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground sm:text-xs">
+                  Fresh meals are delivered{" "}
+                  <strong className="text-rose-600 dark:text-rose-400">within 6 km</strong> of our
+                  Kalighat kitchen. Outside this area, food orders are not available.
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-2 rounded-lg bg-white/60 px-3 py-2 text-[10px] font-semibold text-rose-600 dark:bg-white/5 dark:text-rose-300">
+              <Navigation className="h-3.5 w-3.5 shrink-0" />
+              Your location decides availability
+            </div>
           </div>
-          <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-2.5 py-2 dark:border-emerald-900/50 dark:bg-emerald-950/30">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs dark:bg-emerald-900/40">✅</span>
-            <p className="text-[10px] font-semibold leading-snug text-emerald-700 dark:text-emerald-300">
-              Natural, General &amp; Puja — everywhere
-            </p>
+
+          {/* Everything-else card */}
+          <div className="relative overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-4 dark:border-emerald-900/40 dark:from-emerald-950/30 dark:to-teal-950/20">
+            <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-emerald-500/10 blur-2xl" />
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/40">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-bold text-foreground">Everything Else</p>
+                  <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300">
+                    NO LIMIT
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground sm:text-xs">
+                  Natural products, general products &amp; puja samagri are delivered{" "}
+                  <strong className="text-emerald-600 dark:text-emerald-400">everywhere</strong> —
+                  no range limit. Order freely from anywhere.
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-2 rounded-lg bg-white/60 px-3 py-2 text-[10px] font-semibold text-emerald-600 dark:bg-white/5 dark:text-emerald-300">
+              <MapPin className="h-3.5 w-3.5 shrink-0" />
+              Always delivered, anywhere in India
+            </div>
           </div>
         </div>
 
-        {/* Location Verification Card */}
-        <div className="mx-auto mt-4 max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+        {/* ============ LOCATION CHECK CARD ============ */}
+        <div className="mx-auto mt-5 max-w-lg overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
           {/* Card Header */}
-          <div className="flex items-center gap-3 bg-gradient-to-r from-primary/10 to-primary/5 px-4 py-3.5 sm:px-6 sm:py-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
-              <MapPin className="h-5 w-5 text-primary" />
+          <div
+            className={`flex items-center gap-3 px-4 py-3.5 sm:px-6 sm:py-4 ${
+              isPending
+                ? "bg-gradient-to-r from-primary/10 to-primary/5"
+                : isOutOfRange
+                  ? "bg-gradient-to-r from-rose-500/10 to-rose-500/5"
+                  : "bg-gradient-to-r from-amber-500/10 to-amber-500/5"
+            }`}
+          >
+            <div
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                isPending
+                  ? "bg-primary/15"
+                  : isOutOfRange
+                    ? "bg-rose-500/15"
+                    : "bg-amber-500/15"
+              }`}
+            >
+              <MapPin
+                className={`h-5 w-5 ${
+                  isPending
+                    ? "text-primary"
+                    : isOutOfRange
+                      ? "text-rose-500"
+                      : "text-amber-500"
+                }`}
+              />
             </div>
             <div className="min-w-0">
               <h2 className="text-sm font-bold tracking-tight sm:text-base">
-                {status === "pending" || status === "checking"
-                  ? "Verify Your Location"
-                  : "Delivery Not Available"}
+                {isPending
+                  ? "Do we deliver food to your area?"
+                  : isOutOfRange
+                    ? "Food Delivery Not Available"
+                    : "Location Access Needed"}
               </h2>
               <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground sm:text-xs">
-                {status === "pending" || status === "checking"
-                  ? "We deliver within 6 km of our kitchen — check if we cover your area."
-                  : <>Your area is outside our 6 km range. <strong className="text-foreground">Food order nahi kar sakte.</strong></>}
+                {isPending
+                  ? "We deliver hot food within 6 km of our kitchen. Check if your area is covered."
+                  : isOutOfRange
+                    ? <><strong className="text-rose-600 dark:text-rose-400">Aapka area 6 km range se bahar hai</strong> — food order nahi kar sakte, par baaki sab milega.</>
+                    : "We could not access your location. Allow location permission to check food delivery."}
               </p>
             </div>
           </div>
 
           {/* Card Body */}
-          <div className="space-y-3 px-4 py-4 sm:space-y-3.5 sm:px-6 sm:py-5">
-            {status !== "pending" && distance !== null && (
-              <div className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50/50 p-3 dark:border-rose-900/30 dark:bg-rose-950/20">
-                <div>
-                  <p className="text-[11px] font-medium text-muted-foreground">Your Distance</p>
-                  <p className="text-[10px] text-muted-foreground/70">from Kalighat kitchen</p>
+          <div className="space-y-4 px-4 py-5 sm:px-6 sm:py-6">
+            {/* Radar / zone visual */}
+            <div className="flex items-center justify-center">
+              <div className="relative flex h-28 w-28 items-center justify-center">
+                <div className="absolute inset-0 rounded-full border-2 border-dashed border-orange-200 dark:border-orange-900/50" />
+                <div className="absolute inset-3 rounded-full border border-dashed border-orange-300/70 dark:border-orange-800/40" />
+                <div className="absolute inset-6 rounded-full border border-orange-400/60 dark:border-orange-700/50" />
+                <div className="absolute inset-[34px] flex items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-rose-500 text-white shadow-md shadow-orange-500/30">
+                  <Utensils className="h-5 w-5" />
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-rose-600 dark:text-rose-400">{distance.toFixed(1)} km</p>
-                  <p className="text-[10px] font-medium text-muted-foreground">Limit: 6 km</p>
+                <span className="absolute -right-1 top-0 rounded-full bg-orange-100 px-1.5 py-0.5 text-[8px] font-bold text-orange-700 dark:bg-orange-900/60 dark:text-orange-300">
+                  6 km
+                </span>
+                {distance !== null && !isPending && (
+                  <span className="absolute -bottom-0.5 -left-3 rounded-full bg-rose-100 px-1.5 py-0.5 text-[8px] font-bold text-rose-700 dark:bg-rose-900/60 dark:text-rose-300">
+                    You: {distance.toFixed(1)} km
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Distance meter */}
+            {status !== "pending" && distance !== null && (
+              <div>
+                <div className="mb-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span>Your distance from kitchen</span>
+                  <span className="font-bold text-foreground">{distance.toFixed(1)} km</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      distance <= 6
+                        ? "bg-emerald-500"
+                        : "bg-gradient-to-r from-orange-400 to-rose-500"
+                    }`}
+                    style={{ width: `${Math.min((distance / 8) * 100, 100)}%` }}
+                  />
+                </div>
+                <div className="mt-1 flex justify-between text-[10px] text-muted-foreground/70">
+                  <span>Kitchen</span>
+                  <span className={distance > 6 ? "text-rose-500 dark:text-rose-400 font-semibold" : "text-emerald-600 dark:text-emerald-400 font-semibold"}>
+                    {distance > 6 ? `Limit: 6 km → outside` : `Within limit ✓`}
+                  </span>
+                  <span>6 km limit</span>
                 </div>
               </div>
             )}
 
+            {/* Detect button */}
             <Button
               onClick={detectLocation}
               disabled={locLoading}
@@ -609,13 +736,17 @@ export function CategoryProductsClient({
               ) : (
                 <Compass className="h-4 w-4" />
               )}
-              Detect My Location
+              {locLoading
+                ? "Checking your location…"
+                : distance !== null
+                  ? "Re-Check My Location"
+                  : "Detect My Location"}
             </Button>
 
             <div className="relative flex items-center">
               <div className="flex-grow border-t border-border" />
-              <span className="flex-shrink mx-3 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-                or enter address
+              <span className="mx-3 flex-shrink text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                or enter your address
               </span>
               <div className="flex-grow border-t border-border" />
             </div>
@@ -624,63 +755,76 @@ export function CategoryProductsClient({
               checkAddress={setLocationByAddress}
               loading={locLoading}
             />
+
+            {isPending && (
+              <p className="text-center text-[10px] text-muted-foreground/80">
+                <AlertCircle className="mr-1 inline h-3 w-3" />
+                Example: &quot;Kalighat, Kolkata&quot; or a nearby pincode like &quot;700026&quot;
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Available Categories */}
-        <div className="mt-6">
-          <div className="mb-2.5 flex items-center gap-2">
+        {/* ============ AVAILABLE CATEGORIES ============ */}
+        <div className="mt-7">
+          <div className="mb-3 flex items-center gap-2">
             <div className="h-4 w-1 rounded-full bg-emerald-500" />
             <p className="text-xs font-bold sm:text-sm">Available for You — Order Freely</p>
           </div>
-          <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
             <Link
               href="/category/natural-products"
-              className="group flex flex-col items-center gap-2 rounded-2xl border border-border bg-card px-2 py-3.5 text-center transition-all hover:border-emerald-400 hover:bg-emerald-50/50 hover:shadow-md dark:hover:bg-emerald-950/20"
+              className="group relative overflow-hidden rounded-2xl border border-emerald-200 bg-card p-3 text-center transition-all hover:-translate-y-0.5 hover:border-emerald-400 hover:bg-emerald-50/50 hover:shadow-lg hover:shadow-emerald-500/10 dark:border-emerald-900/40 dark:hover:bg-emerald-950/20 sm:p-4"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-xl transition-transform group-hover:scale-110 sm:h-12 sm:w-12 sm:text-2xl dark:bg-emerald-900/30">
+              <div className="pointer-events-none absolute -right-6 -top-6 h-16 w-16 rounded-full bg-emerald-500/10 blur-xl transition-opacity group-hover:opacity-100 opacity-0" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl shadow-sm transition-transform group-hover:scale-110 dark:bg-card sm:h-12 sm:w-12 sm:text-2xl">
                 🌿
               </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold leading-tight group-hover:text-emerald-600 sm:text-sm dark:group-hover:text-emerald-400">
-                  Natural Products
-                </p>
-                <p className="mt-0.5 hidden text-[10px] text-muted-foreground sm:block">
-                  Organic groceries, oils &amp; spices
-                </p>
-              </div>
+              <p className="mt-2 text-[11px] font-bold leading-tight transition-colors group-hover:text-emerald-600 sm:text-sm dark:group-hover:text-emerald-400">
+                Natural Products
+              </p>
+              <p className="mt-1 hidden text-[10px] leading-snug text-muted-foreground sm:block">
+                Organic groceries, oils &amp; spices
+              </p>
+              <span className="mt-2 inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                Deliver Anywhere
+              </span>
             </Link>
             <Link
               href="/category/general"
-              className="group flex flex-col items-center gap-2 rounded-2xl border border-border bg-card px-2 py-3.5 text-center transition-all hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-md dark:hover:bg-blue-950/20"
+              className="group relative overflow-hidden rounded-2xl border border-blue-200 bg-card p-3 text-center transition-all hover:-translate-y-0.5 hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-lg hover:shadow-blue-500/10 dark:border-blue-900/40 dark:hover:bg-blue-950/20 sm:p-4"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 text-xl transition-transform group-hover:scale-110 sm:h-12 sm:w-12 sm:text-2xl dark:bg-blue-900/30">
+              <div className="pointer-events-none absolute -right-6 -top-6 h-16 w-16 rounded-full bg-blue-500/10 blur-xl transition-opacity group-hover:opacity-100 opacity-0" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl shadow-sm transition-transform group-hover:scale-110 dark:bg-card sm:h-12 sm:w-12 sm:text-2xl">
                 🛍️
               </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold leading-tight group-hover:text-blue-600 sm:text-sm dark:group-hover:text-blue-400">
-                  General Products
-                </p>
-                <p className="mt-0.5 hidden text-[10px] text-muted-foreground sm:block">
-                  Electronics, fashion &amp; more
-                </p>
-              </div>
+              <p className="mt-2 text-[11px] font-bold leading-tight transition-colors group-hover:text-blue-600 sm:text-sm dark:group-hover:text-blue-400">
+                General Products
+              </p>
+              <p className="mt-1 hidden text-[10px] leading-snug text-muted-foreground sm:block">
+                Electronics, fashion &amp; more
+              </p>
+              <span className="mt-2 inline-block rounded-full bg-blue-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                Deliver Anywhere
+              </span>
             </Link>
             <Link
               href="/puja"
-              className="group flex flex-col items-center gap-2 rounded-2xl border border-border bg-card px-2 py-3.5 text-center transition-all hover:border-amber-400 hover:bg-amber-50/50 hover:shadow-md dark:hover:bg-amber-950/20"
+              className="group relative overflow-hidden rounded-2xl border border-amber-200 bg-card p-3 text-center transition-all hover:-translate-y-0.5 hover:border-amber-400 hover:bg-amber-50/50 hover:shadow-lg hover:shadow-amber-500/10 dark:border-amber-900/40 dark:hover:bg-amber-950/20 sm:p-4"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-xl transition-transform group-hover:scale-110 sm:h-12 sm:w-12 sm:text-2xl dark:bg-amber-900/30">
+              <div className="pointer-events-none absolute -right-6 -top-6 h-16 w-16 rounded-full bg-amber-500/10 blur-xl transition-opacity group-hover:opacity-100 opacity-0" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl shadow-sm transition-transform group-hover:scale-110 dark:bg-card sm:h-12 sm:w-12 sm:text-2xl">
                 🪔
               </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold leading-tight group-hover:text-amber-600 sm:text-sm dark:group-hover:text-amber-400">
-                  Puja Samagri
-                </p>
-                <p className="mt-0.5 hidden text-[10px] text-muted-foreground sm:block">
-                  Rituals, pandits &amp; packages
-                </p>
-              </div>
+              <p className="mt-2 text-[11px] font-bold leading-tight transition-colors group-hover:text-amber-600 sm:text-sm dark:group-hover:text-amber-400">
+                Puja Samagri
+              </p>
+              <p className="mt-1 hidden text-[10px] leading-snug text-muted-foreground sm:block">
+                Rituals, pandits &amp; packages
+              </p>
+              <span className="mt-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                Deliver Anywhere
+              </span>
             </Link>
           </div>
         </div>
