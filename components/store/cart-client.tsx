@@ -11,6 +11,7 @@ import {
   Tag,
   Truck,
   PhoneCall,
+  MessageCircle,
   Sparkles,
   ShieldCheck,
   AlertTriangle,
@@ -29,7 +30,7 @@ import { formatINR } from '@/lib/format';
 import { toast } from 'sonner';
 import { computeTotals, getTaxRate, getFreeShippingThreshold } from '@/lib/store-config-utils';
 import { groupItemsBySection } from '@/lib/cart-sections';
-import { getDeliveryEstimate, QUICK_SERVICE_CONTACT } from '@/lib/delivery-estimate';
+import { getDeliveryEstimate, SUPPORT_PHONE, SUPPORT_PHONE_TEL, SUPPORT_WHATSAPP_URL } from '@/lib/delivery-estimate';
 import type { CartItem } from '@/lib/types';
 import { CheckoutStepper } from '@/components/store/checkout-stepper';
 import { ZeroChargesBanner } from '@/components/store/zero-charges-banner';
@@ -396,7 +397,7 @@ export function CartClient() {
             ))}
 
             {/* Support Banner */}
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card p-3.5">
+            <div className="rounded-xl border border-border/60 bg-card p-3.5">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                   <PhoneCall className="h-4 w-4 text-primary" />
@@ -406,11 +407,20 @@ export function CartClient() {
                   <p className="text-[11px] text-muted-foreground">Call or WhatsApp us</p>
                 </div>
               </div>
-              <a href={`tel:${QUICK_SERVICE_CONTACT.replace(/\D/g, '')}`}>
-                <Button variant="outline" size="sm" className="text-xs font-semibold">
-                  Call Support
-                </Button>
-              </a>
+              <div className="mt-3 flex gap-2">
+                <a href={SUPPORT_PHONE_TEL} className="flex-1">
+                  <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs font-semibold">
+                    <PhoneCall className="h-3.5 w-3.5" />
+                    Call {SUPPORT_PHONE}
+                  </Button>
+                </a>
+                <a href={SUPPORT_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="flex-1">
+                  <Button size="sm" className="w-full gap-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white">
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    WhatsApp
+                  </Button>
+                </a>
+              </div>
             </div>
 
             {/* Bottom Actions */}

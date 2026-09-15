@@ -25,6 +25,7 @@ import {
   AlertCircle,
   FileText,
   ShoppingBag,
+  MessageCircle,
 } from "lucide-react";
 import { useCart } from "@/components/providers/cart-provider";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -35,7 +36,7 @@ import type { Address } from "@/lib/types";
 import { isFoodOpenNow, isPaymentModeAllowed, PAYMENT_METHODS, computeTotals, getTaxRate } from "@/lib/store-config-utils";
 import { geocodeAddress, getDistanceInKm, OUTLET_LAT, OUTLET_LNG } from "@/lib/location-utils";
 import { groupItemsBySection } from "@/lib/cart-sections";
-import { getDeliveryEstimate, QUICK_SERVICE_CONTACT } from "@/lib/delivery-estimate";
+import { getDeliveryEstimate, SUPPORT_PHONE, SUPPORT_PHONE_TEL, SUPPORT_WHATSAPP_URL } from "@/lib/delivery-estimate";
 import { CheckoutStepper } from "@/components/store/checkout-stepper";
 
 interface StoreConfigData {
@@ -937,9 +938,19 @@ export function CheckoutClient() {
               </div>
 
               {/* Support info */}
-              <div className="mt-4 flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/15 p-2.5 text-xs text-muted-foreground">
+              <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-primary/5 border border-primary/15 p-2.5">
                 <PhoneCall className="h-4 w-4 shrink-0 text-primary" />
-                <span className="text-[11px]">{QUICK_SERVICE_CONTACT}</span>
+                <span className="text-[11px] text-muted-foreground">Need help? Call or WhatsApp us</span>
+                <span className="ml-auto flex gap-1.5">
+                  <a href={SUPPORT_PHONE_TEL} className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[10px] font-semibold text-foreground transition-colors hover:bg-primary/5">
+                    <PhoneCall className="h-3 w-3" />
+                    {SUPPORT_PHONE}
+                  </a>
+                  <a href={SUPPORT_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[10px] font-semibold text-white transition-colors hover:bg-emerald-700">
+                    <MessageCircle className="h-3 w-3" />
+                    WhatsApp
+                  </a>
+                </span>
               </div>
 
               {/* Place Order CTA Button */}
