@@ -290,9 +290,7 @@ export default function AdminProductsPage() {
         .from("products")
         .select("*, category(*), sub_category(*), brand(*), product_images(*)")
         .eq("sort", sortBy),
-      supabase
-        .from("puja_items")
-        .select("*, puja(*)"),
+      supabase.from("puja_items").select("*, puja(*)"),
     ]);
     setProducts((productsRes.data ?? []) as Product[]);
     setPujaItems(pujaItemsRes.data ?? []);
@@ -350,7 +348,7 @@ export default function AdminProductsPage() {
         (data ?? []).map((pi: any) => ({
           puja_id: pi.puja_id,
           category: pi.category ?? "basic",
-        }))
+        })),
       );
     } else {
       setPujaAssignments([]);
@@ -401,12 +399,14 @@ export default function AdminProductsPage() {
     if (values.product_type === "puja_samagri") {
       const assigned = pujaAssignments.filter((pa) => pa.puja_id);
       if (assigned.length === 0) {
-        toast.error("At least one puja assignment is required for puja samagri items.");
+        toast.error(
+          "At least one puja assignment is required for puja samagri items.",
+        );
         setSubmitting(false);
         return;
       }
       const invalidCategory = assigned.some(
-        (pa) => !["basic", "special", "recommended"].includes(pa.category)
+        (pa) => !["basic", "special", "recommended"].includes(pa.category),
       );
       if (invalidCategory) {
         toast.error("Every puja assignment must have a valid category.");
@@ -415,7 +415,7 @@ export default function AdminProductsPage() {
       }
       const duplicates = assigned.some(
         (pa, i) =>
-          assigned.findIndex((other) => other.puja_id === pa.puja_id) !== i
+          assigned.findIndex((other) => other.puja_id === pa.puja_id) !== i,
       );
       if (duplicates) {
         toast.error("A product cannot be assigned to the same puja twice.");
@@ -475,10 +475,7 @@ export default function AdminProductsPage() {
         });
       }
       if (values.product_type === "puja_samagri") {
-        await supabase
-          .from("puja_items")
-          .delete()
-          .eq("product_id", editing.id);
+        await supabase.from("puja_items").delete().eq("product_id", editing.id);
         for (let i = 0; i < pujaAssignments.length; i++) {
           const pa = pujaAssignments[i];
           await supabase.from("puja_items").insert({
@@ -620,8 +617,9 @@ export default function AdminProductsPage() {
                 </TabsTrigger>
               );
             })}
-          </TabsList>            <div className="flex items-center gap-2">
-              <select
+          </TabsList>{" "}
+          <div className="flex items-center gap-2">
+            {/* <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="h-9 rounded-md border border-input bg-background px-3 text-sm"
@@ -632,29 +630,29 @@ export default function AdminProductsPage() {
                 <option value="name-desc">Name Z–A</option>
                 <option value="newest">Newest first</option>
                 <option value="oldest">Oldest first</option>
-              </select>
-              <div className="relative max-w-xs">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search..."
-                  className="pl-9"
-                />
-              </div>
-              <ProductImportDialog
-                productType={activeTab as ProductType}
-                onImported={load}
-                title="Import products from Excel — existing names update, new names are added. Follow the 3-step wizard."
+              </select> */}
+            <div className="relative max-w-xs">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search..."
+                className="pl-9"
               />
-              <Button
-                variant="outline"
-                onClick={handleExport}
-                disabled={exporting}
-              >
-                <FileSpreadsheet className="mr-1 h-4 w-4 text-success" />{" "}
-                {exporting ? "Exporting..." : "Export Excel"}
-              </Button>
+            </div>
+            <ProductImportDialog
+              productType={activeTab as ProductType}
+              onImported={load}
+              title="Import products from Excel — existing names update, new names are added. Follow the 3-step wizard."
+            />
+            <Button
+              variant="outline"
+              onClick={handleExport}
+              disabled={exporting}
+            >
+              <FileSpreadsheet className="mr-1 h-4 w-4 text-success" />{" "}
+              {exporting ? "Exporting..." : "Export Excel"}
+            </Button>
             <Button onClick={() => openNew(activeTab)}>
               <Plus className="mr-1 h-4 w-4" /> Add{" "}
               {PRODUCT_TYPES.find((t) => t.value === activeTab)?.label}
@@ -793,9 +791,9 @@ export default function AdminProductsPage() {
                                 {Array.from(
                                   new Set(
                                     getPujaAssignments(p.id).map(
-                                      (a) => a.category
-                                    )
-                                  )
+                                      (a) => a.category,
+                                    ),
+                                  ),
                                 ).map((cat) => (
                                   <Badge
                                     key={cat}
@@ -1040,9 +1038,7 @@ function ProductFormContent({
   uploadFile: (f: File) => void;
   pujas: any[];
   pujaAssignments: { puja_id: string; category: string }[];
-  setPujaAssignments: (
-    v: { puja_id: string; category: string }[]
-  ) => void;
+  setPujaAssignments: (v: { puja_id: string; category: string }[]) => void;
 }) {
   const pt = values.product_type;
 
@@ -1204,7 +1200,7 @@ function ProductFormContent({
                       .filter(
                         (p) =>
                           p.id === pa.puja_id ||
-                          !pujaAssignments.some((a) => a.puja_id === p.id)
+                          !pujaAssignments.some((a) => a.puja_id === p.id),
                       )
                       .map((p) => (
                         <option key={p.id} value={p.id}>
@@ -1231,7 +1227,7 @@ function ProductFormContent({
                     size="icon"
                     onClick={() =>
                       setPujaAssignments(
-                        pujaAssignments.filter((_, i) => i !== idx)
+                        pujaAssignments.filter((_, i) => i !== idx),
                       )
                     }
                     aria-label="Remove puja assignment"
@@ -1251,7 +1247,7 @@ function ProductFormContent({
                 size="sm"
                 onClick={() => {
                   const unassigned = pujas.find(
-                    (p) => !pujaAssignments.some((a) => a.puja_id === p.id)
+                    (p) => !pujaAssignments.some((a) => a.puja_id === p.id),
                   );
                   setPujaAssignments([
                     ...pujaAssignments,
