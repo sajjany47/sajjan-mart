@@ -544,12 +544,11 @@ export function CategoryProductsClient({
                   {title}
                 </h1>
                 <p className="mt-0.5 truncate text-xs text-muted-foreground sm:mt-1 sm:whitespace-normal sm:text-sm">
-                  {description ?? 'Cloud kitchen — fresh meals delivered hot'}
+                  {description ?? "Cloud kitchen — fresh meals delivered hot"}
                 </p>
               </div>
               <span className="hidden shrink-0 items-center gap-1 rounded-full border border-orange-200 bg-white/80 px-3 py-1 text-[11px] font-bold text-orange-700 shadow-sm dark:border-orange-900/50 dark:bg-card dark:text-orange-300 sm:inline-flex">
-                <MapPin className="h-3.5 w-3.5" />
-                6 km Zone
+                <MapPin className="h-3.5 w-3.5" />6 km Zone
               </span>
             </div>
             <div className="relative z-10 mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-orange-200/60 pt-3 text-[11px] font-medium text-orange-700/80 dark:border-orange-900/40 dark:text-orange-300/80 sm:mt-4 sm:text-xs">
@@ -557,7 +556,11 @@ export function CategoryProductsClient({
                 <span className="flex h-4 w-4 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/40">
                   <X className="h-3 w-3 text-rose-600 dark:text-rose-400" />
                 </span>
-                Hot food — only within <strong className="font-bold text-foreground dark:text-orange-100">6 km</strong> of our kitchen
+                Hot food — only within{" "}
+                <strong className="font-bold text-foreground dark:text-orange-100">
+                  6 km
+                </strong>{" "}
+                of our kitchen
               </span>
               <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
                 <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
@@ -565,63 +568,6 @@ export function CategoryProductsClient({
                 </span>
                 Natural, General &amp; Puja — everywhere
               </span>
-            </div>
-          </div>
-        </div>
-
-        {/* ============ DELIVERY ZONE COMPARISON ============ */}
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          {/* Food card */}
-          <div className="relative overflow-hidden rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50 to-orange-50 p-4 dark:border-rose-900/40 dark:from-rose-950/30 dark:to-orange-950/20">
-            <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-rose-500/10 blur-2xl" />
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-100 dark:bg-rose-900/40">
-                <Truck className="h-5 w-5 text-rose-600 dark:text-rose-400" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-bold text-foreground">Food Delivery</p>
-                  <span className="shrink-0 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-600 dark:bg-rose-900/40 dark:text-rose-300">
-                    LIMITED AREA
-                  </span>
-                </div>
-                <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground sm:text-xs">
-                  Fresh meals are delivered{" "}
-                  <strong className="text-rose-600 dark:text-rose-400">within 6 km</strong> of our
-                  Kalighat kitchen. Outside this area, food orders are not available.
-                </p>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center gap-2 rounded-lg bg-white/60 px-3 py-2 text-[10px] font-semibold text-rose-600 dark:bg-white/5 dark:text-rose-300">
-              <Navigation className="h-3.5 w-3.5 shrink-0" />
-              Your location decides availability
-            </div>
-          </div>
-
-          {/* Everything-else card */}
-          <div className="relative overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-4 dark:border-emerald-900/40 dark:from-emerald-950/30 dark:to-teal-950/20">
-            <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-emerald-500/10 blur-2xl" />
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/40">
-                <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-bold text-foreground">Everything Else</p>
-                  <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300">
-                    NO LIMIT
-                  </span>
-                </div>
-                <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground sm:text-xs">
-                  Natural products, general products &amp; puja samagri are delivered{" "}
-                  <strong className="text-emerald-600 dark:text-emerald-400">everywhere</strong> —
-                  no range limit. Order freely from anywhere.
-                </p>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center gap-2 rounded-lg bg-white/60 px-3 py-2 text-[10px] font-semibold text-emerald-600 dark:bg-white/5 dark:text-emerald-300">
-              <MapPin className="h-3.5 w-3.5 shrink-0" />
-              Always delivered, anywhere in India
             </div>
           </div>
         </div>
@@ -666,11 +612,18 @@ export function CategoryProductsClient({
                     : "Location Access Needed"}
               </h2>
               <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground sm:text-xs">
-                {isPending
-                  ? "We deliver hot food within 6 km of our kitchen. Check if your area is covered."
-                  : isOutOfRange
-                    ? <><strong className="text-rose-600 dark:text-rose-400">Aapka area 6 km range se bahar hai</strong> — food order nahi kar sakte, par baaki sab milega.</>
-                    : "We could not access your location. Allow location permission to check food delivery."}
+                {isPending ? (
+                  "We deliver hot food within 6 km of our kitchen. Check if your area is covered."
+                ) : isOutOfRange ? (
+                  <>
+                    <strong className="text-rose-600 dark:text-rose-400">
+                      Aapka area 6 km range se bahar hai
+                    </strong>{" "}
+                    — food order nahi kar sakte, par baaki sab milega.
+                  </>
+                ) : (
+                  "We could not access your location. Allow location permission to check food delivery."
+                )}
               </p>
             </div>
           </div>
@@ -702,7 +655,9 @@ export function CategoryProductsClient({
               <div>
                 <div className="mb-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
                   <span>Your distance from kitchen</span>
-                  <span className="font-bold text-foreground">{distance.toFixed(1)} km</span>
+                  <span className="font-bold text-foreground">
+                    {distance.toFixed(1)} km
+                  </span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                   <div
@@ -716,7 +671,13 @@ export function CategoryProductsClient({
                 </div>
                 <div className="mt-1 flex justify-between text-[10px] text-muted-foreground/70">
                   <span>Kitchen</span>
-                  <span className={distance > 6 ? "text-rose-500 dark:text-rose-400 font-semibold" : "text-emerald-600 dark:text-emerald-400 font-semibold"}>
+                  <span
+                    className={
+                      distance > 6
+                        ? "text-rose-500 dark:text-rose-400 font-semibold"
+                        : "text-emerald-600 dark:text-emerald-400 font-semibold"
+                    }
+                  >
                     {distance > 6 ? `Limit: 6 km → outside` : `Within limit ✓`}
                   </span>
                   <span>6 km limit</span>
@@ -759,7 +720,8 @@ export function CategoryProductsClient({
             {isPending && (
               <p className="text-center text-[10px] text-muted-foreground/80">
                 <AlertCircle className="mr-1 inline h-3 w-3" />
-                Example: &quot;Kalighat, Kolkata&quot; or a nearby pincode like &quot;700026&quot;
+                Example: &quot;Kalighat, Kolkata&quot; or a nearby pincode like
+                &quot;700026&quot;
               </p>
             )}
           </div>
@@ -769,7 +731,9 @@ export function CategoryProductsClient({
         <div className="mt-7">
           <div className="mb-3 flex items-center gap-2">
             <div className="h-4 w-1 rounded-full bg-emerald-500" />
-            <p className="text-xs font-bold sm:text-sm">Available for You — Order Freely</p>
+            <p className="text-xs font-bold sm:text-sm">
+              Available for You — Order Freely
+            </p>
           </div>
           <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
             <Link
@@ -856,13 +820,15 @@ export function CategoryProductsClient({
           <div className="relative z-10 mt-3 flex items-center gap-3 border-t border-orange-200/50 pt-3 text-[11px] text-muted-foreground dark:border-orange-900/30 sm:text-xs sm:gap-4">
             <span className="flex items-center gap-1">🔥 Fresh Hot Food</span>
             <span className="flex items-center gap-1">⚡ Fast Delivery</span>
-            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">0% Extra</span>
+            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+              0% Extra
+            </span>
           </div>
         </div>
       )}
 
       {/* Hero Banner for Natural Products */}
-      {productType === 'natural' && (
+      {productType === "natural" && (
         <div className="relative -mx-4 overflow-hidden rounded-2xl border border-emerald-200/60 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 px-5 py-5 shadow-sm sm:-mx-0 sm:rounded-2xl sm:px-6 sm:py-6 dark:from-emerald-950/30 dark:via-green-950/20 dark:to-teal-950/20 dark:border-emerald-900/30">
           <div className="absolute inset-0 bg-[url('/images/banners/natural_banner.jpg')] bg-cover bg-center opacity-[0.07] mix-blend-multiply" />
           <div className="relative z-10 flex items-center gap-4">
@@ -883,13 +849,15 @@ export function CategoryProductsClient({
           <div className="relative z-10 mt-3 flex items-center gap-3 border-t border-emerald-200/50 pt-3 text-[11px] text-muted-foreground dark:border-emerald-900/30 sm:text-xs sm:gap-4">
             <span className="flex items-center gap-1">🌱 100% Pure</span>
             <span className="flex items-center gap-1">🚚 Delivered Fresh</span>
-            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">0% Extra</span>
+            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+              0% Extra
+            </span>
           </div>
         </div>
       )}
 
       {/* Hero Banner for General Products */}
-      {productType === 'general' && (
+      {productType === "general" && (
         <div className="relative -mx-4 overflow-hidden rounded-2xl border border-blue-200/60 bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 px-5 py-5 shadow-sm sm:-mx-0 sm:rounded-2xl sm:px-6 sm:py-6 dark:from-blue-950/30 dark:via-indigo-950/20 dark:to-violet-950/20 dark:border-blue-900/30">
           <div className="absolute inset-0 bg-[url('/images/banners/zero_charges_banner.jpg')] bg-cover bg-center opacity-[0.07] mix-blend-multiply" />
           <div className="relative z-10 flex items-center gap-4">
@@ -910,13 +878,15 @@ export function CategoryProductsClient({
           <div className="relative z-10 mt-3 flex items-center gap-3 border-t border-blue-200/50 pt-3 text-[11px] text-muted-foreground dark:border-blue-900/30 sm:text-xs sm:gap-4">
             <span className="flex items-center gap-1">🏷️ Best Prices</span>
             <span className="flex items-center gap-1">🚚 Fast Delivery</span>
-            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">0% Extra</span>
+            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+              0% Extra
+            </span>
           </div>
         </div>
       )}
 
       {/* Fallback title for other categories */}
-      {!isFood && productType !== 'natural' && productType !== 'general' && (
+      {!isFood && productType !== "natural" && productType !== "general" && (
         <div>
           <h1 className="font-display text-xl font-semibold sm:text-2xl">
             {title}
@@ -939,7 +909,8 @@ export function CategoryProductsClient({
               Kitchen is currently closed
             </p>
             <p className="text-[11px] text-amber-600/80 dark:text-amber-400/70">
-              Reopens at {storeConfig.food_open_time} • Hours: {storeConfig.food_open_time} - {storeConfig.food_close_time}
+              Reopens at {storeConfig.food_open_time} • Hours:{" "}
+              {storeConfig.food_open_time} - {storeConfig.food_close_time}
             </p>
           </div>
         </div>
@@ -1015,7 +986,11 @@ export function CategoryProductsClient({
 
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="lg:hidden shrink-0 relative">
+            <Button
+              variant="outline"
+              size="icon"
+              className="lg:hidden shrink-0 relative"
+            >
               <SlidersHorizontal className="h-4 w-4" />
               {hasActiveFilters && (
                 <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-primary" />
