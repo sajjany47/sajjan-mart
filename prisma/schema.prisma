@@ -257,14 +257,15 @@ model Puja {
 }
 
 model PujaItem {
-  id        String @id @default(dbgenerated("gen_random_uuid()"))
-  pujaId    String @map("puja_id")
+  id        String  @id @default(dbgenerated("gen_random_uuid()"))
+  pujaId    String  @map("puja_id")
   productId String? @map("product_id")
   name      String
-  unit      String @default("pc")
+  category  String  @default("basic") // basic | special | recommended
+  unit      String  @default("pc")
   price     Decimal @default(0)
-  defaultQty Int   @default(1) @map("default_qty")
-  sortOrder Int    @default(0) @map("sort_order")
+  defaultQty Int    @default(1) @map("default_qty")
+  sortOrder Int     @default(0) @map("sort_order")
 
   puja    Puja?    @relation(fields: [pujaId], references: [id], onDelete: Cascade)
   product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
@@ -374,6 +375,12 @@ model Order {
   previousStatus String?  @map("previous_status")
   refundedAmount Decimal? @map("refunded_amount")
   refundId      String?   @map("refund_id")
+  refundStatus  String?   @map("refund_status")
+  razorpayOrderId   String? @map("razorpay_order_id")
+  razorpayPaymentId String? @map("razorpay_payment_id")
+  razorpaySignature String? @map("razorpay_signature")
+  paidAt        DateTime? @map("paid_at")
+  paymentFailureReason String? @map("payment_failure_reason")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @default(now()) @map("updated_at")
 
@@ -382,6 +389,24 @@ model Order {
   tickets SupportTicket[]
 
   @@map("orders")
+}
+
+// Holds a payment that is still awaiting confirmation. A real Razonpay order
+// is only persisted in `orders` AFTER the payment is successfully verified —
+// so failed/dismissed payments never create an order. `payload` snapshots the
+// checkout details the order will be built from once the payment settles.
+model PaymentSession {
+  id              String   @id @default(dbgenerated("gen_random_uuid()"))
+  razorpayOrderId String   @unique @map("razorpay_order_id")
+  razorpayPaymentId String? @map("razorpay_payment_id")
+  userId          String?  @map("user_id")
+  payload         Json     @default("{}")
+  status          String   @default("pending") // pending | processing | paid | failed | expired
+  orderId         String?  @map("order_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("payment_sessions")
 }
 
 model OrderItem {

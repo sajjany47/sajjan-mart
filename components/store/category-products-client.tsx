@@ -524,74 +524,67 @@ export function CategoryProductsClient({
 
   if (isFood && !isWithinRange) {
     return (
-      <div className="pb-12">
+      <div className="pb-8 sm:pb-10">
         {/* Hero Banner */}
-        <div className="relative -mx-4 overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 via-red-500 to-pink-600 px-6 py-8 text-center text-white shadow-xl sm:-mx-0 sm:rounded-2xl">
-          <div className="absolute inset-0 bg-[url('/images/banners/food_banner.jpg')] bg-cover bg-center opacity-20 mix-blend-overlay" />
-          <div className="relative z-10">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-              <Utensils className="h-7 w-7" />
+        <div className="relative overflow-hidden rounded-2xl border border-orange-200/70 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 px-4 py-3.5 shadow-sm sm:px-6 sm:py-6 dark:border-orange-900/40 dark:from-orange-950/40 dark:via-rose-950/20 dark:to-amber-950/30">
+          <div className="absolute inset-0 bg-[url('/images/banners/food_banner.jpg')] bg-cover bg-center opacity-[0.08] mix-blend-multiply dark:opacity-[0.12] dark:mix-blend-screen" />
+          <div className="relative z-10 flex items-center gap-3 sm:gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-rose-500 text-white shadow-md shadow-orange-500/20 sm:h-14 sm:w-14 sm:rounded-2xl">
+              <Utensils className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <h1 className="font-display text-2xl font-bold sm:text-3xl">
-              {title}
-            </h1>
-            <p className="mt-1.5 text-sm text-white/80">
-              {description ?? 'Cloud kitchen — fresh meals delivered hot'}
-            </p>
+            <div className="min-w-0 flex-1">
+              <h1 className="font-display text-xl font-bold leading-tight text-foreground sm:text-2xl">
+                {title}
+              </h1>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground sm:mt-1 sm:whitespace-normal sm:text-sm">
+                {description ?? 'Cloud kitchen — fresh meals delivered hot'}
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full border border-orange-200 bg-white/80 px-2.5 py-1 text-[10px] font-bold text-orange-700 shadow-sm dark:border-orange-900/50 dark:bg-card dark:text-orange-300 sm:px-3 sm:text-[11px]">
+              📍 6 km
+            </span>
           </div>
         </div>
 
         {/* Delivery Range Notice */}
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-900/50 dark:bg-rose-950/30">
-            <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/40">
-                <span className="text-base">🚫</span>
-              </div>
-              <div>
-                <p className="text-sm font-bold text-rose-700 dark:text-rose-300">Food Delivery</p>
-                <p className="mt-0.5 text-[12px] leading-relaxed text-rose-600/80 dark:text-rose-400/70">
-                  Not available outside 6 km of our Kalighat kitchen
-                </p>
-              </div>
-            </div>
+        <div className="mt-3 grid grid-cols-2 gap-2.5">
+          <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-2 dark:border-rose-900/50 dark:bg-rose-950/30">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-rose-100 text-xs dark:bg-rose-900/40">🚫</span>
+            <p className="text-[10px] font-semibold leading-snug text-rose-700 dark:text-rose-300">
+              Food not delivered outside 6 km of our kitchen
+            </p>
           </div>
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/30">
-            <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
-                <span className="text-base">✅</span>
-              </div>
-              <div>
-                <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">All Other Categories</p>
-                <p className="mt-0.5 text-[12px] leading-relaxed text-emerald-600/80 dark:text-emerald-400/70">
-                  Natural, General &amp; Puja — available everywhere!
-                </p>
-              </div>
-            </div>
+          <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-2.5 py-2 dark:border-emerald-900/50 dark:bg-emerald-950/30">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs dark:bg-emerald-900/40">✅</span>
+            <p className="text-[10px] font-semibold leading-snug text-emerald-700 dark:text-emerald-300">
+              Natural, General &amp; Puja — everywhere
+            </p>
           </div>
         </div>
 
         {/* Location Verification Card */}
-        <div className="mx-auto mt-6 max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+        <div className="mx-auto mt-4 max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
           {/* Card Header */}
-          <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-6 py-5 text-center">
-            <div className="mx-auto mb-2.5 flex h-12 w-12 items-center justify-center rounded-full bg-primary/15">
-              <MapPin className="h-6 w-6 text-primary" />
+          <div className="flex items-center gap-3 bg-gradient-to-r from-primary/10 to-primary/5 px-4 py-3.5 sm:px-6 sm:py-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
+              <MapPin className="h-5 w-5 text-primary" />
             </div>
-            <h2 className="text-base font-bold tracking-tight">
-              {status === "pending" || status === "checking"
-                ? "Verify Your Location"
-                : "Delivery Not Available"}
-            </h2>
-            <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-              {status === "pending" || status === "checking"
-                ? "Food is delivered within 6 km of our kitchen. Check if your area is covered."
-                : <>Your area is outside our 6 km food delivery range. <strong className="text-foreground">Food order nahi kar sakte.</strong></>}
-            </p>
+            <div className="min-w-0">
+              <h2 className="text-sm font-bold tracking-tight sm:text-base">
+                {status === "pending" || status === "checking"
+                  ? "Verify Your Location"
+                  : "Delivery Not Available"}
+              </h2>
+              <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground sm:text-xs">
+                {status === "pending" || status === "checking"
+                  ? "We deliver within 6 km of our kitchen — check if we cover your area."
+                  : <>Your area is outside our 6 km range. <strong className="text-foreground">Food order nahi kar sakte.</strong></>}
+              </p>
+            </div>
           </div>
 
           {/* Card Body */}
-          <div className="space-y-4 px-6 py-5">
+          <div className="space-y-3 px-4 py-4 sm:space-y-3.5 sm:px-6 sm:py-5">
             {status !== "pending" && distance !== null && (
               <div className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50/50 p-3 dark:border-rose-900/30 dark:bg-rose-950/20">
                 <div>
@@ -619,7 +612,7 @@ export function CategoryProductsClient({
               Detect My Location
             </Button>
 
-            <div className="relative flex items-center py-1">
+            <div className="relative flex items-center">
               <div className="flex-grow border-t border-border" />
               <span className="flex-shrink mx-3 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
                 or enter address
@@ -635,52 +628,58 @@ export function CategoryProductsClient({
         </div>
 
         {/* Available Categories */}
-        <div className="mt-8">
-          <div className="mb-4 flex items-center gap-2">
-            <div className="h-5 w-1 rounded-full bg-emerald-500" />
-            <p className="text-sm font-bold">Available for You — Order Freely</p>
+        <div className="mt-6">
+          <div className="mb-2.5 flex items-center gap-2">
+            <div className="h-4 w-1 rounded-full bg-emerald-500" />
+            <p className="text-xs font-bold sm:text-sm">Available for You — Order Freely</p>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
             <Link
               href="/category/natural-products"
-              className="group flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-all hover:border-emerald-400 hover:bg-emerald-50/50 hover:shadow-md dark:hover:bg-emerald-950/20"
+              className="group flex flex-col items-center gap-2 rounded-2xl border border-border bg-card px-2 py-3.5 text-center transition-all hover:border-emerald-400 hover:bg-emerald-50/50 hover:shadow-md dark:hover:bg-emerald-950/20"
             >
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-2xl transition-transform group-hover:scale-110 dark:bg-emerald-900/30">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-xl transition-transform group-hover:scale-110 sm:h-12 sm:w-12 sm:text-2xl dark:bg-emerald-900/30">
                 🌿
               </div>
-              <div>
-                <p className="text-sm font-bold group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold leading-tight group-hover:text-emerald-600 sm:text-sm dark:group-hover:text-emerald-400">
                   Natural Products
                 </p>
-                <p className="text-[11px] text-muted-foreground">Organic groceries, oils &amp; spices</p>
+                <p className="mt-0.5 hidden text-[10px] text-muted-foreground sm:block">
+                  Organic groceries, oils &amp; spices
+                </p>
               </div>
             </Link>
             <Link
               href="/category/general"
-              className="group flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-all hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-md dark:hover:bg-blue-950/20"
+              className="group flex flex-col items-center gap-2 rounded-2xl border border-border bg-card px-2 py-3.5 text-center transition-all hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-md dark:hover:bg-blue-950/20"
             >
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-2xl transition-transform group-hover:scale-110 dark:bg-blue-900/30">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 text-xl transition-transform group-hover:scale-110 sm:h-12 sm:w-12 sm:text-2xl dark:bg-blue-900/30">
                 🛍️
               </div>
-              <div>
-                <p className="text-sm font-bold group-hover:text-blue-600 dark:group-hover:text-blue-400">
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold leading-tight group-hover:text-blue-600 sm:text-sm dark:group-hover:text-blue-400">
                   General Products
                 </p>
-                <p className="text-[11px] text-muted-foreground">Electronics, fashion &amp; more</p>
+                <p className="mt-0.5 hidden text-[10px] text-muted-foreground sm:block">
+                  Electronics, fashion &amp; more
+                </p>
               </div>
             </Link>
             <Link
               href="/puja"
-              className="group flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-all hover:border-amber-400 hover:bg-amber-50/50 hover:shadow-md dark:hover:bg-amber-950/20"
+              className="group flex flex-col items-center gap-2 rounded-2xl border border-border bg-card px-2 py-3.5 text-center transition-all hover:border-amber-400 hover:bg-amber-50/50 hover:shadow-md dark:hover:bg-amber-950/20"
             >
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-2xl transition-transform group-hover:scale-110 dark:bg-amber-900/30">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-xl transition-transform group-hover:scale-110 sm:h-12 sm:w-12 sm:text-2xl dark:bg-amber-900/30">
                 🪔
               </div>
-              <div>
-                <p className="text-sm font-bold group-hover:text-amber-600 dark:group-hover:text-amber-400">
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold leading-tight group-hover:text-amber-600 sm:text-sm dark:group-hover:text-amber-400">
                   Puja Samagri
                 </p>
-                <p className="text-[11px] text-muted-foreground">Rituals, pandits &amp; packages</p>
+                <p className="mt-0.5 hidden text-[10px] text-muted-foreground sm:block">
+                  Rituals, pandits &amp; packages
+                </p>
               </div>
             </Link>
           </div>

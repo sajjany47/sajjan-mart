@@ -76,7 +76,7 @@ export function Footer({ activeCategories }: { activeCategories: string[] }) {
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-center text-xs text-muted-foreground sm:flex-row sm:text-left">
           <p>&copy; {new Date().getFullYear()} Sajjan Mart. All rights reserved.</p>
-          <p>Payments: COD · Razorpay · Cashfree</p>
+          <p>Payments: COD · Razorpay (Cards, UPI, Netbanking)</p>
         </div>
       </div>
     </footer>

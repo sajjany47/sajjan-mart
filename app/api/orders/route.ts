@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma/client';
 import { jsonResponse, parseBody } from '@/lib/api-utils';
 import { getStoreConfig, isFoodOpenNow } from '@/lib/store-config';
 import { computeOrderAmounts } from '@/lib/order-refunds';
+import { createRazorpayOrder, razorpayConfigured, razorpayKeyId } from '@/lib/razorpay';
 import { sendOrderPlacedMails } from '@/lib/mailer';
 
 export async function GET(request: NextRequest) {
@@ -119,6 +120,72 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // ---- Razorpay order creation (backend-owned) ----
+    // Create the Razorpay order BEFORE any write so a payment init failure can
+    // never orphan data. Real (key-configured) Razorpay checkouts only persist
+    // a `payment_sessions` snapshot here — the DB order is created AFTER the
+    // payment is verified (see lib/razorpay-settle.ts). COD and demo (no key
+    // secret / zero value) orders are written to `orders` immediately.
+    const wantsRazorpay = String(orderData.paymentMethod ?? 'cod') === 'razorpay';
+    const payable = Number(orderData.total ?? 0);
+    let keyId: string | null = wantsRazorpay ? razorpayKeyId() : null;
+    let razorpayOrderId: string | null = null;
+    let demoMode = false;
+
+    if (wantsRazorpay && razorpayConfigured() && payable > 0) {
+      let rzOrder;
+      try {
+        rzOrder = await createRazorpayOrder(payable, String(orderData.orderNumber ?? ''));
+      } catch (error) {
+        console.error('[orders] razorpay order creation failed:', error);
+        return NextResponse.json(
+          { error: 'Failed to initialise payment. Please try again.' },
+          { status: 502 }
+        );
+      }
+      razorpayOrderId = rzOrder.id;
+
+      const payload = {
+        userId: orderData.userId ?? null,
+        subtotal: Number(orderData.subtotal ?? 0),
+        discount: Number(orderData.discount ?? 0),
+        shipping: Number(orderData.shipping ?? 0),
+        tax: Number(orderData.tax ?? 0),
+        total: payable,
+        couponCode: orderData.couponCode ?? null,
+        address: orderData.address ?? {},
+        notes: orderData.notes ?? null,
+        hasFood: Boolean(orderData.hasFood),
+        items: itemData,
+      };
+
+      // Upsert (keyed by the unique razorpayOrderId): a retry of the same
+      // razorpay order re-arms the same session instead of stacking a new one.
+      await prisma.paymentSession.upsert({
+        where: { razorpayOrderId },
+        update: {
+          userId: payload.userId,
+          payload,
+          status: 'pending',
+          orderId: null,
+          razorpayPaymentId: null,
+        },
+        create: { razorpayOrderId, userId: payload.userId, payload, status: 'pending' },
+      });
+
+      // No DB order yet — the customer must complete the payment first.
+      return jsonResponse({ keyId, demoMode, razorpayOrderId }, { status: 201 });
+    }
+
+    // Payment status is owned by the server, never trusted from the client.
+    // Demo mode (no key configured) or a zero-value order: simulate an instant
+    // paid payment so the storefront keeps working without keys.
+    if (wantsRazorpay) {
+      demoMode = true;
+      orderData.paymentStatus = 'paid';
+      keyId = null;
+    }
+
     const item = await prisma.order.create({
       data: {
         ...orderData,
@@ -132,7 +199,10 @@ export async function POST(request: NextRequest) {
       .then((full) => full && sendOrderPlacedMails(full))
       .catch((e) => console.error('[orders] placed-mail failed:', e));
 
-    return jsonResponse(item, { status: 201 });
+    return jsonResponse(
+      { ...item, keyId, demoMode, razorpayOrderId: razorpayOrderId ?? null },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('[orders] create failed:', error);
     return NextResponse.json({ error: 'Failed to create' }, { status: 500 });

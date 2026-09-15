@@ -36,25 +36,17 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'puja_samagri';
+    const isTemplate = searchParams.get('template') === '1';
     const sheetName = { food: 'Food', puja_samagri: 'Puja Samagri', natural: 'Natural Products', general: 'General' }[type] ?? type;
     const fileBase = { food: 'food', puja_samagri: 'puja-samagri', natural: 'natural-products', general: 'general' }[type] ?? type;
-
-    const products = await prisma.product.findMany({
-      where: { productType: type },
-      include: {
-        category: true,
-        subCategory: true,
-        brand: true,
-        productImages: { orderBy: { sortOrder: 'asc' } },
-        pujaItems: { include: { puja: true }, orderBy: { sortOrder: 'asc' } },
-      },
-      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-    });
 
     const wb = new ExcelJS.Workbook();
     wb.creator = 'Sajjan Mart Admin';
     wb.created = new Date();
     const ws = wb.addWorksheet(sheetName);
+
+    const foodTypeLabel = (v: string | null) =>
+      ({ veg: 'Veg', non_veg: 'Non Veg', egg: 'Egg' }[v ?? ''] ?? v ?? '');
 
     ws.columns = [
       { header: 'Name', key: 'name', width: 32 },
@@ -86,6 +78,82 @@ export async function GET(request: NextRequest) {
       { header: 'Created At', key: 'createdAt', width: 20 },
       { header: 'Updated At', key: 'updatedAt', width: 20 },
     ];
+
+    if (type === 'food') {
+      ws.columns.push({ header: 'Food Type', key: 'foodType', width: 10 });
+    }
+
+    if (isTemplate) {
+      // Demo workbook: headers + clearly-marked example rows to copy/paste over.
+      const exampleRow = (name: string, price: number, chip: string, foodType?: string) => ({
+        name: `${name} (example — delete or replace this row)`,
+        slug: '',
+        description: 'Example row. Keep the header row (row 1) unchanged and replace or delete this row with your data.',
+        productType: '',
+        subCategory: '',
+        brand: '',
+        chip,
+        purchasePrice: Math.round(price * 0.6),
+        salesPrice: price,
+        discount: 0,
+        finalPrice: price,
+        quantity: 1,
+        quantityType: 'piece',
+        stockType: 'piece',
+        stock: 100,
+        gender: '',
+        rating: 0,
+        reviewCount: 0,
+        isFeatured: 'No',
+        isBestSeller: 'No',
+        isPopular: 'No',
+        isTodayDeal: 'No',
+        isActive: 'Yes',
+        sortOrder: 0,
+        images: '',
+        festivals: '',
+        createdAt: '',
+        updatedAt: '',
+        foodType: foodType ?? '',
+      });
+      if (type === 'food') {
+        ws.addRow(exampleRow('Margherita Pizza', 199, 'Pizza', 'Veg'));
+        ws.addRow(exampleRow('Chicken Biryani', 249, 'Biryani', 'Non Veg'));
+      } else if (type === 'natural') {
+        ws.addRow(exampleRow('Organic Basmati Rice', 120, 'Grains & Rice'));
+        ws.addRow(exampleRow('Cold Pressed Mustard Oil', 180, 'Oil & Ghee'));
+      } else {
+        ws.addRow(exampleRow('Stainless Steel Tiffin Box', 499, 'Home'));
+        ws.addRow(exampleRow('Cotton Kurta', 699, 'Fashion'));
+      }
+
+      const header = ws.getRow(1);
+      header.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFB45309' } };
+      header.alignment = { vertical: 'middle' };
+      header.height = 22;
+      ws.views = [{ state: 'frozen', ySplit: 1 }];
+
+      const buf = await wb.xlsx.writeBuffer();
+      return new Response(new Uint8Array(buf), {
+        headers: {
+          'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Disposition': `attachment; filename="${fileBase}-import-demo.xlsx"`,
+        },
+      });
+    }
+
+    const products = await prisma.product.findMany({
+      where: { productType: type },
+      include: {
+        category: true,
+        subCategory: true,
+        brand: true,
+        productImages: { orderBy: { sortOrder: 'asc' } },
+        pujaItems: { include: { puja: true }, orderBy: { sortOrder: 'asc' } },
+      },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    });
 
     for (const p of products) {
       const sales = currency(p.salesPrice);
@@ -119,6 +187,7 @@ export async function GET(request: NextRequest) {
         festivals: p.pujaItems.map((pi) => pi.puja?.name ?? '').filter(Boolean).join(', '),
         createdAt: p.createdAt.toISOString().slice(0, 16).replace('T', ' '),
         updatedAt: p.updatedAt.toISOString().slice(0, 16).replace('T', ' '),
+        foodType: type === 'food' ? foodTypeLabel(p.foodType) : undefined,
       });
     }
 

@@ -23,6 +23,7 @@
     "import:festivals": "dotenv -e .env.development -- npx tsx prisma/import-festivals.ts",
     "import:natural": "dotenv -e .env.development -- npx tsx prisma/import-natural-products.ts",
     "import:puja-items": "dotenv -e .env.development -- npx tsx prisma/import-puja-items.ts",
+    "import:puja-samagri": "dotenv -e .env.development -- npx tsx prisma/import-puja-samagri.ts",
     "prisma:seed": "dotenv -e .env.development -- npx tsx prisma/seed.ts"
   },
   "dependencies": {
@@ -79,6 +80,7 @@
     "nodemailer": "^9.0.5",
     "postcss": "8.4.30",
     "prisma": "^5.22.0",
+    "razorpay": "^2.9.8",
     "react": "18.2.0",
     "react-day-picker": "^8.10.1",
     "react-dom": "18.2.0",

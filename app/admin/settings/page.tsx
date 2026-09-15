@@ -25,8 +25,8 @@ interface StoreConfigData {
 }
 
 const PAYMENT_OPTIONS = [
-  { value: 'both', label: 'Online + Offline', desc: 'Accept COD, Razorpay and Cashfree' },
-  { value: 'online', label: 'Online only', desc: 'Accept Razorpay and Cashfree (no COD)' },
+  { value: 'both', label: 'Online + Offline', desc: 'Accept COD and Razorpay' },
+  { value: 'online', label: 'Online only', desc: 'Accept Razorpay (no COD)' },
   { value: 'offline', label: 'Offline only', desc: 'Accept Cash on Delivery only' },
 ];
 
