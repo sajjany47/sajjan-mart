@@ -453,7 +453,7 @@ export function CheckoutClient() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen pb-16 bg-muted/20">
+    <div className="min-h-screen pb-8 lg:pb-0 bg-muted/20">
       <CheckoutStepper currentStep={2} />
 
       <div className="container-px mx-auto max-w-7xl">
@@ -470,12 +470,12 @@ export function CheckoutClient() {
           <div className="space-y-6">
             {/* Section 1: Delivery Address */}
             <section className="rounded-2xl border border-border/70 bg-card p-5 sm:p-6 shadow-sm">
-              <div className="flex items-center justify-between border-b border-border/50 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 font-bold text-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/50 pb-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 font-bold text-sm">
                     1
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h2 className="font-display text-lg font-bold text-foreground">Delivery Address</h2>
                     <p className="text-xs text-muted-foreground">Where should we deliver your order?</p>
                   </div>
@@ -486,7 +486,7 @@ export function CheckoutClient() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowAddAddressForm((prev) => !prev)}
-                    className="text-xs font-semibold text-primary hover:bg-primary/10"
+                    className="self-start sm:self-auto w-full sm:w-auto justify-center text-xs font-semibold text-primary hover:bg-primary/10"
                   >
                     {showAddAddressForm ? (
                       <span className="flex items-center gap-1">
@@ -734,18 +734,18 @@ export function CheckoutClient() {
 
             {/* Section 3: Payment Method */}
             <section className="rounded-2xl border border-border/70 bg-card p-5 sm:p-6 shadow-sm">
-              <div className="flex items-center justify-between border-b border-border/50 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 font-bold text-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border-b border-border/50 pb-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 font-bold text-sm">
                     3
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h2 className="font-display text-lg font-bold text-foreground">Payment Method</h2>
                     <p className="text-xs text-muted-foreground">Select how you would like to pay</p>
                   </div>
                 </div>
 
-                <span className="flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                <span className="self-start sm:self-auto shrink-0 flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
                   <ShieldCheck className="h-3.5 w-3.5" /> 100% Encrypted
                 </span>
               </div>
@@ -950,32 +950,34 @@ export function CheckoutClient() {
                 </span>
               </div>
 
-              {/* Place Order CTA Button */}
-              <Button
-                onClick={placeOrder}
-                disabled={loading || foodClosed}
-                className="mt-5 w-full font-bold text-sm py-6 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
-                size="lg"
-              >
-                {foodClosed ? (
-                  "Food Section Closed"
-                ) : loading ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Verifying &amp; Placing Order...
-                  </span>
-                ) : (
-                  `Place Order · ${formatINR(total)}`
-                )}
-              </Button>
+              {/* Place Order CTA Button (desktop only; mobile uses the fixed bottom bar) */}
+              <div className="hidden lg:block">
+                <Button
+                  onClick={placeOrder}
+                  disabled={loading || foodClosed}
+                  className="mt-5 w-full font-bold text-sm py-6 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
+                  size="lg"
+                >
+                  {foodClosed ? (
+                    "Food Section Closed"
+                  ) : loading ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Verifying &amp; Placing Order...
+                    </span>
+                  ) : (
+                    `Place Order · ${formatINR(total)}`
+                  )}
+                </Button>
 
-              {foodClosed && (
-                <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-center text-xs text-destructive">
-                  <p className="font-bold">Food Section Currently Closed</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Store Hours: {config?.food_open_time} - {config?.food_close_time}
-                  </p>
-                </div>
-              )}
+                {foodClosed && (
+                  <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-center text-xs text-destructive">
+                    <p className="font-bold">Food Section Currently Closed</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Store Hours: {config?.food_open_time} - {config?.food_close_time}
+                    </p>
+                  </div>
+                )}
+              </div>
 
               {/* Safety Footer */}
               <div className="mt-5 text-center text-[10px] text-muted-foreground flex items-center justify-center gap-2">

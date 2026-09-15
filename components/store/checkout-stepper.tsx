@@ -17,17 +17,17 @@ export function CheckoutStepper({ currentStep }: StepperProps) {
   return (
     <div className="w-full border-b border-border/50 bg-gradient-to-b from-card/80 via-card/40 to-background/50 py-4 mb-6 backdrop-blur-md">
       <div className="container-px mx-auto max-w-7xl">
-        <div className="flex items-center justify-between gap-4 max-w-3xl mx-auto px-2">
+        <div className="flex items-center justify-between gap-3 max-w-3xl mx-auto px-2 sm:gap-4">
           {steps.map((step, idx) => {
             const isActive = currentStep === step.number;
             const isCompleted = currentStep > step.number;
             const Icon = step.icon;
 
             return (
-              <div key={step.number} className="flex items-center flex-1 last:flex-none">
-                <div className="flex items-center gap-2.5 sm:gap-3">
+              <div key={step.number} className="flex items-center flex-1 last:flex-none min-w-0">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                   <div
-                    className={`flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl text-xs font-bold transition-all duration-300 ${
+                    className={`flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl text-xs font-bold transition-all duration-300 ${
                       isCompleted
                         ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20 ring-2 ring-emerald-500/30'
                         : isActive
@@ -35,18 +35,18 @@ export function CheckoutStepper({ currentStep }: StepperProps) {
                         : 'bg-muted/80 text-muted-foreground border border-border/60'
                     }`}
                   >
-                    {isCompleted ? <CheckCircle2 className="h-5 w-5" /> : <Icon className="h-4 w-4 sm:h-5 sm:w-5" />}
+                    {isCompleted ? <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" /> : <Icon className="h-3.5 w-3.5 sm:h-5 sm:w-5" />}
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <span
-                      className={`block text-[10px] font-bold uppercase tracking-wider ${
+                      className={`block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider ${
                         isActive ? 'text-primary' : isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'
                       }`}
                     >
                       Step 0{step.number}
                     </span>
                     <span
-                      className={`block text-xs sm:text-sm font-medium leading-tight ${
+                      className={`block text-[10px] sm:text-xs font-medium leading-tight truncate whitespace-nowrap ${
                         isActive ? 'text-foreground font-bold' : isCompleted ? 'text-foreground font-semibold' : 'text-muted-foreground'
                       }`}
                     >
@@ -56,7 +56,7 @@ export function CheckoutStepper({ currentStep }: StepperProps) {
                 </div>
 
                 {idx < steps.length - 1 && (
-                  <div className="flex-1 mx-2 sm:mx-4 flex items-center">
+                  <div className="flex-1 mx-1.5 sm:mx-4 flex items-center min-w-0">
                     <div
                       className={`h-[2px] w-full transition-all duration-500 rounded-full ${
                         currentStep > step.number ? 'bg-emerald-500' : 'bg-border/80'
