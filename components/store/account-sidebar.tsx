@@ -45,7 +45,7 @@ export function AccountSidebar() {
             </div>
           </div>
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 lg:hidden">
+        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar lg:hidden">
           {NAV.map((n) => (
             <Skeleton key={n.href} className="h-9 w-24 shrink-0 rounded-full" />
           ))}
@@ -107,7 +107,7 @@ export function AccountSidebar() {
         </nav>
       </div>
 
-      <div className="-mx-4 overflow-x-auto px-4 pb-1 lg:hidden">
+      <div className="-mx-4 overflow-x-auto px-4 pb-1 no-scrollbar lg:hidden">
         <div className="flex w-max gap-2">
           {NAV.map((n) => {
             const active =
