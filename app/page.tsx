@@ -8,7 +8,7 @@ import { SectionHeader } from '@/components/store/section-header';
 import { createServerSupabase } from '@/lib/supabase/server';
 import type { Category, Product, Puja } from '@/lib/types';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 const HERO_SLIDES: Slide[] = [
   {
@@ -68,38 +68,47 @@ const SECTION_CONFIG = [
 ] as const;
 
 async function getHomeData() {
-  const supabase = createServerSupabase();
+  try {
+    const supabase = createServerSupabase();
 
-  const [categoriesResult, ...productResults] = await Promise.all([
-    supabase.from('categories').select('*').eq('is_active', true).order('sort_order'),
-    ...SECTION_CONFIG.map((s) =>
-      supabase
-        .from('products')
-        .select('*, product_images(*)')
-        .eq('is_active', true)
-        .eq('product_type', s.type)
-        .order('rating', { ascending: false })
-        .limit(6)
-    ),
-  ]);
+    const [categoriesResult, ...productResults] = await Promise.all([
+      supabase.from('categories').select('*').eq('is_active', true).order('sort_order'),
+      ...SECTION_CONFIG.map((s) =>
+        supabase
+          .from('products')
+          .select('*, product_images(*)')
+          .eq('is_active', true)
+          .eq('product_type', s.type)
+          .order('rating', { ascending: false })
+          .limit(6)
+      ),
+    ]);
 
-  const productsByType: Record<string, Product[]> = {};
-  SECTION_CONFIG.forEach((s, i) => {
-    productsByType[s.type] = (productResults[i].data ?? []) as Product[];
-  });
+    const productsByType: Record<string, Product[]> = {};
+    SECTION_CONFIG.forEach((s, i) => {
+      productsByType[s.type] = (productResults[i]?.data ?? []) as Product[];
+    });
 
-  const { data: pujasData } = await supabase
-    .from('pujas')
-    .select('*')
-    .eq('is_active', true)
-    .order('name')
-    .limit(6);
+    const { data: pujasData } = await supabase
+      .from('pujas')
+      .select('*')
+      .eq('is_active', true)
+      .order('name')
+      .limit(6);
 
-  return {
-    categories: (categoriesResult.data ?? []) as Category[],
-    productsByType,
-    pujas: (pujasData ?? []) as Puja[],
-  };
+    return {
+      categories: (categoriesResult?.data ?? []) as Category[],
+      productsByType,
+      pujas: (pujasData ?? []) as Puja[],
+    };
+  } catch (error) {
+    console.error('Error fetching home data:', error);
+    return {
+      categories: [],
+      productsByType: { food: [], natural: [], general: [] },
+      pujas: [],
+    };
+  }
 }
 
 export default async function HomePage() {
