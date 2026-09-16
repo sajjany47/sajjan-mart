@@ -4,21 +4,26 @@ import { PujaListClient } from '@/components/store/puja-list-client';
 import { createServerSupabase } from '@/lib/supabase/server';
 import type { Puja, PujaItem } from '@/lib/types';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 async function getPujas() {
-  const supabase = createServerSupabase();
-  const { data } = await supabase.from('pujas').select('*').eq('is_active', true).order('name');
-  const pujas = (data ?? []) as Puja[];
-  const ids = pujas.map((p) => p.id);
-  const { data: items } = ids.length > 0
-    ? await supabase.from('puja_items').select('*').in('puja_id', ids).order('sort_order')
-    : { data: [] };
-  const byPuja: Record<string, PujaItem[]> = {};
-  for (const it of (items ?? []) as PujaItem[]) {
-    (byPuja[it.puja_id] = byPuja[it.puja_id] ?? []).push(it);
+  try {
+    const supabase = createServerSupabase();
+    const { data } = await supabase.from('pujas').select('*').eq('is_active', true).order('name');
+    const pujas = (data ?? []) as Puja[];
+    const ids = pujas.map((p) => p.id);
+    const { data: items } = ids.length > 0
+      ? await supabase.from('puja_items').select('*').in('puja_id', ids).order('sort_order')
+      : { data: [] };
+    const byPuja: Record<string, PujaItem[]> = {};
+    for (const it of (items ?? []) as PujaItem[]) {
+      (byPuja[it.puja_id] = byPuja[it.puja_id] ?? []).push(it);
+    }
+    return pujas.map((p) => ({ ...p, items: byPuja[p.id] ?? [] }));
+  } catch (error) {
+    console.error('Error fetching pujas:', error);
+    return [];
   }
-  return pujas.map((p) => ({ ...p, items: byPuja[p.id] ?? [] }));
 }
 
 export default async function PujaPage() {

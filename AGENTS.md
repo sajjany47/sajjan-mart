@@ -1,5 +1,14 @@
 # AGENTS.md — Project Change Log
 
+## 2026-09-16: Root route (`/`) dynamic SSR & error boundary fix for production (Render)
+
+- **Issue**: Root URL `https://sajjan-mart.onrender.com/` failed to load or reset on Render while subroutes like `/category/food` worked.
+- **Root cause**: `/` and `/puja` were statically generated (`○`) at build time with `revalidate = 60`. On Render, static generation / ISR revalidation failed when DB connections were inactive or cold-started, serving stale/broken responses or crashing with 500 errors. In contrast, routes like `/category/[slug]` were dynamic (`λ`) because they read `searchParams`, causing them to execute live server-side database queries on every request.
+- **Fix in `app/page.tsx` & `app/puja/page.tsx`**: Replaced `revalidate = 60` with `export const dynamic = 'force-dynamic';` so `/` and `/puja` are rendered dynamically (`λ`) on every request. Wrapped `getHomeData()` and `getPujas()` in `try-catch` blocks returning safe fallbacks.
+- **Fix in `components/store/store-shell.tsx`**: Wrapped category fetching in a `try-catch` block to ensure `StoreShell` never throws 500 errors.
+- **`app/error.tsx`**: Created global error boundary UI component to gracefully handle any uncaught runtime exceptions without browser resets.
+- **Verified**: `npm run build` passed cleanly, `/` and `/puja` are now dynamic (`λ`), and type checking passed.
+
 ## 2026-09-15: Account page mobile redesign + hydration fix
 
 - **Goal**: make `/account` mobile responsive and visually polished without touching data logic (queries, stats, order rows unchanged).

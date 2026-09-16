@@ -4,9 +4,14 @@ import { MobileBottomNav } from '@/components/store/mobile-bottom-nav';
 import { createServerSupabase } from '@/lib/supabase/server';
 
 export async function StoreShell({ children }: { children: React.ReactNode }) {
-  const supabase = createServerSupabase();
-  const { data } = await supabase.from('categories').select('slug').eq('is_active', true);
-  const activeCategories = (data ?? []).map((c: any) => c.slug);
+  let activeCategories: string[] = [];
+  try {
+    const supabase = createServerSupabase();
+    const { data } = await supabase.from('categories').select('slug').eq('is_active', true);
+    activeCategories = (data ?? []).map((c: any) => c.slug);
+  } catch (error) {
+    console.error('Error fetching categories in StoreShell:', error);
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/20 selection:text-primary">
