@@ -47,6 +47,10 @@ const CATEGORY_HEADERS = ['category', 'chip', 'productcategory', 'categorychip',
 const ACTIVE_HEADERS = ['isactive', 'active', 'status', 'enabled', 'visible'];
 const FOOD_TYPE_HEADERS = ['foodtype', 'food', 'diet', 'vegtype'];
 const ITEMS_HEADERS = ['items', 'itemlist', 'includeditems', 'contents', 'pujaitems', 'samagriitems'];
+const QUANTITY_HEADERS = ['quantity', 'qty', 'packsize', 'pack', 'size'];
+const QUANTITY_TYPE_HEADERS = ['quantitytype', 'qtytype', 'unit', 'unittype'];
+const STOCK_HEADERS = ['stock', 'stockcount', 'inventory', 'instock'];
+const STOCK_TYPE_HEADERS = ['stocktype', 'inventorytype', 'stockunit'];
 
 export interface PujaImportParseResult {
   items: ParsedPujaItem[];
@@ -69,6 +73,55 @@ function firstMatchingHeader(headers: string[], candidates: string[]): string | 
     if (headers.includes(candidates[i])) return candidates[i];
   }
   return undefined;
+}
+
+function normalizeQuantityType(v: unknown): string | undefined {
+  if (v === null || v === undefined) return undefined;
+  const raw = String(v).trim();
+  if (!raw) return undefined;
+  const lower = raw.toLowerCase();
+  const slug = lower
+    .replace(/[()]/g, '')
+    .replace(/[^a-z0-9]+/g, '');
+  if (!slug) return undefined;
+  const aliases: Record<string, string> = {
+    pc: 'piece',
+    pcs: 'piece',
+    pieces: 'piece',
+    piece: 'piece',
+    single: 'piece',
+    number: 'piece',
+    nos: 'piece',
+    no: 'piece',
+    each: 'piece',
+    gr: 'gram',
+    grams: 'gram',
+    gram: 'gram',
+    gm: 'gram',
+    g: 'gram',
+    kg: 'kg',
+    kilo: 'kg',
+    kilogram: 'kg',
+    ml: 'ml',
+    millilitre: 'ml',
+    millilitreml: 'ml',
+    ltr: 'l',
+    litre: 'l',
+    liter: 'l',
+    l: 'l',
+  };
+  return aliases[slug] ?? (slug.length <= 10 ? slug : undefined);
+}
+
+function parseStock(v: unknown): number | undefined {
+  if (v === null || v === undefined) return undefined;
+  if (typeof v === 'number') return Number.isFinite(v) ? Math.max(0, Math.round(v)) : undefined;
+  const s = String(v).trim();
+  if (!s) return undefined;
+  const m = s.match(/-?\d+(?:\.\d+)?/);
+  if (!m) return undefined;
+  const n = Number(m[0]);
+  return Number.isFinite(n) ? Math.max(0, Math.round(n)) : undefined;
 }
 
 function detectSheetKind(worksheet: ExcelJS.Worksheet, headers: string[]): SheetKind {
@@ -149,6 +202,10 @@ function scanItemsSheet(
       chip: chipResult.slug,
       isActive: parseBool(rowValue(r, ACTIVE_HEADERS)),
       foodType,
+      quantity: parseNumber(rowValue(r, QUANTITY_HEADERS)),
+      quantityType: normalizeQuantityType(rowValue(r, QUANTITY_TYPE_HEADERS)),
+      stock: parseStock(rowValue(r, STOCK_HEADERS)),
+      stockType: normalizeQuantityType(rowValue(r, STOCK_TYPE_HEADERS)),
       warnings: rowWarnings,
     });
   }

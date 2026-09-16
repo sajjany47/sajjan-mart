@@ -50,6 +50,10 @@ interface ItemEditRow {
   chip: string;
   foodType: string;
   isActive: boolean;
+  quantity: string;
+  quantityType: string;
+  stock: string;
+  stockType: string;
   existing: boolean;
   warnings: string[];
 }
@@ -77,6 +81,10 @@ interface PreviewRow {
   chip?: string;
   isActive?: boolean;
   foodType?: string;
+  quantity?: number;
+  quantityType?: string;
+  stock?: number;
+  stockType?: string;
   warnings?: string[];
 }
 
@@ -230,6 +238,10 @@ export function ProductImportDialog({
               chip: r.chip ?? '',
               foodType: r.foodType ?? '',
               isActive: r.isActive ?? true,
+              quantity: r.quantity === undefined || r.quantity === null ? '' : String(r.quantity),
+              quantityType: r.quantityType ?? '',
+              stock: r.stock === undefined || r.stock === null ? '' : String(r.stock),
+              stockType: r.stockType ?? '',
               existing: !!r.existing,
               warnings: r.warnings ?? [],
             });
@@ -296,6 +308,10 @@ export function ProductImportDialog({
         chip: r.chip || undefined,
         isActive: r.isActive,
         foodType: isPuja ? undefined : r.foodType || undefined,
+        quantity: r.quantity.trim() === '' ? undefined : parseNumber(r.quantity),
+        quantityType: r.quantityType.trim() === '' ? undefined : r.quantityType.trim(),
+        stock: r.stock.trim() === '' ? undefined : parseNumber(r.stock),
+        stockType: r.stockType.trim() === '' ? undefined : r.stockType.trim(),
         warnings: [],
       });
     }
@@ -586,6 +602,22 @@ export function ProductImportDialog({
                               </option>
                             ))}
                           </select>
+                        </div>
+                        <div>
+                          <p className="mb-1 text-[11px] font-medium text-muted-foreground">Quantity</p>
+                          <Input type="number" min={0} value={r.quantity} onChange={(e) => updateItem(r.rowId, { quantity: e.target.value })} className="h-8 text-sm" />
+                        </div>
+                        <div>
+                          <p className="mb-1 text-[11px] font-medium text-muted-foreground">Qty Type</p>
+                          <Input value={r.quantityType} placeholder="e.g. piece, gram, kg" onChange={(e) => updateItem(r.rowId, { quantityType: e.target.value })} className="h-8 text-sm" />
+                        </div>
+                        <div>
+                          <p className="mb-1 text-[11px] font-medium text-muted-foreground">Stock</p>
+                          <Input type="number" min={0} value={r.stock} onChange={(e) => updateItem(r.rowId, { stock: e.target.value })} className="h-8 text-sm" />
+                        </div>
+                        <div>
+                          <p className="mb-1 text-[11px] font-medium text-muted-foreground">Stock Type</p>
+                          <Input value={r.stockType} placeholder="e.g. piece, gram, kg" onChange={(e) => updateItem(r.rowId, { stockType: e.target.value })} className="h-8 text-sm" />
                         </div>
                         <div className="col-span-2 sm:col-span-4">
                           <p className="mb-1 text-[11px] font-medium text-muted-foreground">Description</p>

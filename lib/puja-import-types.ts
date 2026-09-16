@@ -49,6 +49,10 @@ export interface ParsedPujaItem {
   chip?: string;
   isActive?: boolean;
   foodType?: string;
+  quantity?: number;
+  quantityType?: string;
+  stock?: number;
+  stockType?: string;
   warnings?: string[];
 }
 
