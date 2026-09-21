@@ -91,13 +91,16 @@ async function main() {
     total: '999.00',
     paymentMethod: 'cod',
     paymentStatus: 'pending',
+    itemCount: '1',
     items: JSON.stringify([
       {
+        id: 'test-item-1',
         itemId: 'test-item-1',
         name: 'Test Product',
-        quantity: '2',
-        unitPrice: '499.50',
-        total: '999.00',
+        quantity: 2,
+        price: 499.5,
+        unitPrice: 499.5,
+        total: 999.0,
       },
     ]),
   };
@@ -106,6 +109,9 @@ async function main() {
   const result = await messaging.sendEachForMulticast({
     tokens: tokens.map((t) => t.token),
     data: testPayload,
+    android: {
+      priority: 'high',
+    },
   });
 
   console.log('\n  === FCM Send Result ===');
