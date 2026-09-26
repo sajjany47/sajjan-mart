@@ -53,6 +53,10 @@ export async function GET(request: NextRequest) {
       { header: 'Description', key: 'description', width: 50 },
       { header: 'Image URL', key: 'images', width: 60 },
       { header: 'Category', key: 'category', width: 24 },
+      { header: 'Quantity', key: 'quantity', width: 12 },
+      { header: 'Quantity Type', key: 'quantityType', width: 14 },
+      { header: 'Stock Type', key: 'stockType', width: 14 },
+      { header: 'Stock', key: 'stock', width: 10 },
       { header: 'Is Active', key: 'isActive', width: 10 },
     ];
 
@@ -65,6 +69,10 @@ export async function GET(request: NextRequest) {
         description: 'Example row. Keep the header row (row 1) unchanged and replace or delete this row with your data.',
         images: '',
         category: 'Coconut (Nariyal)',
+        quantity: 1,
+        quantityType: 'piece',
+        stockType: 'piece',
+        stock: 100,
         isActive: 'Yes',
       });
       itemSheet.addRow({
@@ -74,6 +82,10 @@ export async function GET(request: NextRequest) {
         description: '',
         images: '',
         category: 'Deep (Diya)',
+        quantity: 1,
+        quantityType: 'piece',
+        stockType: 'piece',
+        stock: 100,
         isActive: 'Yes',
       });
       pujaSheet.addRow({
@@ -137,6 +149,10 @@ export async function GET(request: NextRequest) {
         description: product.description ?? '',
         images: product.productImages.map((img) => img.url).join(', '),
         category: CHIP_LABEL_BY_SLUG[product.productCategory ?? ''] ?? product.productCategory ?? '',
+        quantity: product.quantity === null ? '' : Number(product.quantity),
+        quantityType: product.quantityType ?? '',
+        stockType: product.stockType ?? '',
+        stock: product.stock,
         isActive: yesNo(product.isActive),
       });
     }

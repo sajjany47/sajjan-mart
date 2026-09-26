@@ -92,6 +92,10 @@ export async function applyPujaImport(
       data.subCategoryId = subCategoryBySlug.get(chip) ?? null;
     }
     if (item.isActive !== undefined) data.isActive = item.isActive;
+    if (item.quantity !== undefined) data.quantity = item.quantity;
+    if (item.quantityType !== undefined) data.quantityType = item.quantityType;
+    if (item.stock !== undefined) data.stock = item.stock;
+    if (item.stockType !== undefined) data.stockType = item.stockType;
 
     if (existing) {
       if (Object.keys(data).length > 0) {
@@ -128,10 +132,10 @@ export async function applyPujaImport(
         purchasePrice: item.purchasePrice ?? (item.price !== undefined ? Math.round(item.price * 0.6 * 100) / 100 : 0),
         salesPrice: item.price ?? 0,
         discountPercent: 0,
-        quantityType: 'piece',
-        quantity: 1,
-        stockType: 'piece',
-        stock: 100,
+        quantityType: item.quantityType ?? 'piece',
+        quantity: item.quantity ?? 1,
+        stockType: item.stockType ?? 'piece',
+        stock: item.stock ?? 100,
         productCategory: chip,
         isActive: item.isActive ?? true,
         isFeatured: true,

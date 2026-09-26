@@ -113,6 +113,10 @@ export async function applyProductImport(
     }
     if (item.isActive !== undefined) data.isActive = item.isActive;
     if (foodType !== undefined) data.foodType = foodType;
+    if (item.quantity !== undefined) data.quantity = item.quantity;
+    if (item.quantityType !== undefined) data.quantityType = item.quantityType;
+    if (item.stock !== undefined) data.stock = item.stock;
+    if (item.stockType !== undefined) data.stockType = item.stockType;
 
     if (existing) {
       if (Object.keys(data).length > 0) {
@@ -149,10 +153,10 @@ export async function applyProductImport(
         purchasePrice: item.purchasePrice ?? (item.price !== undefined ? Math.round(item.price * 0.6 * 100) / 100 : 0),
         salesPrice: item.price ?? 0,
         discountPercent: 0,
-        quantityType: 'piece',
-        quantity: 1,
-        stockType: isFood ? null : 'piece',
-        stock: isFood ? 0 : 100,
+        quantityType: item.quantityType ?? 'piece',
+        quantity: item.quantity ?? 1,
+        stockType: item.stockType ?? (isFood ? null : 'piece'),
+        stock: item.stock ?? (isFood ? 0 : 100),
         foodType: isFood ? foodType ?? 'veg' : null,
         productCategory: chip,
         isActive: item.isActive ?? true,
