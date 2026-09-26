@@ -18,6 +18,10 @@ const cookieOptions = {
 };
 
 export function getAccessToken(request: NextRequest) {
+  const authHeader = request.headers.get('authorization');
+  if (authHeader && /^Bearer\s+/i.test(authHeader)) {
+    return authHeader.replace(/^Bearer\s+/i, '').trim();
+  }
   return request.cookies.get(ACCESS_TOKEN_COOKIE)?.value ?? request.cookies.get(LEGACY_TOKEN_COOKIE)?.value;
 }
 
