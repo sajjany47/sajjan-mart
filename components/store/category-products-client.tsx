@@ -1008,12 +1008,18 @@ export function CategoryProductsClient({
         </Sheet>
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        Showing{" "}
-        <span className="font-semibold text-foreground">{products.length}</span>{" "}
-        of <span className="font-semibold text-foreground">{total}</span>{" "}
-        {isFood ? "dishes" : "products"}
-      </p>
+      {loading ? (
+        <Skeleton className="h-4 w-36" />
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          Showing{" "}
+          <span className="font-semibold text-foreground">
+            {products.length}
+          </span>{" "}
+          of <span className="font-semibold text-foreground">{total}</span>{" "}
+          {isFood ? "dishes" : "products"}
+        </p>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
         <aside className="hidden lg:block">
@@ -1023,16 +1029,6 @@ export function CategoryProductsClient({
         </aside>
 
         <div className="relative">
-          {loading && (
-            <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background/50 backdrop-blur-[2px]">
-              <div className="flex flex-col items-center gap-2 rounded-xl bg-card/90 px-6 py-4 shadow-lg">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                <span className="text-xs font-medium text-muted-foreground">
-                  {isFood ? "Loading food items..." : "Loading products..."}
-                </span>
-              </div>
-            </div>
-          )}
           {loading ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
