@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma/client';
 import { verifyWebhookSignature } from '@/lib/razorpay';
 import { createOrderFromPaymentSession } from '@/lib/razorpay-settle';
 import { sendPaymentSuccessMail } from '@/lib/mailer';
+import { sendNewOrderNotification } from '@/lib/notifications';
 
 /**
  * Razorpay webhook — payment.captured / payment.failed / refund.processed.
@@ -44,6 +45,9 @@ export async function POST(request: NextRequest) {
           const settled = await createOrderFromPaymentSession(session, {
             paymentId: String(entity.id ?? session.razorpayPaymentId ?? ''),
           });
+          console.log(
+            `[webhooks] payment.captured settled via session | razorpayOrderId: ${razorpayOrderId} | orderId: ${settled?.order?.id ?? 'none'} | created: ${settled?.created === true} | notification: ${settled?.created === true ? 'dispatched by settle' : 'skipped (already settled or declined)'}`
+          );
           return NextResponse.json({ received: true, ...(settled && !settled.created ? { note: 'already-settled' } : settled ? { order_created: true } : { skipped: 'settle-declined' }) });
         }
 
@@ -56,8 +60,12 @@ export async function POST(request: NextRequest) {
         if (!order) return NextResponse.json({ received: true, skipped: 'order-not-found' });
 
         if (order.paymentStatus !== 'paid') {
-          await prisma.order.update({
-            where: { id: order.id },
+          // Conditional update, not read-then-write: Razorpay retries this event
+          // and a concurrent verify may be finishing the same order. Only the
+          // caller that actually flips the row to `paid` (count 1) is allowed to
+          // mail and push, so a retry can never produce a second alert.
+          const marked = await prisma.order.updateMany({
+            where: { id: order.id, paymentStatus: { not: 'paid' } },
             data: {
               paymentStatus: 'paid',
               razorpayPaymentId: String(entity.id ?? order.razorpayPaymentId ?? ''),
@@ -65,10 +73,40 @@ export async function POST(request: NextRequest) {
               paymentFailureReason: null,
             },
           });
-          prisma.order
-            .findUnique({ where: { id: order.id }, include: { items: true, user: true } })
-            .then((full) => full && sendPaymentSuccessMail(full))
-            .catch((e) => console.error('[webhooks] success-mail failed:', e));
+
+          if (marked.count > 0) {
+            console.log(
+              `[webhooks] order marked paid by payment.captured | orderNumber: ${order.orderNumber} | razorpayOrderId: ${razorpayOrderId}`
+            );
+            const full = await prisma.order
+              .findUnique({ where: { id: order.id }, include: { items: true, user: true } })
+              .catch((e) => {
+                console.error('[webhooks] order reload failed:', e);
+                return null;
+              });
+
+            if (full) {
+              sendPaymentSuccessMail(full).catch((e) =>
+                console.error('[webhooks] success-mail failed:', e)
+              );
+              // Isolated so a Firebase problem can never fail the webhook ack —
+              // a non-2xx makes Razorpay retry the event.
+              try {
+                await sendNewOrderNotification(full, full.items, full.user);
+              } catch (e) {
+                console.error(
+                  '[webhooks] NEW_ORDER dispatch failed — order remains paid | orderNumber:',
+                  full.orderNumber,
+                  '| error:',
+                  e instanceof Error ? e.message : e
+                );
+              }
+            }
+          } else {
+            console.log(
+              `[webhooks] payment.captured retry — already paid, notification skipped | orderNumber: ${order.orderNumber}`
+            );
+          }
         }
         return NextResponse.json({ received: true });
       }
