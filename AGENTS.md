@@ -1,5 +1,20 @@
 # AGENTS.md — Project Change Log
 
+## 2026-09-29: Puja date normalization moved server-side (create/update APIs own `puja_date`)
+
+- **New `normalizeOptionalDate(value)` in `lib/api-utils.ts`**: accepts `Date`, full ISO strings, and date-only `YYYY-MM-DD` (converted to UTC-midnight ISO — Prisma 5.22 rejects date-only strings with "Expected ISO-8601 DateTime"); `null`/`""`/whitespace → `null` (clears the value); key absent → `undefined` (leave untouched); unparseable → `false` so callers can 400.
+- **`POST /api/pujas` + `PUT /api/pujas/[id]`** now normalize `body.pujaDate` (post-`parseBody`, which has already converted `puja_date` → `pujaDate`) before hitting Prisma — invalid dates get a clean `400 Invalid puja_date value` instead of a Prisma 500. Any API caller can now send a raw date-input value.
+- **Admin client simplified** (`app/admin/pujas/page.tsx` `save()`): the client-side `new Date(...T00:00:00Z)` conversion was removed — the UI sends the raw `form.puja_date || null` and the API owns conversion (single source of truth).
+- **Verified via HTTP e2e (12/12)**: POST date-only → 201 + `2026-11-08T00:00:00.000Z`; PUT date-only / full ISO / `""` / `null` / absent-key (untouched) all correct; invalid dates → 400 on both routes; test rows deleted; `tsc --noEmit` + lint clean.
+
+## 2026-09-29: Admin Puja date field + searchable samagri list; skeleton loaders
+
+- **`Puja` gained an optional `puja_date` column** (`DateTime?`, pushed via `prisma db push`): admin sets it in the add/edit dialog (`<Input type="date">`, "Puja Date (optional)" — leave empty for no fixed date); empty → `null`, provided → stored as `YYYY-MM-DDT00:00:00.000Z`. **Prisma 5.22 rejects date-only strings** ("Expected ISO-8601 DateTime"), so `save()` in `app/admin/pujas/page.tsx` converts via `new Date(`${form.puja_date}T00:00:00Z`)` (the `Z` matters — without it local-time parsing shifts the date a day for UTC+ users). Edit prefill uses `p.puja_date.slice(0, 10)`. `lib/types.ts` Puja type gained `puja_date: string | null`.
+- **Puja Samagri Items list in the add/edit dialog is searchable**: search input (filters by product name, live), clear (X) button, "No items match" empty state; **"Select all shown"** selects only the visible/filtered items; count line reads `X of N items selected · M shown · Total ₹…`. Search resets each time the dialog opens.
+- **Skeleton loaders replace spinners**: new `app/category/[slug]/loading.tsx` (route-level Suspense skeleton for all 4 category pages: hero, chips, search/sort bar, sidebar, 8 product-card skeletons) and rewrote `app/puja/loading.tsx` (hero, search, count line, 6 puja-card skeletons). `components/store/category-products-client.tsx` lost its spinner overlay; the "Showing X of Y" line is a skeleton while loading.
+- **Dev-server gotcha hit**: all dynamic `[id]` API routes started returning HTML 500 "Call retries were exceeded" (jest-worker crash in `next dev`) while collection routes worked — this silently broke admin auth (auth-provider's profile fetch failed → role null → redirect to `/account`). A plain dev-server restart fixed it.
+- **Verified in browser**: create with date (stored `2026-11-08T00:00:00.000Z`), edit prefill, clear date → `null`, change date → new value; search "coconut" 636→7 items, select-all-shown → 7 selected, total ₹315 auto-computed; test data deleted; `tsc --noEmit` + lint clean.
+
 ## 2026-09-16: Root route (`/`) dynamic SSR & error boundary fix for production (Render)
 
 - **Issue**: Root URL `https://sajjan-mart.onrender.com/` failed to load or reset on Render while subroutes like `/category/food` worked.
