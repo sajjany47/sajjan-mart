@@ -34,6 +34,7 @@
     --warning: 38 92% 50%;
     --warning-foreground: 20 14% 14%;
   }
+
   .dark {
     --background: 20 14% 7%;
     --foreground: 40 30% 96%;
@@ -70,11 +71,16 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
-  h1, h2, h3, .font-display {
+
+  h1,
+  h2,
+  h3,
+  .font-display {
     font-family: var(--font-display), Georgia, serif;
   }
 }
@@ -83,15 +89,31 @@
   .container-px {
     @apply px-4 sm:px-6 lg:px-8;
   }
-  .no-scrollbar::-webkit-scrollbar { display: none; }
-  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  .text-balance { text-wrap: balance; }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
+  0% {
+    background-position: -1000px 0;
+  }
+
+  100% {
+    background-position: 1000px 0;
+  }
 }
+
 .animate-shimmer {
   animation: shimmer 1.6s infinite linear;
   background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--accent)) 50%, hsl(var(--muted)) 100%);

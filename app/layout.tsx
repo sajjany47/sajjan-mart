@@ -1,30 +1,32 @@
-import './globals.css';
-import type { Metadata } from 'next';
-import { Inter, Playfair_Display } from 'next/font/google';
-import { ThemeProvider } from '@/components/providers/theme-provider';
-import { AuthProvider } from '@/components/providers/auth-provider';
-import { LocationProvider } from '@/components/providers/location-provider';
-import { CartProvider } from '@/components/providers/cart-provider';
-import { Toaster } from '@/components/ui/sonner';
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
-const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-display' });
+// @ts-ignore CSS side-effect imports are handled by Next.js at build time.
+import "./globals.css";
+import type { Metadata } from "next";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import { AuthProvider } from "@/components/providers/auth-provider";
+import { LocationProvider } from "@/components/providers/location-provider";
+import { CartProvider } from "@/components/providers/cart-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
-  title: 'Sajjan Mart - Food, Puja, Natural & General Shopping',
+  title: "Sajjan Mart - Food, Puja, Natural & General Shopping",
   description:
-    'Multi-vendor ecommerce platform for fresh food, complete puja packages with pandit booking, organic natural products, and general shopping.',
+    "Multi-vendor ecommerce platform for fresh food, complete puja packages with pandit booking, organic natural products, and general shopping.",
   openGraph: {
-    title: 'Sajjan Mart',
-    description: 'Food, Puja Samagri, Natural Products & General Shopping - all in one place.',
-    type: 'website',
+    title: "Sajjan Mart",
+    description:
+      "Food, Puja Samagri, Natural Products & General Shopping - all in one place.",
+    type: "website",
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
+      <body className="font-sans antialiased">
         <ThemeProvider>
           <AuthProvider>
             <LocationProvider>
