@@ -1,5 +1,12 @@
 # AGENTS.md — Project Change Log
 
+## 2026-09-29: Storefront /puja list reordered by event relevance + date chips
+
+- **New `lib/puja-order.ts`** (client-safe): `sortPujasForStorefront()` orders pujas **Marriage Anniversary → Birthday** (slug-pinned via `MONTHLY_PUJA_SLUGS` — they recur monthly so they stay on top), then **today's event**, then **upcoming dates soonest-first**, then **undated pujas (A–Z)**, then **past dates most-recent-first**. "Today" is computed in IST (`todayInIST()`, UTC+5:30) and compared as `YYYY-MM-DD` keys. `pujaDayKey()` accepts **both Date objects and ISO strings** — the server supabase wrapper (`lib/supabase/server.ts`) passes Prisma `DateTime` values through as `Date` objects, so `puja_date.slice()` on the server-rendered page threw and silently emptied the list (getPujas catch → `[]`) until the helpers were made Date-aware. First hit of this Date-vs-string trap in a page component.
+- **`app/puja/page.tsx`**: `getPujas()` now returns `sortPujasForStorefront(...)`; the client search filter preserves the passed order.
+- **Date chips on puja cards** (`components/store/puja-list-client.tsx`): dated pujas show a top-right chip on the card image — emerald "Today" / emerald `20 Oct`-style upcoming date / muted slate for past (`formatPujaDate`, UTC month/day). Undated cards get no chip.
+- **Verified**: with durga-puja set to today + diwali to 2026-10-20 (then reset to null): order was marriage-anniversary → birthday → durga-puja (Today chip) → diwali (20 Oct chip) → 40 undated A–Z → jagannath-puja (16 Jul chip, past) last; after reset the order degrades correctly and chips disappear. 45 cards, `tsc --noEmit` + lint clean.
+
 ## 2026-09-29: Puja date normalization moved server-side (create/update APIs own `puja_date`)
 
 - **New `normalizeOptionalDate(value)` in `lib/api-utils.ts`**: accepts `Date`, full ISO strings, and date-only `YYYY-MM-DD` (converted to UTC-midnight ISO — Prisma 5.22 rejects date-only strings with "Expected ISO-8601 DateTime"); `null`/`""`/whitespace → `null` (clears the value); key absent → `undefined` (leave untouched); unparseable → `false` so callers can 400.

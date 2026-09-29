@@ -2,6 +2,7 @@ import { Sparkles, Star, ShieldCheck } from 'lucide-react';
 import { StoreShell } from '@/components/store/store-shell';
 import { PujaListClient } from '@/components/store/puja-list-client';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { sortPujasForStorefront } from '@/lib/puja-order';
 import type { Puja, PujaItem } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -19,14 +20,16 @@ async function getPujas() {
     for (const it of (items ?? []) as PujaItem[]) {
       (byPuja[it.puja_id] = byPuja[it.puja_id] ?? []).push(it);
     }
-    return pujas.map((p) => {
-      const pujaItems = byPuja[p.id] ?? [];
-      const basePrice = pujaItems
-        .filter((item) => item.category === 'basic')
-        .reduce((total, item) => total + item.price * item.default_qty, 0);
+    return sortPujasForStorefront(
+      pujas.map((p) => {
+        const pujaItems = byPuja[p.id] ?? [];
+        const basePrice = pujaItems
+          .filter((item) => item.category === 'basic')
+          .reduce((total, item) => total + item.price * item.default_qty, 0);
 
-      return { ...p, base_price: basePrice, items: pujaItems };
-    });
+        return { ...p, base_price: basePrice, items: pujaItems };
+      })
+    );
   } catch (error) {
     console.error('Error fetching pujas:', error);
     return [];
