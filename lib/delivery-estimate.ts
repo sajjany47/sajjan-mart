@@ -27,4 +27,6 @@ export function getDeliveryEstimate(section: string): { title: string; detail: s
   };
 }
 
-export const QUICK_SERVICE_CONTACT = 'For quick service contact sajjany47@gmail.com / 8981374643 (Call / WhatsApp support)';
+export const SUPPORT_PHONE = '8981374643';
+export const SUPPORT_PHONE_TEL = 'tel:+918981374643';
+export const SUPPORT_WHATSAPP_URL = 'https://wa.me/918981374643?text=Hi%20Sajjan%20Mart%2C%20I%20need%20help';

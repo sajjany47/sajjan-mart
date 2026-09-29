@@ -233,6 +233,23 @@ export async function sendOrderStatusMail(order: OrderWithDetails, newStatus: st
   });
 }
 
+/** Mail to the customer when their online payment is confirmed. */
+export async function sendPaymentSuccessMail(order: OrderWithDetails) {
+  const to = order.user?.email;
+  if (!to) return;
+  await sendMailSafe({
+    to,
+    subject: `[Sajjan Mart] Payment received — Order #${order.orderNumber}`,
+    html: wrap(
+      'Payment successful',
+      `${customerGreeting(order)}
+      <p>We have received your online payment for order <strong>#${order.orderNumber}</strong>.</p>
+      <p>Amount paid: <strong>${money(order.total)}</strong> via ${order.paymentMethod.toUpperCase()}.</p>
+      <p>Your order is being prepared and we will update you at every step — confirmation, dispatch and delivery.</p>`
+    ),
+  });
+}
+
 /** Mail to admin when a customer requests cancellation. */
 export async function sendCancelRequestMail(order: OrderWithDetails, requestedItemNames: string[]) {
   await sendMailSafe({

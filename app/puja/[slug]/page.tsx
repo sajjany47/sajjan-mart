@@ -22,8 +22,35 @@ async function getPujaData(_pujaId: string) {
     supabase.from('puja_items').select('*').eq('puja_id', _pujaId).order('sort_order'),
     supabase.from('pandits').select('*').eq('is_active', true).order('name'),
   ]);
+  const pujaItems = (items.data ?? []) as any[];
+
+  // Attach each item's product thumbnail (puja_items.product_id → product_images). Display only — no logic change.
+  const productIds: string[] = [];
+  for (const item of pujaItems) {
+    if (item.product_id && !productIds.includes(item.product_id)) {
+      productIds.push(item.product_id);
+    }
+  }
+  if (productIds.length > 0) {
+    const { data: products } = await supabase
+      .from('products')
+      .select('id, product_images(url, sort_order)')
+      .in('id', productIds);
+    const imageByProduct = new Map<string, string>();
+    for (const p of products ?? []) {
+      const images = ((p as any).product_images ?? []) as { url: string; sort_order: number | null }[];
+      if (images.length > 0) {
+        const sorted = [...images].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+        imageByProduct.set((p as any).id, sorted[0].url);
+      }
+    }
+    for (const item of pujaItems) {
+      item.image = item.product_id ? imageByProduct.get(item.product_id) ?? null : null;
+    }
+  }
+
   return {
-    items: items.data ?? [],
+    items: pujaItems,
     pandits: (pandits.data ?? []),
   };
 }

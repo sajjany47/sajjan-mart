@@ -41,3 +41,24 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
 export function orderStatusLabel(status: string | undefined): string {
   return (status && ORDER_STATUS_LABELS[status]) || status || 'Pending';
 }
+
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  pending: 'Pending',
+  paid: 'Paid',
+  failed: 'Failed',
+  refunded: 'Refunded',
+};
+
+export function paymentStatusLabel(status: string | undefined): string {
+  return (status && PAYMENT_STATUS_LABELS[status]) || status || 'Pending';
+}
+
+const REFUND_STATUS_LABELS: Record<string, string> = {
+  pending: 'Refund initiated',
+  processed: 'Refunded',
+  failed: 'Refund failed',
+};
+
+export function refundStatusLabel(status: string | null | undefined): string {
+  return (status && REFUND_STATUS_LABELS[status]) || status || 'Not refunded';
+}

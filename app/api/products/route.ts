@@ -131,7 +131,25 @@ export async function GET(request: NextRequest) {
     if (sort === 'price-asc') orderBy = { salesPrice: 'asc' };
     else if (sort === 'price-desc') orderBy = { salesPrice: 'desc' };
     else if (sort === 'rating') orderBy = { rating: 'desc' };
-    else if (sort === 'newest') orderBy = { createdAt: 'desc' };
+    else if (sort === 'newest' || sort === 'created_at') orderBy = { createdAt: 'desc' };
+    else if (sort === 'oldest') orderBy = { createdAt: 'asc' };
+    // 'name-asc' / 'name-desc' / 'name' / 'image-missing' are applied with a
+    // case-insensitive JS sort after fetch.
+
+    const lcName = (p: any) => (p.name ?? '').toLowerCase();
+    const imgCount = (p: any) => (p.productImages ?? []).length;
+
+    const sortInMemory = (list: any[]) => {
+      if (sort === 'name-asc' || sort === 'name' || sort === 'image-missing') {
+        list.sort((a, b) => lcName(a).localeCompare(lcName(b)));
+      } else if (sort === 'name-desc') {
+        list.sort((a, b) => lcName(b).localeCompare(lcName(a)));
+      }
+      if (sort === 'image-missing') {
+        list.sort((a, b) => imgCount(a) - imgCount(b));
+      }
+      return list;
+    };
 
     if (paginate) {
       const total = await prisma.product.count({ where });
@@ -143,6 +161,7 @@ export async function GET(request: NextRequest) {
         skip: start,
         ...(take !== undefined ? { take } : {}),
       });
+      sortInMemory(items);
       if (distinctCategories) {
         const availableCategories = await prisma.product.findMany({
           where: { ...where, isActive: true },
@@ -165,6 +184,7 @@ export async function GET(request: NextRequest) {
       include: productInclude,
       orderBy,
     });
+    sortInMemory(items);
 
     if (distinctCategories) {
       const availableCategories = await prisma.product.findMany({

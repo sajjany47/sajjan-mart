@@ -15,7 +15,7 @@ export type OrderStatus =
   | 'cancel_request'
   | 'return'
   | 'refunded';
-export type PaymentMethod = 'cod' | 'razorpay' | 'cashfree';
+export type PaymentMethod = 'cod' | 'razorpay';
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 
 export interface Profile {
@@ -25,6 +25,7 @@ export interface Profile {
   phone: string | null;
   role: UserRole;
   avatar_url: string | null;
+  is_active: boolean;
   created_at: string;
 }
 
@@ -137,6 +138,7 @@ export interface PujaItem {
   puja_id: string;
   product_id: string | null;
   name: string;
+  category: string;
   unit: string;
   price: number;
   default_qty: number;
@@ -226,6 +228,12 @@ export interface Order {
   previous_status: string | null;
   refunded_amount: number | null;
   refund_id: string | null;
+  refund_status: string | null;
+  razorpay_order_id: string | null;
+  razorpay_payment_id: string | null;
+  razorpay_signature: string | null;
+  paid_at: string | null;
+  payment_failure_reason: string | null;
   created_at: string;
   updated_at: string;
   order_items?: OrderItem[];
@@ -243,7 +251,7 @@ export interface OrderItem {
   unit_price: number;
   quantity: number;
   total: number;
-  item_type: 'product' | 'puja';
+  item_type: 'product' | 'puja' | 'food';
   metadata: Record<string, any>;
   ready: boolean;
   cancelled: boolean;

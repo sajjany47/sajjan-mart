@@ -40,12 +40,10 @@ export const PAYMENT_METHODS: Record<string, { value: string; label: string; des
   ],
   online: [
     { value: 'razorpay', label: 'Razorpay', desc: 'Credit / Debit card, UPI, Netbanking' },
-    { value: 'cashfree', label: 'Cashfree', desc: 'Multiple payment options' },
   ],
   both: [
     { value: 'cod', label: 'Cash on Delivery', desc: 'Pay when your order arrives' },
     { value: 'razorpay', label: 'Razorpay', desc: 'Credit / Debit card, UPI, Netbanking' },
-    { value: 'cashfree', label: 'Cashfree', desc: 'Multiple payment options' },
   ],
 };
 

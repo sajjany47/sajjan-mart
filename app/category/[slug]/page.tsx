@@ -145,7 +145,7 @@ export default async function CategoryPage({
 
   return (
     <StoreShell>
-      <div className="container-px mx-auto max-w-7xl py-5">
+      <div className="container-px mx-auto max-w-7xl py-3 sm:py-6">
         <CategoryProductsClient
           title={category.name}
           description={category.description ?? undefined}

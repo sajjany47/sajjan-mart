@@ -198,21 +198,11 @@ export function Header({ activeCategories }: { activeCategories: string[] }) {
             variant="ghost"
             size="sm"
             onClick={() => setLocDialogOpen(true)}
-            className={cn(
-              "hidden items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold md:flex transition-all",
-              status === "granted" &&
-                "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/15",
-              status === "out_of_range" &&
-                "bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/15",
-            )}
+            className="hidden items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold md:flex transition-all"
           >
             <MapPin className="h-3.5 w-3.5" />
             <span className="max-w-[120px] truncate">
-              {status === "granted"
-                ? address?.split(",")[0] || "Within Range"
-                : status === "out_of_range"
-                  ? "Out of Range"
-                  : "Set Location"}
+              {address ? address.split(",")[0] : "Set Location"}
             </span>
           </Button>
 
@@ -221,11 +211,7 @@ export function Header({ activeCategories }: { activeCategories: string[] }) {
             variant="ghost"
             size="icon"
             onClick={() => setLocDialogOpen(true)}
-            className={cn(
-              "flex md:hidden",
-              status === "granted" && "text-emerald-500",
-              status === "out_of_range" && "text-rose-500",
-            )}
+            className="flex md:hidden"
             aria-label="Location"
           >
             <MapPin className="h-5 w-5" />

@@ -9,7 +9,7 @@ import * as Yup from 'yup';
 import { FormikTextPassword } from '@/components/FormikTextInput';
 
 const ResetPasswordSchema = Yup.object().shape({
-  password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+  password: Yup.string().required('Password is required'),
 });
 
 export default function ResetPasswordPage() {

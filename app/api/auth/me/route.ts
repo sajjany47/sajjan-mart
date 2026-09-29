@@ -11,10 +11,10 @@ export async function GET(request: NextRequest) {
 
     const user = await prisma.profile.findUnique({
       where: { id: payload.id },
-      select: { id: true, email: true, fullName: true, role: true, avatarUrl: true },
+      select: { id: true, email: true, fullName: true, role: true, avatarUrl: true, isActive: true },
     });
 
-    if (!user) {
+    if (!user || user.isActive === false) {
       return NextResponse.json({ user: null }, { status: 401 });
     }
 

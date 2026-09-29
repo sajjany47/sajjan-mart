@@ -13,7 +13,7 @@ import { FormikTextInput, FormikTextPassword } from '@/components/FormikTextInpu
 const RegisterSchema = Yup.object().shape({
   name: Yup.string().min(2, 'Name must be at least 2 characters').required('Name is required'),
   email: Yup.string().email('Invalid email address').required('Email is required'),
-  password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+  password: Yup.string().required('Password is required'),
 });
 
 export default function RegisterPage() {
@@ -57,15 +57,12 @@ export default function RegisterPage() {
               placeholder="you@example.com"
               component={FormikTextInput}
             />
-            <div>
-              <Field
-                name="password"
-                label="Password"
-                placeholder="Create a password"
-                component={FormikTextPassword}
-              />
-              <p className="mt-1 text-xs text-muted-foreground">At least 6 characters.</p>
-            </div>
+            <Field
+              name="password"
+              label="Password"
+              placeholder="Create a password"
+              component={FormikTextPassword}
+            />
             <Button type="submit" className="w-full" disabled={loading || isSubmitting}>
               {loading ? 'Creating account...' : 'Create account'}
             </Button>

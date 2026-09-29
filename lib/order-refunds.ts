@@ -106,33 +106,19 @@ export function computeOrderAmounts(order: AmountsOrder): OrderAmounts {
 }
 
 /**
- * Persisted order-level update after items were cancelled. Only money actually
- * captured (prepaid + paid) is recorded as refunded — COD/unpaid orders simply
- * get a lower collection amount at the door.
+ * Persisted order-level update after items were cancelled. This only marks the
+ * order cancelled when nothing remains. The actual money bookkeeping
+ * (`refundedAmount` / `refundId` / `refundStatus` / `paymentStatus=refunded`)
+ * is owned by the refund initiator in `lib/razorpay-refunds.ts`, which only
+ * records money after Razorpay actually accepts the refund.
  */
-export function buildRefundUpdate(
-  order: AmountsOrder & { orderNumber?: string }
-): Record<string, unknown> {
+export function buildRefundUpdate(order: AmountsOrder): Record<string, unknown> {
   const amounts = computeOrderAmounts(order);
   const update: Record<string, unknown> = {};
 
-  if (amounts.is_prepaid_paid) {
-    // Never exceeds what the customer actually paid.
-    update.refundedAmount = Math.min(amounts.refund_due_total, amounts.original_total);
-  }
-
   if (amounts.fully_cancelled) {
     update.status = 'cancelled';
-    if (amounts.is_prepaid_paid) {
-      update.paymentStatus = 'refunded';
-      update.refundId = makeRefundId(order.orderNumber ?? '');
-    }
   }
 
   return update;
-}
-
-/** Internal refund reference stored on the order for audit/idempotency. */
-export function makeRefundId(orderNumber: string): string {
-  return `RFD-${orderNumber || 'ORD'}-${Date.now().toString(36)}`;
 }

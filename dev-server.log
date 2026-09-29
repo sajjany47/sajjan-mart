@@ -1,0 +1,194 @@
+  ▲ Next.js 13.5.1
+  - Local:        http://localhost:3000
+  - Environments: .env.development
+
+ ✓ Ready in 2s
+ ✓ Compiled /api/admin/users/route in 414ms (117 modules)
+ ✓ Compiled /api/auth/login/route in 122ms (120 modules)
+ ✓ Compiled /api/orders/route in 406ms (175 modules)
+[orders] create failed: PrismaClientValidationError: 
+Invalid `prisma.order.create()` invocation:
+
+{
+  data: {
+    userId: "4f70ec40-ef97-46c9-8a24-bc7f3c418de8",
++   orderNumber: String
+  }
+}
+
+Argument `orderNumber` is missing.
+    at wn (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async POST (webpack-internal:///(rsc)/./app/api/orders/route.ts:150:22)
+    at async E:\FestivalMart\sajjan-mart\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:66877 {
+  clientVersion: '5.22.0'
+}
+ ✓ Compiled /api/admin/users/[id]/route in 37ms (177 modules)
+[orders] create failed: PrismaClientValidationError: 
+Invalid `prisma.order.create()` invocation:
+
+{
+  data: {
+    userId: "4f70ec40-ef97-46c9-8a24-bc7f3c418de8",
++   orderNumber: String
+  }
+}
+
+Argument `orderNumber` is missing.
+    at wn (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async POST (webpack-internal:///(rsc)/./app/api/orders/route.ts:150:22)
+    at async E:\FestivalMart\sajjan-mart\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:66877 {
+  clientVersion: '5.22.0'
+}
+ ✓ Compiled in 78ms (177 modules)
+[orders] create failed: PrismaClientValidationError: 
+Invalid `prisma.order.create()` invocation:
+
+{
+  data: {
+    userId: "4f70ec40-ef97-46c9-8a24-bc7f3c418de8",
++   orderNumber: String
+  }
+}
+
+Argument `orderNumber` is missing.
+    at wn (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (E:\FestivalMart\sajjan-mart\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async POST (webpack-internal:///(rsc)/./app/api/orders/route.ts:150:22)
+    at async E:\FestivalMart\sajjan-mart\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:66877 {
+  clientVersion: '5.22.0'
+}
+ ○ compiling /not-found ...
+AbortError: The user aborted a request.
+    at abort (E:\FestivalMart\sajjan-mart\node_modules\next\dist\compiled\node-fetch\index.js:1:65190)
+    at AbortSignal.abortAndFinalize (E:\FestivalMart\sajjan-mart\node_modules\next\dist\compiled\node-fetch\index.js:1:65410)
+    at [nodejs.internal.kHybridDispatch] (node:internal/event_target:843:20)
+    at AbortSignal.dispatchEvent (node:internal/event_target:776:26)
+    at runAbort (node:internal/abort_controller:547:10)
+    at abortSignal (node:internal/abort_controller:518:3)
+    at AbortController.abort (node:internal/abort_controller:566:5)
+    at Timeout.<anonymous> (E:\FestivalMart\sajjan-mart\node_modules\next\dist\compiled\@next\font\dist\google\fetch-font-file.js:24:51)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7) {
+  type: 'aborted'
+}
+ X Failed to download `Inter` from Google Fonts. Using fallback font instead.
+
+Failed to fetch `Inter` from Google Fonts.}
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ Compiled /admin/orders/page in 37.6s (628 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/auth/me/route in 460ms (411 modules)
+ ✓ Compiled /api/auth/refresh/route in 163ms (413 modules)
+ ✓ Compiled /api/profiles/[id]/route in 173ms (416 modules)
+ ✓ Compiled /api/orders/route in 434ms (471 modules)
+ ✓ Compiled /admin/users/page in 1266ms (799 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/admin/users/route in 246ms (484 modules)
+ ✓ Compiled /admin/users/[id]/page in 1032ms (816 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/admin/users/[id]/route in 166ms (494 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /admin/tickets/page in 1544ms (649 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/support-tickets/route in 190ms (404 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/admin/users/route in 185ms (485 modules)
+ ○ compiling /page ...
+ ✓ Compiled /page in 4.4s (1065 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/settings/route in 415ms (633 modules)
+ ✓ Compiled in 457ms (448 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled in 183ms (448 modules)
+ ✓ Compiled in 179ms (448 modules)
+ ✓ Compiled in 184ms (448 modules)
+ ✓ Compiled in 184ms (448 modules)
+ ✓ Compiled /api/auth/logout/route in 449ms (576 modules)
+ ○ compiling /(auth)/register/page ...
+ ✓ Compiled /(auth)/register/page in 26.4s (1311 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/settings/route in 2.8s (733 modules)
+ ✓ Compiled /api/auth/signup/route in 1386ms (724 modules)
+ ✓ Compiled /api/auth/me/route in 1342ms (724 modules)
+ ✓ Compiled /api/profiles/[id]/route in 1335ms (726 modules)
+ ○ compiling /account/page ...
+ ✓ Compiled /account/page in 7.5s (1329 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/orders/route in 1375ms (740 modules)
+ ✓ Compiled (794 modules)
+ ✓ Compiled /api/auth/logout/route in 1616ms (791 modules)
+ ○ compiling /(auth)/login/page ...
+ ✓ Compiled /(auth)/login/page in 4.6s (1387 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ○ compiling /(auth)/forgot-password/page ...
+ ✓ Compiled /(auth)/forgot-password/page in 3.8s (1382 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/auth/login/route in 1086ms (766 modules)
+ ✓ Compiled /api/auth/me/route in 1309ms (766 modules)
+ ✓ Compiled /api/profiles/[id]/route in 1391ms (768 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ○ compiling /admin/page ...
+ ✓ Compiled /admin/page in 14.9s (1213 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/profiles/route in 1327ms (639 modules)
+ ✓ Compiled (697 modules)
+ ○ compiling /admin/products/page ...
+ ✓ Compiled /admin/products/page in 7.9s (1281 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/add-on-items/route in 795ms (679 modules)
+ ✓ Compiled (683 modules)
+ ✓ Compiled /api/products/[id]/route in 858ms (615 modules)
+ ✓ Compiled /api/product-images/route in 590ms (617 modules)
+ ✓ Compiled /api/products/route in 1579ms (619 modules)
+ ✓ Compiled in 1050ms (1195 modules)
+ ✓ Compiled in 955ms (1209 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled in 477ms (618 modules)
+ ✓ Compiled in 529ms (618 modules)
+ ✓ Compiled in 722ms (1209 modules)
+ ✓ Compiled in 1057ms (1213 modules)
+ ✓ Compiled /api/products/route in 563ms (616 modules)
+ ✓ Compiled (622 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled in 710ms (619 modules)
+ ○ compiling /api/admin/export/puja-samagri/route ...
+ ✓ Compiled /api/admin/export/puja-samagri/route in 3.4s (1191 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled /api/auth/me/route in 1080ms (695 modules)
+ ✓ Compiled /api/auth/refresh/route in 693ms (697 modules)
+ ✓ Compiled /api/profiles/[id]/route in 937ms (700 modules)
+ ✓ Compiled /api/products/route in 1072ms (702 modules)
+ ✓ Compiled (708 modules)
+ ○ compiling /api/admin/export/puja-samagri/route ...
+ ✓ Compiled /api/admin/export/puja-samagri/route in 10s (1206 modules)
