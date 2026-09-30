@@ -3,10 +3,126 @@ import { prisma } from '@/lib/prisma/client';
 import { jsonResponse, parseBody } from '@/lib/api-utils';
 import { requireAdmin } from '@/lib/admin-auth';
 import { computeOrderAmounts, buildRefundUpdate } from '@/lib/order-refunds';
+import { computePreparationSummary } from '@/lib/order-preparation';
 import { initiateRefundIfNeeded } from '@/lib/razorpay-refunds';
 import { sendOrderStatusMail, sendAdminItemCancelledMail } from '@/lib/mailer';
+import { sendOrderStatusUpdatedNotification } from '@/lib/notifications';
 
 const ACTIVE_STATUSES = ['pending', 'confirmed', 'processing', 'packed'];
+
+/** The two decisions a vendor makes on a pending order: Accept / Reject. */
+const PENDING_EXIT_STATUSES = ['confirmed', 'cancelled'];
+
+/**
+ * Statuses at which the kitchen is finished with the order. Moving into one of
+ * them stamps `prepared_at` (once), so the preparation duration freezes instead
+ * of counting on outside the Processing tab. `cancelled` is deliberately not
+ * here: a cancelled order was never prepared.
+ */
+const KITCHEN_EXIT_STATUSES = ['shipped', 'delivered'];
+
+/** The other half of that rule: the order must still be in the kitchen for the
+ *  transition to leave it. Mirrors the vendor's Processing tab statuses. */
+const KITCHEN_STATUSES = ['accepted', 'confirmed', 'processing', 'packed'];
+
+/** Bounds of the food preparation window the vendor may choose. */
+const PREP_MIN_MINUTES = 1;
+const PREP_MAX_MINUTES = 45;
+const PREP_DEFAULT_MINUTES = 30;
+
+/** A missing or unusable selection is the default, never an error: an order
+ *  must never be left accepted without a deadline because of a client bug. */
+function clampPrepMinutes(requested: unknown): number {
+  const minutes = Number(requested);
+  if (!Number.isFinite(minutes)) return PREP_DEFAULT_MINUTES;
+  return Math.min(PREP_MAX_MINUTES, Math.max(PREP_MIN_MINUTES, Math.round(minutes)));
+}
+
+/**
+ * The timer belongs to the server. `acceptedAt` and `preparationDueAt` are
+ * generated here so every vendor device reads the same instant, and only an
+ * order with an active (non-cancelled) food item gets them — a client cannot
+ * forge a countdown onto a non-food order.
+ *
+ * Returns the fields for the same conditional `updateMany` that claims the
+ * order, which is what keeps the write atomic and lets a losing concurrent
+ * accept write nothing at all.
+ */
+async function foodPreparationWrite(
+  orderId: string,
+  requestedMinutes: unknown
+): Promise<{
+  preparationTimeMinutes: number;
+  acceptedAt: Date;
+  preparationDueAt: Date;
+} | null> {
+  const items = await prisma.orderItem.findMany({
+    where: { orderId },
+    select: {
+      itemType: true,
+      cancelled: true,
+      product: { select: { productType: true } },
+    },
+  });
+  // Same rule the vendor app applies, so a device that offers a making time
+  // always gets it stored: the item snapshot OR the live product record.
+  const hasFood = items.some(
+    (i) =>
+      !i.cancelled &&
+      (i.itemType === 'food' || i.product?.productType === 'food')
+  );
+  if (!hasFood) return null;
+
+  const minutes = clampPrepMinutes(requestedMinutes);
+  const acceptedAt = new Date();
+  return {
+    preparationTimeMinutes: minutes,
+    acceptedAt,
+    preparationDueAt: new Date(acceptedAt.getTime() + minutes * 60_000),
+  };
+}
+
+async function latestDecision(id: string) {
+  return prisma.order.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      orderNumber: true,
+      status: true,
+      paymentStatus: true,
+      updatedAt: true,
+      // The winning device's timer, reported to whoever loses the race, so a
+      // second phone shows the same due time instead of starting its own.
+      preparationTimeMinutes: true,
+      acceptedAt: true,
+      preparationDueAt: true,
+    },
+  });
+}
+
+/**
+ * Another device already moved this order out of `pending`. The decision that
+ * was written first stands; we report it instead of overwriting it.
+ */
+function alreadyProcessed(latest: Awaited<ReturnType<typeof latestDecision>>) {
+  return NextResponse.json(
+    {
+      error: 'ORDER_ALREADY_PROCESSED',
+      message: 'This order was already handled on another device.',
+      status: latest?.status ?? null,
+      order: latest,
+    },
+    { status: 409 },
+  );
+}
+
+/** Alert every admin device that this pending order has been decided. */
+function announceDecision(order: { id: string; orderNumber: string } | null, status: string) {
+  if (!order) return;
+  sendOrderStatusUpdatedNotification({ ...order, status }).catch((e) =>
+    console.error('[orders] status-push failed:', e),
+  );
+}
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -15,7 +131,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       include: { user: true, items: true },
     });
     if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return jsonResponse({ ...item, amounts: computeOrderAmounts(item) });
+    return jsonResponse({
+      ...item,
+      amounts: computeOrderAmounts(item),
+      preparation: computePreparationSummary(item),
+    });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
   }
@@ -26,10 +146,48 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   if (!payload) return response as NextResponse;
   try {
     const body = await parseBody(request);
+    // Parsed body is passed straight into Prisma `data` everywhere below, so
+    // the timer fields are taken back out: only this handler may write them.
+    const requestedPrepMinutes = body.preparationTimeMinutes;
+    delete body.preparationTimeMinutes;
+    delete body.acceptedAt;
+    delete body.preparationDueAt;
+    delete body.preparedAt;
+
     const before = await prisma.order.findUnique({
       where: { id: params.id },
       select: { status: true },
     });
+
+    /* An id that matches no row (truncated, mistyped, or deleted) is a client
+     * error, not a server fault: `update` below throws P2025 and the generic
+     * catch reported it as an unexplained 500. The race paths are untouched —
+     * a missing order can never be `pending`, so this cannot swallow a 409. */
+    if (!before) {
+      return NextResponse.json(
+        {
+          error: 'ORDER_NOT_FOUND',
+          message: 'No order with this id exists. Pull the order list again.',
+        },
+        { status: 404 }
+      );
+    }
+
+    // An accept/reject on a still-pending order may be decided by exactly one
+    // device. The read above only chooses the code path; the writes below use a
+    // conditional `status: 'pending'` claim, so a concurrent decision on
+    // another phone loses and returns 409 without touching the row.
+    const latching =
+      before?.status === 'pending' &&
+      typeof body.status === 'string' &&
+      PENDING_EXIT_STATUSES.includes(body.status);
+
+    // The same race resolved sequentially: device 2's Accept arrives after
+    // device 1's Reject already committed. A rejected order must not be
+    // resurrected into `confirmed`, so the existing decision stands.
+    if (body.status === 'confirmed' && before?.status === 'cancelled') {
+      return alreadyProcessed(await latestDecision(params.id));
+    }
 
     // Admin directly cancels a whole active order (e.g. Reject on a new order):
     // run the same central settlement as item cancellation — every item is
@@ -53,7 +211,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
           items: full.items.map((i) => ({ ...i, cancelled: true })),
         });
 
-        await prisma.$transaction([
+        const cancelWrites = () => [
           ...(openItemIds.length > 0
             ? [
                 prisma.orderItem.updateMany({
@@ -63,7 +221,31 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
               ]
             : []),
           prisma.order.update({ where: { id: params.id }, data: { ...body, ...settlement } }),
-        ]);
+        ];
+
+        if (latching) {
+          // Claim + settlement commit together: if the settlement fails, the
+          // order must not be left cancelled-but-unsettled, or a retry would
+          // 409 and the refund could never be computed.
+          const decided = await prisma.$transaction(async (tx) => {
+            const claim = await tx.order.updateMany({
+              where: { id: params.id, status: 'pending' },
+              data: { ...body, ...settlement },
+            });
+            if (claim.count === 0) return false;
+            if (openItemIds.length > 0) {
+              await tx.orderItem.updateMany({
+                where: { id: { in: openItemIds } },
+                data: { cancelled: true, refunded: wasPaid },
+              });
+            }
+            return true;
+          });
+
+          if (!decided) return alreadyProcessed(await latestDecision(params.id));
+        } else {
+          await prisma.$transaction(cancelWrites());
+        }
 
         const updated = await prisma.order.findUnique({
           where: { id: params.id },
@@ -90,14 +272,70 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
           );
         }
 
+        // Only the device that won the claim announces the decision, so a
+        // simultaneous tap on a second phone can never duplicate it.
+        announceDecision(refreshed, 'cancelled');
+
         return jsonResponse({
           ...(refreshed ?? {}),
           amounts: refreshed ? computeOrderAmounts(refreshed) : null,
+          preparation: refreshed ? computePreparationSummary(refreshed) : null,
         });
       }
     }
 
-    const item = await prisma.order.update({ where: { id: params.id }, data: body });
+    // Accept on a pending order: single atomic claim, nothing else to write.
+    if (latching && body.status === 'confirmed') {
+      // Computed before the claim and written by it: if another device wins the
+      // race, `claim.count === 0` and these values are never stored, so the
+      // first accepted deadline is the only one and cannot be reset.
+      const preparation = await foodPreparationWrite(params.id, requestedPrepMinutes);
+
+      const claim = await prisma.order.updateMany({
+        where: { id: params.id, status: 'pending' },
+        data: { ...body, ...(preparation ?? {}) },
+      });
+      if (claim.count === 0) return alreadyProcessed(await latestDecision(params.id));
+
+      const accepted = await prisma.order.findUnique({ where: { id: params.id } });
+      if (accepted) {
+        prisma.order
+          .findUnique({ where: { id: params.id }, include: { items: true, user: true } })
+          .then((full) => full && sendOrderStatusMail(full, 'confirmed'))
+          .catch((e) => console.error('[orders] status-mail failed:', e));
+        announceDecision(accepted, 'confirmed');
+      }
+      return jsonResponse({
+        ...accepted,
+        preparation: computePreparationSummary(accepted),
+      });
+    }
+
+    /* The kitchen left write and the status change are one statement pair: if
+     * the timestamp write fails, the status must not stay committed on its own.
+     * A half-applied transition is what made a shipped order look like it was
+     * never finished while the API still answered 500. */
+    const leavesKitchen =
+      KITCHEN_EXIT_STATUSES.includes(body.status) &&
+      KITCHEN_STATUSES.includes(before.status);
+
+    const current = await prisma.$transaction(async (tx) => {
+      const updated = await tx.order.update({ where: { id: params.id }, data: body });
+      if (!leavesKitchen) return updated;
+
+      /* The kitchen finished when the order left processing, so that is the
+       * instant recorded — and only on that transition. Moving an already
+       * shipped order to delivered must not stamp a duration that includes the
+       * shipping time, and a legacy order that shipped before this column
+       * existed stays without one rather than getting a fabricated value.
+       * The `preparedAt: null` guard makes the write first-write-wins. */
+      const stamped = await tx.order.updateMany({
+        where: { id: params.id, preparedAt: null },
+        data: { preparedAt: new Date() },
+      });
+      if (stamped.count === 0) return updated;
+      return (await tx.order.findUnique({ where: { id: params.id } })) ?? updated;
+    });
 
     // Notify the customer whenever the status changes (never blocks the response)
     const newStatus = typeof body.status === 'string' ? body.status : null;
@@ -108,7 +346,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         .catch((e) => console.error('[orders] status-mail failed:', e));
     }
 
-    return jsonResponse(item);
+    return jsonResponse({
+      ...current,
+      preparation: computePreparationSummary(current),
+    });
   } catch (error) {
     console.error('[orders] update failed:', error);
     return NextResponse.json({ error: 'Failed to update' }, { status: 500 });

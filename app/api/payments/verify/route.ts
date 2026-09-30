@@ -35,7 +35,12 @@ export async function POST(request: NextRequest) {
         where: { id: session.orderId },
         include: { user: true },
       });
-      if (order) return jsonResponse(order);
+      if (order) {
+        console.log(
+          `[payments] verification result: replay (already settled) | orderId: ${order.id} | orderNumber: ${order.orderNumber} | notification skipped`
+        );
+        return jsonResponse(order);
+      }
     }
 
     // The real gate — cryptographic signature check.
@@ -49,6 +54,9 @@ export async function POST(request: NextRequest) {
         where: { id: session.id },
         data: { status: 'failed', razorpayPaymentId },
       });
+      console.warn(
+        `[payments] verification result: signature_rejected | razorpayOrderId: ${razorpayOrderId} | session: pending → failed | no notification`
+      );
       return NextResponse.json({ error: 'Payment signature verification failed.' }, { status: 400 });
     }
 
@@ -62,6 +70,9 @@ export async function POST(request: NextRequest) {
             where: { id: session.id },
             data: { status: 'failed', razorpayPaymentId },
           });
+          console.warn(
+            `[payments] verification result: not_captured (${payment.status}) | razorpayOrderId: ${razorpayOrderId} | no notification`
+          );
           return NextResponse.json(
             { error: `Payment not captured (${payment.status}).` },
             { status: 400 }
@@ -73,6 +84,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    console.log(
+      `[payments] verification result: approved | razorpayOrderId: ${razorpayOrderId} | settling`
+    );
+
     // Everything checks out — create the order as paid (idempotent internally).
     const settled = await createOrderFromPaymentSession(session, {
       paymentId: razorpayPaymentId,
@@ -80,8 +95,15 @@ export async function POST(request: NextRequest) {
     });
 
     if (!settled) {
+      console.warn(
+        `[payments] verification result: settled_declined | razorpayOrderId: ${razorpayOrderId} | no notification`
+      );
       return NextResponse.json({ error: 'Payment could not be settled.' }, { status: 409 });
     }
+
+    console.log(
+      `[payments] verify complete | orderId: ${settled.order.id} | orderNumber: ${settled.order.orderNumber} | created: ${settled.created} | notification: ${settled.created ? 'dispatched' : 'skipped (already settled)'}`
+    );
 
     return jsonResponse(settled.order);
   } catch (error) {
