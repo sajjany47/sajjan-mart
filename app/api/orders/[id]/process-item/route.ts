@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma/client';
 import { requireAdmin } from '@/lib/admin-auth';
 import { jsonResponse } from '@/lib/api-utils';
 import { computeOrderAmounts, buildRefundUpdate } from '@/lib/order-refunds';
+import { computePreparationSummary } from '@/lib/order-preparation';
 import { initiateRefundIfNeeded } from '@/lib/razorpay-refunds';
 import { sendAdminItemCancelledMail } from '@/lib/mailer';
 
@@ -71,6 +72,10 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       // never be marked shipped (it will already be 'cancelled').
       if (allHandled && fresh.items.some((i) => !i.cancelled)) {
         orderUpdate.status = 'shipped';
+        // The kitchen finished here, so this is the one instant `prepared_at`
+        // records. Guarded on NULL: a later status change can never move it,
+        // which is what lets every device derive the same duration.
+        if (fresh.preparedAt === null) orderUpdate.preparedAt = new Date();
       }
 
       if (Object.keys(orderUpdate).length > 0) {
@@ -81,7 +86,10 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         where: { id: order.id },
         include: { items: true },
       });
-      return jsonResponse(updated);
+      return jsonResponse({
+        ...updated,
+        preparation: updated ? computePreparationSummary(updated) : null,
+      });
     }
 
     // ---- Admin cancels this item ----
@@ -133,7 +141,11 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
 
     const amounts = refreshed ? computeOrderAmounts(refreshed) : null;
-    return jsonResponse({ ...(refreshed ?? {}), amounts });
+    return jsonResponse({
+      ...(refreshed ?? {}),
+      amounts,
+      preparation: refreshed ? computePreparationSummary(refreshed) : null,
+    });
   } catch (error) {
     console.error('[orders] process-item failed:', error);
     return NextResponse.json({ error: 'Failed to process item' }, { status: 500 });

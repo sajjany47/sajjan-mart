@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma/client';
 import { jsonResponse, parseBody } from '@/lib/api-utils';
 import { getStoreConfig, isFoodOpenNow } from '@/lib/store-config';
 import { computeOrderAmounts } from '@/lib/order-refunds';
+import { computePreparationSummary } from '@/lib/order-preparation';
 import { createRazorpayOrder, razorpayConfigured, razorpayKeyId } from '@/lib/razorpay';
 import { sendOrderPlacedMails } from '@/lib/mailer';
 import { sendNewOrderNotification } from '@/lib/notifications';
@@ -31,6 +32,7 @@ export async function GET(request: NextRequest) {
       ...order,
       order_items: orderItems,
       amounts: computeOrderAmounts({ ...order, items: orderItems }),
+      preparation: computePreparationSummary(order),
     }));
     return jsonResponse(orders);
   } catch (error) {

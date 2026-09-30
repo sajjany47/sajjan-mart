@@ -389,6 +389,12 @@ model Order {
   preparationTimeMinutes Int?      @map("preparation_time_minutes")
   acceptedAt             DateTime? @map("accepted_at")
   preparationDueAt       DateTime? @map("preparation_due_at")
+  // When the kitchen finished this order, stamped by the server the first time
+  // the order leaves processing (last active item marked ready, or a direct
+  // ship/deliver). Written once — later status changes never move it, so every
+  // device derives the same "prepared in N minutes". NULL for orders that
+  // finished before this column existed: no timestamp is invented for them.
+  preparedAt             DateTime? @map("prepared_at")
 
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @default(now()) @map("updated_at")

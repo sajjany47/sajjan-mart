@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma/client';
 import { jsonResponse, parseBody } from '@/lib/api-utils';
 import { requireAdmin } from '@/lib/admin-auth';
 import { computeOrderAmounts, buildRefundUpdate } from '@/lib/order-refunds';
+import { computePreparationSummary } from '@/lib/order-preparation';
 import { initiateRefundIfNeeded } from '@/lib/razorpay-refunds';
 import { sendOrderStatusMail, sendAdminItemCancelledMail } from '@/lib/mailer';
 import { sendOrderStatusUpdatedNotification } from '@/lib/notifications';
@@ -11,6 +12,18 @@ const ACTIVE_STATUSES = ['pending', 'confirmed', 'processing', 'packed'];
 
 /** The two decisions a vendor makes on a pending order: Accept / Reject. */
 const PENDING_EXIT_STATUSES = ['confirmed', 'cancelled'];
+
+/**
+ * Statuses at which the kitchen is finished with the order. Moving into one of
+ * them stamps `prepared_at` (once), so the preparation duration freezes instead
+ * of counting on outside the Processing tab. `cancelled` is deliberately not
+ * here: a cancelled order was never prepared.
+ */
+const KITCHEN_EXIT_STATUSES = ['shipped', 'delivered'];
+
+/** The other half of that rule: the order must still be in the kitchen for the
+ *  transition to leave it. Mirrors the vendor's Processing tab statuses. */
+const KITCHEN_STATUSES = ['accepted', 'confirmed', 'processing', 'packed'];
 
 /** Bounds of the food preparation window the vendor may choose. */
 const PREP_MIN_MINUTES = 1;
@@ -118,7 +131,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       include: { user: true, items: true },
     });
     if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return jsonResponse({ ...item, amounts: computeOrderAmounts(item) });
+    return jsonResponse({
+      ...item,
+      amounts: computeOrderAmounts(item),
+      preparation: computePreparationSummary(item),
+    });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
   }
@@ -135,11 +152,26 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     delete body.preparationTimeMinutes;
     delete body.acceptedAt;
     delete body.preparationDueAt;
+    delete body.preparedAt;
 
     const before = await prisma.order.findUnique({
       where: { id: params.id },
       select: { status: true },
     });
+
+    /* An id that matches no row (truncated, mistyped, or deleted) is a client
+     * error, not a server fault: `update` below throws P2025 and the generic
+     * catch reported it as an unexplained 500. The race paths are untouched —
+     * a missing order can never be `pending`, so this cannot swallow a 409. */
+    if (!before) {
+      return NextResponse.json(
+        {
+          error: 'ORDER_NOT_FOUND',
+          message: 'No order with this id exists. Pull the order list again.',
+        },
+        { status: 404 }
+      );
+    }
 
     // An accept/reject on a still-pending order may be decided by exactly one
     // device. The read above only chooses the code path; the writes below use a
@@ -247,6 +279,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         return jsonResponse({
           ...(refreshed ?? {}),
           amounts: refreshed ? computeOrderAmounts(refreshed) : null,
+          preparation: refreshed ? computePreparationSummary(refreshed) : null,
         });
       }
     }
@@ -272,10 +305,37 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
           .catch((e) => console.error('[orders] status-mail failed:', e));
         announceDecision(accepted, 'confirmed');
       }
-      return jsonResponse(accepted);
+      return jsonResponse({
+        ...accepted,
+        preparation: computePreparationSummary(accepted),
+      });
     }
 
-    const item = await prisma.order.update({ where: { id: params.id }, data: body });
+    /* The kitchen left write and the status change are one statement pair: if
+     * the timestamp write fails, the status must not stay committed on its own.
+     * A half-applied transition is what made a shipped order look like it was
+     * never finished while the API still answered 500. */
+    const leavesKitchen =
+      KITCHEN_EXIT_STATUSES.includes(body.status) &&
+      KITCHEN_STATUSES.includes(before.status);
+
+    const current = await prisma.$transaction(async (tx) => {
+      const updated = await tx.order.update({ where: { id: params.id }, data: body });
+      if (!leavesKitchen) return updated;
+
+      /* The kitchen finished when the order left processing, so that is the
+       * instant recorded — and only on that transition. Moving an already
+       * shipped order to delivered must not stamp a duration that includes the
+       * shipping time, and a legacy order that shipped before this column
+       * existed stays without one rather than getting a fabricated value.
+       * The `preparedAt: null` guard makes the write first-write-wins. */
+      const stamped = await tx.order.updateMany({
+        where: { id: params.id, preparedAt: null },
+        data: { preparedAt: new Date() },
+      });
+      if (stamped.count === 0) return updated;
+      return (await tx.order.findUnique({ where: { id: params.id } })) ?? updated;
+    });
 
     // Notify the customer whenever the status changes (never blocks the response)
     const newStatus = typeof body.status === 'string' ? body.status : null;
@@ -286,7 +346,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         .catch((e) => console.error('[orders] status-mail failed:', e));
     }
 
-    return jsonResponse(item);
+    return jsonResponse({
+      ...current,
+      preparation: computePreparationSummary(current),
+    });
   } catch (error) {
     console.error('[orders] update failed:', error);
     return NextResponse.json({ error: 'Failed to update' }, { status: 500 });
