@@ -12,10 +12,78 @@ const ACTIVE_STATUSES = ['pending', 'confirmed', 'processing', 'packed'];
 /** The two decisions a vendor makes on a pending order: Accept / Reject. */
 const PENDING_EXIT_STATUSES = ['confirmed', 'cancelled'];
 
+/** Bounds of the food preparation window the vendor may choose. */
+const PREP_MIN_MINUTES = 1;
+const PREP_MAX_MINUTES = 45;
+const PREP_DEFAULT_MINUTES = 30;
+
+/** A missing or unusable selection is the default, never an error: an order
+ *  must never be left accepted without a deadline because of a client bug. */
+function clampPrepMinutes(requested: unknown): number {
+  const minutes = Number(requested);
+  if (!Number.isFinite(minutes)) return PREP_DEFAULT_MINUTES;
+  return Math.min(PREP_MAX_MINUTES, Math.max(PREP_MIN_MINUTES, Math.round(minutes)));
+}
+
+/**
+ * The timer belongs to the server. `acceptedAt` and `preparationDueAt` are
+ * generated here so every vendor device reads the same instant, and only an
+ * order with an active (non-cancelled) food item gets them — a client cannot
+ * forge a countdown onto a non-food order.
+ *
+ * Returns the fields for the same conditional `updateMany` that claims the
+ * order, which is what keeps the write atomic and lets a losing concurrent
+ * accept write nothing at all.
+ */
+async function foodPreparationWrite(
+  orderId: string,
+  requestedMinutes: unknown
+): Promise<{
+  preparationTimeMinutes: number;
+  acceptedAt: Date;
+  preparationDueAt: Date;
+} | null> {
+  const items = await prisma.orderItem.findMany({
+    where: { orderId },
+    select: {
+      itemType: true,
+      cancelled: true,
+      product: { select: { productType: true } },
+    },
+  });
+  // Same rule the vendor app applies, so a device that offers a making time
+  // always gets it stored: the item snapshot OR the live product record.
+  const hasFood = items.some(
+    (i) =>
+      !i.cancelled &&
+      (i.itemType === 'food' || i.product?.productType === 'food')
+  );
+  if (!hasFood) return null;
+
+  const minutes = clampPrepMinutes(requestedMinutes);
+  const acceptedAt = new Date();
+  return {
+    preparationTimeMinutes: minutes,
+    acceptedAt,
+    preparationDueAt: new Date(acceptedAt.getTime() + minutes * 60_000),
+  };
+}
+
 async function latestDecision(id: string) {
   return prisma.order.findUnique({
     where: { id },
-    select: { id: true, orderNumber: true, status: true, paymentStatus: true, updatedAt: true },
+    select: {
+      id: true,
+      orderNumber: true,
+      status: true,
+      paymentStatus: true,
+      updatedAt: true,
+      // The winning device's timer, reported to whoever loses the race, so a
+      // second phone shows the same due time instead of starting its own.
+      preparationTimeMinutes: true,
+      acceptedAt: true,
+      preparationDueAt: true,
+    },
   });
 }
 
@@ -61,6 +129,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   if (!payload) return response as NextResponse;
   try {
     const body = await parseBody(request);
+    // Parsed body is passed straight into Prisma `data` everywhere below, so
+    // the timer fields are taken back out: only this handler may write them.
+    const requestedPrepMinutes = body.preparationTimeMinutes;
+    delete body.preparationTimeMinutes;
+    delete body.acceptedAt;
+    delete body.preparationDueAt;
+
     const before = await prisma.order.findUnique({
       where: { id: params.id },
       select: { status: true },
@@ -178,9 +253,14 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     // Accept on a pending order: single atomic claim, nothing else to write.
     if (latching && body.status === 'confirmed') {
+      // Computed before the claim and written by it: if another device wins the
+      // race, `claim.count === 0` and these values are never stored, so the
+      // first accepted deadline is the only one and cannot be reset.
+      const preparation = await foodPreparationWrite(params.id, requestedPrepMinutes);
+
       const claim = await prisma.order.updateMany({
         where: { id: params.id, status: 'pending' },
-        data: body,
+        data: { ...body, ...(preparation ?? {}) },
       });
       if (claim.count === 0) return alreadyProcessed(await latestDecision(params.id));
 

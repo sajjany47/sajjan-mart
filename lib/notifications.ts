@@ -150,6 +150,7 @@ export function buildNewOrderData(
     quantity: number;
     unitPrice: unknown;
     total: unknown;
+    itemType?: string;
   }>,
   user?: { fullName?: string | null; phone?: string | null } | null,
 ): Record<string, string> {
@@ -180,6 +181,9 @@ export function buildNewOrderData(
       id: it.id || String(idx + 1),
       itemId: it.id || String(idx + 1),
       name: it.name || `Item ${idx + 1}`,
+      // Carried so a vendor phone can tell a FOOD order from a product order
+      // straight off the push, before any API round-trip.
+      itemType: it.itemType || 'product',
       variantName: (it as any).variantName || '',
       quantity: Number(it.quantity) || 1,
       price: unitPriceNum,

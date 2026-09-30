@@ -34,7 +34,27 @@ export async function GET(request: NextRequest) {
     }));
     return jsonResponse(orders);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
+    console.error('[orders] fetch failed:', error);
+    // A Prisma error code is stable and non-sensitive, so it always travels to
+    // the caller; the message (which quotes the failing invocation) is only
+    // added while this build is not serving production traffic.
+    const code =
+      error && typeof error === 'object' && 'code' in error
+        ? String((error as { code?: unknown }).code ?? '')
+        : '';
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch orders',
+        ...(code ? { code } : {}),
+        ...(process.env.NODE_ENV === 'production'
+          ? {}
+          : {
+              detail:
+                error instanceof Error ? error.message : String(error),
+            }),
+      },
+      { status: 500 },
+    );
   }
 }
 
