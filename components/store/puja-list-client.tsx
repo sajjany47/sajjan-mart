@@ -3,8 +3,9 @@
 import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, X, Sparkles, ShieldCheck, ArrowRight } from "lucide-react";
+import { Search, X, Sparkles, ShieldCheck, ArrowRight, CalendarDays } from "lucide-react";
 import { formatINR } from "@/lib/format";
+import { pujaDateStatus, formatPujaDate } from "@/lib/puja-order";
 import type { Puja, PujaItem } from "@/lib/types";
 
 type PujaWithItems = Puja & { items: PujaItem[] };
@@ -55,7 +56,9 @@ export function PujaListClient({ pujas }: { pujas: PujaWithItems[] }) {
 
       {/* Puja Grid */}
       <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((p) => (
+        {filtered.map((p) => {
+          const status = pujaDateStatus(p);
+          return (
           <Link
             key={p.id}
             href={`/puja/${p.slug}`}
@@ -79,6 +82,20 @@ export function PujaListClient({ pujas }: { pujas: PujaWithItems[] }) {
               <span className="absolute left-3 top-3 rounded-full bg-primary/90 px-2.5 py-1 text-[10px] font-bold text-primary-foreground shadow-md backdrop-blur-sm">
                 🪔 Puja Package
               </span>
+              {(status === "today" || status === "upcoming" || status === "past") && (
+                <span
+                  className={`absolute right-3 top-3 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold text-white shadow-md backdrop-blur-sm ${
+                    status === "today"
+                      ? "bg-emerald-500"
+                      : status === "upcoming"
+                        ? "bg-emerald-600/90"
+                        : "bg-slate-600/60"
+                  }`}
+                >
+                  <CalendarDays className="h-3 w-3" />
+                  {status === "today" ? "Today" : formatPujaDate(p.puja_date!)}
+                </span>
+              )}
               <span className="absolute right-3 bottom-3 inline-flex items-center gap-1 rounded-full bg-slate-950/70 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md">
                 <ShieldCheck className="h-3 w-3" /> Verified
               </span>
@@ -128,7 +145,8 @@ export function PujaListClient({ pujas }: { pujas: PujaWithItems[] }) {
               </div>
             </div>
           </Link>
-        ))}
+          );
+        })}
       </div>
 
       {/* Empty State */}

@@ -130,6 +130,7 @@ export interface Puja {
   description: string | null;
   image_url: string | null;
   base_price: number;
+  puja_date: string | null;
   is_active: boolean;
 }
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Plus, Trash2, Pencil, FileSpreadsheet, Search } from "lucide-react";
+import { Plus, Trash2, Pencil, FileSpreadsheet, Search, X } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,7 @@ const EMPTY = {
   description: "",
   image_url: "",
   base_price: 0,
+  puja_date: "",
   is_active: true,
 };
 
@@ -69,6 +70,7 @@ export default function AdminPujasPage() {
     | "oldest"
   >("image-missing");
   const [search, setSearch] = useState("");
+  const [itemSearch, setItemSearch] = useState("");
 
   async function load() {
     setLoading(true);
@@ -93,6 +95,7 @@ export default function AdminPujasPage() {
     setEditing(null);
     setForm(EMPTY);
     setSelectedItems([]);
+    setItemSearch("");
     setOpen(true);
   }
 
@@ -103,8 +106,10 @@ export default function AdminPujasPage() {
       description: p.description ?? "",
       image_url: p.image_url ?? "",
       base_price: p.base_price,
+      puja_date: p.puja_date ? p.puja_date.slice(0, 10) : "",
       is_active: p.is_active,
     });
+    setItemSearch("");
     const { data } = await supabase
       .from("puja_items")
       .select("*")
@@ -146,6 +151,7 @@ export default function AdminPujasPage() {
           description: form.description,
           image_url: form.image_url,
           base_price: Number(form.base_price),
+          puja_date: form.puja_date || null,
           is_active: form.is_active,
         })
         .eq("id", editing.id);
@@ -162,6 +168,7 @@ export default function AdminPujasPage() {
         description: form.description,
         image_url: form.image_url,
         base_price: Number(form.base_price),
+        puja_date: form.puja_date || null,
         is_active: form.is_active,
       });
       if (error) {
@@ -212,6 +219,11 @@ export default function AdminPujasPage() {
   }
 
   const [exporting, setExporting] = useState(false);
+
+  const itemQuery = itemSearch.trim().toLowerCase();
+  const visibleProducts = itemQuery
+    ? products.filter((p) => p.name.toLowerCase().includes(itemQuery))
+    : products;
 
   async function handleExport() {
     setExporting(true);
@@ -399,6 +411,20 @@ export default function AdminPujasPage() {
                   Auto-set from selected items total
                 </p>
               </div>
+              <div>
+                <Label className="text-xs">Puja Date (optional)</Label>
+                <Input
+                  type="date"
+                  value={form.puja_date}
+                  onChange={(e) =>
+                    setForm({ ...form, puja_date: e.target.value })
+                  }
+                  className="mt-1"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Leave empty if this puja has no fixed date
+                </p>
+              </div>
               <div className="flex items-end pb-1">
                 <div className="flex items-center gap-2">
                   <input
@@ -420,14 +446,45 @@ export default function AdminPujasPage() {
               </div>
             </div>
             <div>
-              <Label className="text-xs">Puja Samagri Items</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-xs">Puja Samagri Items</Label>
+                <span className="text-xs text-muted-foreground">
+                  {selectedItems.length} selected
+                </span>
+              </div>
+              {products.length > 0 && (
+                <div className="relative mt-2">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search items — coconut, diya, agarbatti..."
+                    value={itemSearch}
+                    onChange={(e) => setItemSearch(e.target.value)}
+                    className="pl-9 text-sm"
+                  />
+                  {itemSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setItemSearch("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label="Clear item search"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              )}
               <div className="mt-2 grid grid-cols-1 gap-1 rounded-lg border border-border p-2 sm:grid-cols-2">
                 {products.length === 0 && (
                   <p className="col-span-full px-2 py-4 text-center text-xs text-muted-foreground">
                     No puja samagri products found. Add them under Products.
                   </p>
                 )}
-                {products.map((p) => {
+                {products.length > 0 && visibleProducts.length === 0 && (
+                  <p className="col-span-full px-2 py-4 text-center text-xs text-muted-foreground">
+                    No items match &quot;{itemSearch}&quot;.
+                  </p>
+                )}
+                {visibleProducts.map((p) => {
                   const checked = selectedItems.includes(p.id);
                   return (
                     <label
@@ -454,10 +511,16 @@ export default function AdminPujasPage() {
                 <div className="mt-1 flex gap-3 text-xs">
                   <button
                     type="button"
-                    onClick={() => setSelectedItems(products.map((p) => p.id))}
+                    onClick={() =>
+                      setSelectedItems((prev) =>
+                        Array.from(
+                          new Set([...prev, ...visibleProducts.map((p) => p.id)]),
+                        ),
+                      )
+                    }
                     className="text-primary font-medium"
                   >
-                    Select all
+                    Select all{itemQuery ? " shown" : ""}
                   </button>
                   <button
                     type="button"
@@ -469,7 +532,8 @@ export default function AdminPujasPage() {
                 </div>
               )}
               <p className="mt-1 text-xs text-muted-foreground">
-                {selectedItems.length} of {products.length} items selected ·
+                {selectedItems.length} of {products.length} items selected
+                {itemQuery && ` · ${visibleProducts.length} shown`} ·
                 Total{" "}
                 {formatINR(
                   products

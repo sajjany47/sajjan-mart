@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma/client';
-import { jsonResponse, parseBody } from '@/lib/api-utils';
+import { jsonResponse, parseBody, normalizeOptionalDate } from '@/lib/api-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -53,6 +53,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await parseBody(request);
+    const normalizedDate = normalizeOptionalDate(body.pujaDate);
+    if (normalizedDate === false) {
+      return NextResponse.json({ error: 'Invalid puja_date value' }, { status: 400 });
+    }
+    if (normalizedDate !== undefined) body.pujaDate = normalizedDate;
     const item = await prisma.puja.create({ data: body });
     return jsonResponse(item, { status: 201 });
   } catch (error) {

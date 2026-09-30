@@ -44,3 +44,17 @@ export async function parseBody(request: Request) {
   const body = await request.json();
   return toSnakeCamelKeys(body);
 }
+
+// Prisma DateTime fields reject date-only "YYYY-MM-DD" strings; normalize them
+// to UTC midnight. Accepts Date, full ISO strings, and date-only strings.
+// Returns null for null/empty (clears the value), undefined when the key is
+// absent (leave untouched), and false for unparseable input (caller → 400).
+export function normalizeOptionalDate(value: unknown): Date | null | undefined | false {
+  if (value === undefined) return undefined;
+  if (value === null || value === '') return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? false : value;
+  const str = String(value).trim();
+  if (!str) return null;
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(str) ? new Date(`${str}T00:00:00Z`) : new Date(str);
+  return Number.isNaN(date.getTime()) ? false : date;
+}
