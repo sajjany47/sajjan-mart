@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma/client';
 import { jsonResponse, parseBody } from '@/lib/api-utils';
 import { getStoreConfig, isFoodOpenNow } from '@/lib/store-config';
 import { computeOrderAmounts } from '@/lib/order-refunds';
+import { computePreparationSummary } from '@/lib/order-preparation';
 import { createRazorpayOrder, razorpayConfigured, razorpayKeyId } from '@/lib/razorpay';
 import { sendOrderPlacedMails } from '@/lib/mailer';
 import { sendNewOrderNotification } from '@/lib/notifications';
@@ -31,10 +32,31 @@ export async function GET(request: NextRequest) {
       ...order,
       order_items: orderItems,
       amounts: computeOrderAmounts({ ...order, items: orderItems }),
+      preparation: computePreparationSummary(order),
     }));
     return jsonResponse(orders);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
+    console.error('[orders] fetch failed:', error);
+    // A Prisma error code is stable and non-sensitive, so it always travels to
+    // the caller; the message (which quotes the failing invocation) is only
+    // added while this build is not serving production traffic.
+    const code =
+      error && typeof error === 'object' && 'code' in error
+        ? String((error as { code?: unknown }).code ?? '')
+        : '';
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch orders',
+        ...(code ? { code } : {}),
+        ...(process.env.NODE_ENV === 'production'
+          ? {}
+          : {
+              detail:
+                error instanceof Error ? error.message : String(error),
+            }),
+      },
+      { status: 500 },
+    );
   }
 }
 
